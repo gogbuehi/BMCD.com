@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+    backgroundGradientAlphas="0,1" backgroundGradientColors="#000000,#000000"
+    backgroundAlpha="0"
+	verticalAlign="middle"
+	horizontalAlign="center" paddingTop="0" paddingBottom="0" paddingLeft="0" paddingRight="0"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="vertical" initialize="init()">
+	<mx:Image id="bg_tile" source="@Embed(source='assets/tiles/tile_carbon_04.gif')" visible="false"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.VersionInfo;
+			import com.hphant.utils.Logger;
+			
+			[Bindable]
+			private var subdomains:Array;
+			private var versionInfo:VersionInfo;
+			
+			private function init():void
+			{
+				try
+				{
+					this.subdomains = ExternalInterface.call("getSubdomains"); 
+				}
+				catch(error:Error)
+				{
+					log("External Interface Error: " + error);
+				}
+				if(!this.subdomains){this.subdomains = ["",""];}
+				this.versionInfo = new VersionInfo(new URLRequest("/swf/splash.properties"));
+			}
+			private function log(message:String,level:uint=0):void{
+				Logger.log(message,level);
+			}
+			
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				 this.graphics.clear();
+				this.graphics.beginBitmapFill(Bitmap(this.bg_tile.content).bitmapData);
+				this.graphics.drawRect(0,0,unscaledWidth,unscaledHeight);
+				this.graphics.endFill(); 
+				var m:Matrix = new Matrix();
+				m.createGradientBox(unscaledWidth,unscaledHeight);
+				this.graphics.beginGradientFill(GradientType.RADIAL,[0x000000,0x000000],
+												[0,.6],[0,255],m);
+				this.graphics.drawRect(0,0,unscaledWidth,unscaledHeight);
+				this.graphics.endFill();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Style>
+	   ToolTip { 
+        	fontFamily: "Arial"; 
+	        fontSize: 10; 
+	        fontStyle: "regular"; 
+        	color: #FFFFFF; 
+        	backgroundColor: #000000;
+      }
+
+	</mx:Style>
+	<mx:Canvas>
+	<mx:Canvas id="maskCanvas" width="1000" 
+			height="700" 
+			cornerRadius="10" 
+			borderStyle="solid"
+			 horizontalScrollPolicy="off"
+			  verticalScrollPolicy="off">
+	</mx:Canvas>
+	<mx:Image mask="{this.maskCanvas}" source="@Embed(source='assets/BMCD_SplashPage_Skyline.png')" />
+	<mx:HBox 
+			width="1000" 
+		    verticalAlign="top"
+		    y="315"
+		    horizontalAlign="center"
+		    horizontalGap="28" 
+			cornerRadius="10" 
+			 borderColor="#000000"
+			  borderThickness="0"
+			 borderStyle="solid"
+			 horizontalScrollPolicy="off"
+			  verticalScrollPolicy="off" >
+		<mx:Button x="57" y="294" label="" width="472" height="250" alpha="0" buttonMode="true" toolTip="Proceed to: Jaguar and Land Rover" click="navigateToURL(new URLRequest(this.subdomains[0]),'_self')" />
+		<mx:Button x="546" y="294" label="" width="472" height="250" alpha="0" buttonMode="true" toolTip="Proceed to: Lamborghini, Bentley and Lotus" click="navigateToURL(new URLRequest(this.subdomains[1]),'_self')"/>
+	</mx:HBox>
+	</mx:Canvas>
+</mx:Application>

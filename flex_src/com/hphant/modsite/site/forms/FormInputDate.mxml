@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" disabledOverlayAlpha="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+	<mx:Label text="{label}" id="dataLabel" styleName="{labelStyleName}"/>
+	<mx:DateField id="dataInput" styleName="{inputStyleName}" disabledDays="{this.disabledDays}" enabled="{this.enabled}" width="100%" creationComplete="{this.initValidator();setDefaultDisabledRange()}"/>
+	<mx:String id="labelStyleName">emailFormLabel</mx:String>
+	<mx:String id="inputStyleName">emailFormInput</mx:String>
+	<mx:Array id="disabledDays">
+		<mx:Number>0</mx:Number>
+		<mx:Number>6</mx:Number>
+	</mx:Array>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ValidationResultEvent;
+			
+			import mx.validators.DateValidator;
+			
+			private function setDefaultDisabledRange():void{
+				var d:Date = new Date();
+					d.date = d.date-1;
+					this.dataInput.disabledRanges = [{rangeEnd:d}];
+			}
+			
+			private var _label:String = "label";
+			[Bindable]
+			[Inspectable(defaultValue="label",category="Common")]
+			public override function get label():String{ return this._label;}
+			public override function set label(value:String):void{
+				this._label = value;
+			}
+			public function get selectedDate():Date{
+				return this.dataInput.selectedDate;
+			}
+			public function set selectedDate(value:Date):void{
+				this.dataInput.selectedDate = value;
+			}
+			
+			public function get text():String{
+				return this.dataInput.text;
+			}
+			
+			private function initValidator():void{
+				this.validator = new DateValidator();
+				this.validator.enabled = true;
+				this.validator.required = _reqired;
+				this.validator.source = this.dataInput;
+				this.validator.property = "text";
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._requiredChanged && this.validator){
+					this.validator.required = _reqired;
+					this._requiredChanged = false;
+				}
+			}
+			private var validator:DateValidator;
+			public function validateData():Boolean{
+				return !(this.validator.validate().type==ValidationResultEvent.INVALID);
+			}
+			private var _reqired:Boolean = true;
+			private var _requiredChanged:Boolean = false;
+			[Inspectable]
+			public function get required():Boolean{return this._reqired;}
+			public function set required(value:Boolean):void{
+				this._requiredChanged = true;
+				this._reqired = value;
+				this.invalidateProperties();
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

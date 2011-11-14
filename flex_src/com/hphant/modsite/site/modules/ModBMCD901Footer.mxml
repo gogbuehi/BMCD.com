@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns="com.hphant.modsite.site.modules.*" 
+	       xmlns:mx="http://www.adobe.com/2006/mxml"
+	       height="0"
+	       visible="false"
+	       backgroundAlpha="0" borderThickness="0"
+	       autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" implements="com.hphant.modsite.site.modules.interfaces.IModule" 
+	       width="984" currentState="state0" xmlns:menu="com.hphant.modsite.site.assets.menu.*" xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:renderers="com.hphant.renderers.*">
+	      <menu:MAFooterMenu id="siteMap" styleName="siteMap" width="100%" clipContent="true" creationComplete="{this.siteMap.addEventListener(MALinkClickEvent.LINK_CLICKED,this.menuCick)}"/>
+	      <mx:Box width="100%" horizontalAlign="center">
+	      	<renderers:ImageButtonRenderer id="siteReferance" data="{this.ref}" click="{this.menuCick(event)}" styleName="siteReferance"/>
+	      </mx:Box>
+	      <text:MAText id="createdBy" styleName="createdBy" width="100%" link="{menuCick(event)}"/>
+		  <mx:states>
+		   		<mx:State name="state0">
+		   			<mx:SetProperty target="{this}" name="visible" value="true"/>
+		   			<mx:SetProperty target="{this.createdBy}" name="visible" value="true"/>
+		   		</mx:State>
+		   		<mx:State name="state1" basedOn="state0">
+		   			<mx:SetProperty target="{this.createdBy}" name="xml" value="{txt}"/>
+		   		</mx:State>
+		   		<mx:State name="state2" basedOn="state1">
+		   			<mx:SetProperty target="{this.siteMap}" name="xml" value="{links}"/>
+		   			<mx:SetProperty target="{this.siteReferance}" name="data" value="{ref}"/>
+		   		</mx:State>
+		   		<mx:State name="state3" basedOn="state2">
+		   			<mx:SetProperty target="{this}" name="height"/>
+		   		</mx:State>
+		   </mx:states>
+		   <mx:transitions>
+		   		<mx:Transition fromState="*" toState="state1">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:SetPropertyAction target="{this.createdBy}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state1" toState="state2">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:SetPropertyAction target="{this.siteMap}"/>
+		   				<mx:SetPropertyAction target="{this.siteReferance}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state2" toState="state3">
+		   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+		   				<mx:Resize target="{this}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state3" toState="state2">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:Resize target="{this}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state1" toState="state0">
+		   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+		   				<mx:SetPropertyAction target="{this.createdBy}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state0" toState="state3">
+		   			<mx:Sequence>
+		   				<mx:SetPropertyAction target="{this}" name="visible" value="true"/>
+		   				<mx:SetPropertyAction target="{this.createdBy}" name="visible" value="true"/>
+		   				<mx:SetPropertyAction target="{this.createdBy}" name="xml" value="{txt}"/>
+		   				<mx:SetPropertyAction target="{this.siteMap}" name="xml" value="{links}"/>
+		   				<mx:SetPropertyAction target="{this.siteReferance}" name="xml" value="{ref}"/>
+		   				<mx:SetPropertyAction target="{this}" name="height"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state3" toState="state0">
+		   			<mx:Sequence>
+		   				<mx:SetPropertyAction target="{this}" name="height" value="0"/>
+		   				<mx:SetPropertyAction target="{this}" name="visible" value="false"/>
+		   				<mx:SetPropertyAction target="{this.createdBy}" name="visible" value="false"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   </mx:transitions>
+	 <mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import mx.collections.XMLListCollection; 
+			import mx.controls.Button;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "interfaces/ModuleIncludes.as";
+			[Bindable]
+			private var links:XMLList;
+			[Bindable]
+			private var txt:XMLList;
+			[Bindable]
+			private var ref:XMLList;
+			[Bindable]
+			private var imgs:XMLListCollection = new XMLListCollection();
+			protected override function commitProperties():void{
+				if(this.xmlChanged){
+					this.links = this._xml.ul.(String(@['class']).toLowerCase()=="mafootermenu");
+					this.txt = this._xml.p.(String(@['class']).toLowerCase()=="body");
+					this.ref = this._xml.a.(String(@['class']).toLowerCase()=="sitereferance");
+					this.imgs.source = this.ref.img;
+					XMLUtility.insertBlankNode(this.txt);
+					XMLUtility.insertBlankNode(this.links);
+					XMLUtility.insertBlankNode(this.ref.img);
+					if(this.currentState=="state3"){
+						this.siteMap.xml = this.links;
+						this.createdBy.xml = this.txt;
+						//this.siteReferance.data = this.ref;
+					}
+					
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function menuCick(e:Event):void{
+		    	if(e is MALinkClickEvent){
+		    		this.uriManager.goToURI(MALinkClickEvent(e).item.a.@href);
+		    	} else if(e is MouseEvent){
+		    		this.uriManager.goToURI(Button(e.currentTarget).data.@href);
+		    	} else if(e is TextEvent){
+		    		this.uriManager.goToURI(TextEvent(e).text);
+		    	}
+		    }
+		    public function duplicate():IModule{
+				var m:ModBMCD901Footer = new ModBMCD901Footer();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+	
+</mx:VBox>

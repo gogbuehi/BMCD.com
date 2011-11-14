@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataGridPallet xmlns="com.hphant.data.view.*" creationComplete="{init();}" dataProvider="{DataModelLocator.getInstance().inventory}" label="Inventory Data" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<columns>
+		<DataRecordColumn propertyName="stockNumber" propertyType="string" width="150"/>
+		<DataRecordColumn propertyName="year" propertyType="string" width="75"/>
+		<DataRecordColumn propertyName="make" propertyType="string" width="100"/>
+		<DataRecordColumn propertyName="model" propertyType="string" width="100"/>
+		<DataRecordColumn propertyName="mileage" propertyType="string" width="100"/>
+		<DataRecordColumn propertyName="price" propertyType="string" width="100"/>
+	</columns>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.model.InventoryRecord;
+			import com.hphant.data.control.event.InventoryEvent;
+			import com.hphant.data.control.DataModelLocator;
+			private function init():void{
+				this.dataClass = InventoryRecord;
+				this.eventClass = InventoryEvent;
+				this.cmAdd.enabled = false;
+				this.getAllEvent = new InventoryEvent(InventoryEvent.GET_ALL);
+				this.getAllEvent.dispatch();
+			}
+		]]>
+	</mx:Script>
+</DataGridPallet>

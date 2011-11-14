@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" direction="horizontal"  
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" verticalAlign="middle"
+		   xmlns:text="com.hphant.modsite.site.assets.text.*" height="100%" horizontalAlign="left" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+		<mx:Box width="80" height="53" clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<images:MAImage autoSize="false" id="image" height="100%" width="100%" xml="{img}" linkClicked="{this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,event.item))}" />
+		</mx:Box>
+		<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<text:MAText id="text" width="100%" insertBreaks="false" xml="{mdl}"/>
+			<text:MAText id="price" width="100%" insertBreaks="false" xml="{prc}"/>
+		</mx:VBox>
+		
+
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			
+			import flash.text.TextFieldAutoSize;
+			
+			[Bindable]
+			public var autoSize:Boolean = true;
+			
+			[Bindable]
+			private var prc:XMLList;
+			[Bindable]
+			private var mdl:XMLList;
+			[Bindable]
+			private var img:XMLList;
+			
+			
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					mdl = this._xml.p.(@['class']=='model');
+					prc = this._xml.p.(@['class']=='price');
+					img = this._xml.children().(name()=="a"||name()=="img");
+					this.xmlChanged = false;
+				} else if(this.xmlChanged){
+					mdl = null;
+					prc = null;
+					img = null;
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

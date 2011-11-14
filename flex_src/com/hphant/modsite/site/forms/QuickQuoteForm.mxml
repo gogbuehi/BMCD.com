@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="15" width="750" currentState="form" height="800" xmlns:ns1="com.hphant.modsite.site.forms.*">
+	<mx:FormHeading styleName="formSectionLabel" label="Vehicle Request Info" width="100%"/>
+	<mx:Text id="submitText" styleName="formLabel" width="100%" />
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormYearInput labelStyleName="formLabel" id="year" label="Year:" width="85" required="false" />
+		<ns1:FormInput labelStyleName="formLabel" id="make" label="Make:" width="150" required="false"/>
+		<ns1:FormInput labelStyleName="formLabel" id="model" label="Model:" width="150" required="false"/>
+	</mx:HBox>
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormInput labelStyleName="formLabel" id="extColor" label="Ext. color:" width="150" required="false"/>
+		<ns1:FormInput labelStyleName="formLabel" id="intColor" label="Int. color:" width="150" required="false"/>
+	</mx:HBox>
+	<mx:FormHeading styleName="formSectionLabel" label="Trade-In Information" width="100%"/>
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormYearInput labelStyleName="formLabel" id="tradeInYear" label="Year:" width="85" required="false"/>
+		<ns1:FormInput labelStyleName="formLabel" id="tradeInMake" label="Make:" width="150" required="false"/>
+		<ns1:FormInput labelStyleName="formLabel" id="tradeInModel" label="Model:" width="150" required="false"/>
+	</mx:HBox>
+	<mx:FormHeading styleName="formSectionLabel" label="Contact Information" width="100%"/>
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormInput labelStyleName="formLabel" id="firstName" label="First Name*:" width="250"/>
+		<ns1:FormInput labelStyleName="formLabel" id="lastName" label="Last Name*:" width="250"/>
+	</mx:HBox>
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormInput labelStyleName="formLabel" id="email" label="Email*:" width="250" type="email"/>
+		<ns1:FormInput labelStyleName="formLabel" id="phone" label="Day Phone*:" width="250" type="phone"/>
+	</mx:HBox>
+	<mx:FormHeading styleName="formSectionLabel" label="Additional Comments" width="100%"/>
+	<mx:HBox width="100%" paddingLeft="25">
+		<ns1:FormInputTextArea labelStyleName="formLabel" id="comment" label="Comments/Additional Options:" width="100%" height="150" required="false"/>
+	</mx:HBox>
+	<mx:HBox width="100%" paddingLeft="15">
+		<mx:Button id="submit" label="Submit" click="{this.submitClick()}"/>
+		<mx:Button id="clear" label="Clear" click="{this.clearClick()}"/>
+	</mx:HBox>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.QuickQuoteFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function validateForm():Boolean{
+				var valid:Boolean = this.year.validateData();
+				if(!this.extColor.validateData()){valid = false;}
+				if(!this.intColor.validateData()){valid = false;}
+				if(!this.tradeInYear.validateData()){valid = false;}
+				if(!this.tradeInMake.validateData()){valid = false;}
+				if(!this.tradeInModel.validateData()){valid = false;}
+				if(!this.firstName.validateData()){valid = false;}
+				if(!this.lastName.validateData()){valid = false;}
+				if(!this.email.validateData()){valid = false;}
+				if(!this.phone.validateData()){valid = false;}
+				if(!this.comment.validateData()){valid = false;}
+				if(!this.make.validateData()){valid = false;}
+				if(!this.model.validateData()){valid = false;}
+				return valid;					
+			}
+			private function submitClick():void{
+				if(this.validateForm()){
+					var formData:QuickQuoteFormData = new QuickQuoteFormData();
+					formData.extColor = this.extColor.dataInput.text;
+					formData.intColor = this.intColor.dataInput.text;
+					formData.tradeInYear = this.tradeInYear.dataInput.text;
+					formData.tradeInMake = this.tradeInMake.dataInput.text;
+					formData.tradeInModel = this.tradeInModel.dataInput.text;
+					formData.firstName = this.firstName.dataInput.text;
+					formData.lastName = this.lastName.dataInput.text;
+					formData.email = this.email.dataInput.text;
+					formData.phone = this.phone.dataInput.text;
+					formData.comment = this.comment.dataInput.text;
+					formData.make = this.make.dataInput.text;
+					formData.model = this.model.dataInput.text;
+					formData.year = this.year.dataInput.text;
+					this.dispatchEvent(new MAFormEvent(MAFormEvent.SEND_EMAIL,formData));
+				}
+			}
+			private function clearClick():void{
+					this.extColor.text = "";
+					this.intColor.text = "";
+					this.tradeInYear.text = "";
+					this.tradeInMake.text = "";
+					this.tradeInModel.text = "";
+					this.firstName.text = "";
+					this.lastName.text = "";
+					this.email.text = "";
+					this.phone.text = "";
+					this.comment.text = "";
+					this.make.text = "";
+					this.model.text = "";
+					this.year.text = "";
+					if(this.currentState=='sent'){
+						this.currentState = 'form';
+					}
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="form" />
+		<mx:State name="sent" >
+			<mx:SetProperty target="{this.submitText}" value="Your quote request has been sent." name="text" />
+			<mx:SetProperty target="{this.tradeInYear}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.tradeInMake}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.tradeInModel}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.extColor}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.intColor}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.firstName}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.lastName}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.email}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.phone}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.comment}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.make}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.model}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.year}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.submit}" value="false" name="enabled" />
+			<mx:SetProperty target="{this.clear}" value="Reset" name="label" />
+		</mx:State>
+	</mx:states>
+</mx:VBox>

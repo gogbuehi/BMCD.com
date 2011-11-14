@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="1"
+		   resizeEffect="{this.resizeEF}"
+		   currentStateChange="{this.applyXML=true;this.invalidateProperties()}"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off" height="30" width="30" currentState="begin" xmlns:text1="flash.text.*">
+	
+	<mx:Move id="moveEF"/>
+	<mx:Fade id="fadeEF"/>
+	<mx:Resize id="resizeEF"/>
+	<images:MAImageListController id="imageController" maImage="{this.slideShow}" autoLoad="{false}"/>
+	<mx:Canvas id="eventHighlights" visible="false" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<images:MAImage autoSize="false" id="thumb" width="209" height="150" y="15" x="10"/>
+		<text:MATextArea id="title" resizeEffect="resizeEF" moveEffect="moveEF"  autoSize="{TextFieldAutoSize.NONE}" width="598" height="58" x="227" y="10"/>
+		<text:MATextArea autoSize="{TextFieldAutoSize.NONE}" resizeEffect="resizeEF" moveEffect="moveEF" id="blurb" width="598" height="89" x="227" y="76"/>
+		<text:MATextArea id="date" moveEffect="moveEF" autoSize="{TextFieldAutoSize.NONE}" width="181" x="833" y="10" height="128"/>
+		<mx:Button moveEffect="moveEF" id="detailsBtn" label="+" width="35"  x="979" y="148"/>
+	</mx:Canvas>
+	<mx:HBox x="10" y="173" width="100%" id="eventDetails" visible="false" resizeEffect="resizeEF" height="0">
+		<mx:VBox height="100%" id="leftSide">
+			<images:MAImage id="slideShow"  width="640" height="420" autoSize="false"/>
+			<text:MATextArea id="description" width="100%"/>
+		</mx:VBox>
+		<mx:VBox height="100%" id="rightSide">
+			<forms:MAEventCalendarEmail id="email"/>
+			<images:MASubtitledImage id="map"/>
+			<text:MATextArea id="location" width="100%"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:states>
+		<mx:State name="colapsed">
+			<mx:SetProperty target="{detailsBtn}" name="label" value="+"/>
+			<mx:SetProperty target="{eventDetails}" name="height" value="0"/>
+			<mx:SetProperty target="{eventDetails}" name="visible" value="true"/>
+			<mx:SetProperty target="{eventHighlights}" name="visible" value="true"/>
+			<mx:SetProperty name="height"/>
+			<mx:SetProperty name="width" value="1024"/>
+			<mx:SetProperty target="{eventHighlights}" name="width" value="1024"/>
+			<mx:SetProperty target="{eventHighlights}" name="height" value="180"/>
+		</mx:State>
+		<mx:State name="expanded">
+			<mx:RemoveChild target="{thumb}"/>
+			<mx:SetProperty target="{eventDetails}" name="height" value="100%"/>
+			<mx:SetProperty target="{eventDetails}" name="visible" value="true"/>
+			<mx:SetProperty target="{eventHighlights}" name="visible" value="true"/>
+			<mx:SetProperty target="{title}" name="width" value="772"/>
+			<mx:SetProperty target="{title}" name="x" value="10"/>
+			<mx:SetProperty target="{detailsBtn}" name="label" value="-"/>
+			<mx:SetProperty target="{blurb}" name="x" value="10"/>
+			<mx:SetProperty target="{blurb}" name="width" value="772"/>
+			<mx:SetProperty target="{date}" name="x" value="790"/>
+			<mx:SetProperty target="{detailsBtn}" name="y" value="9"/>
+			<mx:SetProperty name="height"/>
+			<mx:SetProperty name="width" value="1024"/>
+		</mx:State>
+		<mx:State name="begin"/>
+	</mx:states>
+	
+	<mx:Script>
+		<![CDATA[
+			include "../interfaces/AssetIncludes.as";
+			include "MACalendarIncludes.as";
+			private var applyXML:Boolean = false;
+			
+			protected override function commitProperties():void{
+				 if(this.xmlChanged && this._xml && this.thumb){
+					this.setBulletImage();
+					this.setTitle();
+					this.setBlurb();
+					this.setDescription();
+					this.setLodcation();
+					this.setSlideShow();
+					this.setDate();
+					this.setMap();
+					this.xmlChanged = false;
+					this.applyXML = false;
+				}/*  else if(this.xmlChanged && this._xml && this.thumb && this.currentState != "colapsed"){
+					this.currentState = "colapsed";
+				}  */
+				super.commitProperties();
+			}
+			private function setBulletImage():void{
+				this.thumb.xml = this._xml.children().(attribute("class").toLowerCase()=="smallimage");
+			}
+			protected function setMap():void{
+				this.map.xml = this._xml.children().(attribute("class").toLowerCase()=="googlemap");
+			}
+			protected function setDate():void{
+				this.date.xml = this._xml.children().(attribute("class").toLowerCase()=="day" ||
+													  attribute("class").toLowerCase()=="date" ||
+													  attribute("class").toLowerCase()=="time");
+			}
+			protected function setTitle():void{
+				this.title.xml = this._xml.children().(attribute("class").toLowerCase()=="title");
+			}
+			protected function setBlurb():void{
+				this.blurb.xml = this._xml.children().(attribute("class").toLowerCase()=="subtitle");
+			}
+			protected function setDescription():void{
+				this.description.xml = this._xml.children().(attribute("class").toLowerCase()=="body");
+			}
+			protected function setLodcation():void{
+				this.location.xml = this._xml.children().(attribute("class").toLowerCase()=="address");
+			}
+			protected function setSlideShow():void{
+				this.imageController.xml = this._xml.children().(attribute("class")=="MAImageListController");
+			}
+			
+		]]>
+	</mx:Script>
+</mx:Canvas>

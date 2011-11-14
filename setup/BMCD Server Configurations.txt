@@ -1,0 +1,164 @@
+--bmcd.com: conf/vhost.conf
+RewriteEngine On
+RewriteRule !^/(flex/debug|js|scripts|swf|favicon.ico|browser|apps|includes/handlers|includes/tests|services|gateway.php)/ /index.php [H,NC,L]
+php_value include_path /var/www/vhosts/bmcd.com/httpdocs:/var/www/vhosts/bmcd.com/httpsdocs:.
+<Directory "/var/www/vhosts/bmcd.com/httpdocs">
+php_admin_value open_basedir none
+</Directory>
+<Directory "/var/www/vhosts/bmcd.com/httpsdocs">
+php_admin_value open_basedir none
+</Directory>
+
+--content.bmcd.com: conf/vhost.conf
+php_value include_path /var/www/vhosts/bmcd.com/httpdocs:/var/www/vhosts/bmcd.com/httpsdocs:.
+<Directory "/var/www/vhosts/bmcd.com/subdomains/content/httpdocs">
+php_admin_value open_basedir none
+</Directory>
+
+--901.bmcd.com: conf/vhost.conf
+RewriteEngine On
+RewriteRule !^/(js|scripts|swf)/ /index.php [H,NC,L]
+php_value include_path /var/www/vhosts/bmcd.com/httpdocs:/var/www/vhosts/bmcd.com/httpsdocs:.
+<Directory "/var/www/vhosts/bmcd.com/subdomains/901/httpdocs">
+php_admin_value open_basedir none
+</Directory>
+
+--999.bmcd.com: conf/vhost.conf
+RewriteEngine On
+RewriteRule !^/(js|scripts|swf)/ /index.php [H,NC,L]
+php_value include_path /var/www/vhosts/bmcd.com/httpdocs:/var/www/vhosts/bmcd.com/httpsdocs:.
+<Directory "/var/www/vhosts/bmcd.com/subdomains/999/httpdocs">
+php_admin_value open_basedir none
+</Directory>
+
+--Global /etc/php.ini
+	--include_path is set here for "hphantdev.com"'s include_path
+	--switching to using on the fly "ini_set()" in the php file,
+	--/var/www/vhosts/bmcd.com/conf/vhost.conf
+	--/var/www/vhosts/bmcd.com/subdomains/content/conf/vhost.conf
+	--/var/www/vhosts/bmcd.com/subdomains/901/conf/vhost.conf
+	--/var/www/vhosts/bmcd.com/subdomains/999/conf/vhost.conf
+
+"php_value include_path /var/www/vhosts/bmcd.com/httpdocs:/var/www/vhosts/bmcd.com/httpsdocs:."
+	--Files are as above
+
+
+--Some final steps
+--Run the this final script:
+	/user/local/psa/admin/sbin/websrvmng --reconfigure-vhost --vhost-name=bmcd.com
+	/user/local/psa/admin/sbin/websrvmng --reconfigure-vhost --vhost-name=content.bmcd.com
+	/user/local/psa/admin/sbin/websrvmng --reconfigure-vhost --vhost-name=901.bmcd.com
+	/user/local/psa/admin/sbin/websrvmng --reconfigure-vhost --vhost-name=999.bmcd.com
+	/etc/init.d/httpd stop
+	/etc/init.d/httpd start
+	
+
+--DATABASE CONFIGURATION
+	--Run the following SQL
+
+DROP TABLE IF EXISTS `crops`;
+CREATE TABLE IF NOT EXISTS `crops` (
+  `id` int(11) NOT NULL auto_increment,
+  `dt` datetime NOT NULL COMMENT 'Default is always "NOW()"',
+  `blnvalid` tinyint(1) NOT NULL default '1',
+  `master_id` int(11) NOT NULL COMMENT 'Reference to "id" of the original photo in the "photos" table',
+  `dimension_height` int(11) NOT NULL COMMENT 'The height of this crop',
+  `dimension_width` int(11) NOT NULL COMMENT 'The width of this crop',
+  `crop_location` varchar(50) NOT NULL COMMENT 'The file location of the crop',
+  `short_description` varchar(200) default NULL,
+  `scale` int(11) NOT NULL default '100' COMMENT 'Scale in % units',
+  `rotation` float NOT NULL default '0' COMMENT 'Units in degrees',
+  `offset_x` float NOT NULL default '0' COMMENT 'Units in pixels',
+  `offset_y` float NOT NULL default '0' COMMENT 'Units in pixels',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COMMENT='Table for Content Library; Entries must be in the "photos" t' AUTO_INCREMENT=10 ;
+
+DROP TABLE IF EXISTS `masters`;
+CREATE TABLE IF NOT EXISTS `masters` (
+  `id` int(11) NOT NULL auto_increment,
+  `dt` datetime NOT NULL,
+  `blnvalid` tinyint(1) NOT NULL default '1',
+  `master_location` varchar(50) NOT NULL,
+  `thumbnail_location` varchar(50) default NULL,
+  `dimension_height` int(11) default NULL,
+  `dimension_width` int(11) default NULL,
+  `short_description` varchar(200) default NULL,
+  `scale` int(11) NOT NULL default '100' COMMENT 'Scale in % units',
+  `rotation` float NOT NULL default '0' COMMENT 'Units in degrees',
+  `offset_x` float NOT NULL default '0' COMMENT 'Units in pixels',
+  `offset_y` float NOT NULL default '0' COMMENT 'Units in pixels',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=utf8 COMMENT='Table for Content Library' AUTO_INCREMENT=42 ;
+
+DROP TABLE IF EXISTS `page_event`;
+CREATE TABLE IF NOT EXISTS `page_event` (
+  `id` int(11) NOT NULL auto_increment,
+  `dt` datetime NOT NULL,
+  `session` varchar(32) NOT NULL,
+  `uri` varchar(75) default NULL,
+  `domain` varchar(30) NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `session`;
+CREATE TABLE IF NOT EXISTS `session` (
+  `id` int(11) NOT NULL auto_increment,
+  `key` varchar(32) NOT NULL,
+  `user_id` int(11) default NULL COMMENT 'Corresponds to a User',
+  `expiration` datetime NOT NULL,
+  `dt` datetime NOT NULL COMMENT 'Date the session was started',
+  `ip` varchar(12) default NULL COMMENT 'If this does not match, create a new session',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `key` (`key`)
+) ENGINE=MyISAM AUTO_INCREMENT=54 DEFAULT CHARSET=utf8 AUTO_INCREMENT=54 ;
+
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE IF NOT EXISTS `user` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL COMMENT 'Can be email or a username',
+  `password` varchar(32) NOT NULL default '34a87ccd2a8d6e3d3a766ae1258b22e2',
+  `permission` smallint(6) NOT NULL default '1' COMMENT 'Values defined in PHP object',
+  `dt` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `videos`;
+CREATE TABLE IF NOT EXISTS `videos` (
+  `id` int(11) NOT NULL auto_increment,
+  `dt` datetime NOT NULL,
+  `blnvalid` tinyint(1) NOT NULL,
+  `location` varchar(100) default NULL,
+  `thumbnail_location` varchar(100) default NULL,
+  `width` int(11) default NULL COMMENT 'Thumbnail width',
+  `height` int(11) default NULL COMMENT 'Thumbnail height',
+  `description` varchar(100) default NULL COMMENT 'Video description',
+  `scale` int(11) NOT NULL default '100' COMMENT 'Unit in %',
+  `rotation` float NOT NULL default '0' COMMENT 'Unit in degrees',
+  `offset_x` float NOT NULL default '0' COMMENT 'Unit in pixels',
+  `offset_y` float NOT NULL default '0' COMMENT 'Unit in pixels',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--FILE AND DIRECTORY STRUCTURE
+
+--CONTENT.BMCD.COM
+	--The following directories should be manually created
+	--images/
+	--temp/
+	--text/
+	--videos/
+	
+	--There are other directories and content that are on the site, but they are dependent on 
+	--the content that is required on the site.
+	--Note: This needs to be structured so that unused files can be discarded, as necessary
+	
+--BMCD.COM
+	--The following directory needs to be manually created
+	--_logs/	This will be where logging will be stored;
+			Also note, logging on Live will be set to "Warn" and above only
+			All alerts of lower priority are ignored
+			Permissions on this directory are "775" (proper level needs to be determined)
+
+
+

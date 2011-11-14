@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" implements="com.hphant.renderers.IVListItemRenderer"
+  	autoLayout="true"
+    initialize="{initCompleted()}"
+    dataChange="{dataChanged()}"
+	verticalScrollPolicy="off" 
+	horizontalScrollPolicy="off"
+    currentState="colapsed"
+	 clipContent="true">
+    <mx:addedEffect>
+    	<mx:Sequence effectEnd="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_COMPLETE));this._atState='colapsed'}"
+	   			 effectStart="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_BEGIN))}">
+    		<mx:Resize target="{this}" duration="700" widthFrom="0" widthTo="984" heightFrom="50" heightTo="200" easingFunction="mx.effects.easing.Circular.easeOut"/>
+  			<mx:SetPropertyAction target="{this}" name="addHeader" value="true"/>
+  		 </mx:Sequence>
+    </mx:addedEffect>
+    <mx:removedEffect>
+   		 <mx:Sequence  effectEnd="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_COMPLETE));this._atState='colapsed'}"
+	   			 effectStart="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_BEGIN))}">
+   		 	<mx:SetPropertyAction target="{this}" name="clearData" value="true"/>
+   		 	<mx:Pause duration="1000" />
+   		 	<mx:Resize target="{this}" duration="700" widthTo="0" heightFrom="50" heightTo="0" easingFunction="mx.effects.easing.Circular.easeOut"/>
+   		 	<mx:SetPropertyAction target="{this}" name="addHeader" value="false"/>
+   		</mx:Sequence>
+    </mx:removedEffect>
+    <mx:VBox x="0" y="0" horizontalAlign="center" id="content" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+    	<mx:HRule id="hr1" width="0" visible="true" height="1" styleName="itemRule" updateComplete="{drawHR1EndCircles()}"></mx:HRule>
+		<mx:HRule id="hr2" width="0" visible="true" height="1" styleName="itemRule" updateComplete="{drawHR2EndCircles()}"/>
+    </mx:VBox>
+    <mx:Box verticalAlign="middle" clipContent="false" height="100%" maxHeight="200" verticalScrollPolicy="off" horizontalScrollPolicy="off" x="{this.hrX}">
+		<mx:VRule id="vr1" width="1" visible="true" height="100%" styleName="itemRule" updateComplete="{drawVR1EndCircles()}"/>
+	</mx:Box>
+    <mx:states>
+    	<mx:State name="colapsed">
+    		<!--<mx:SetProperty target="{this}" name="width" value="984"/>
+    		<mx:SetProperty target="{this}" name="height" value="200"/>-->
+    	</mx:State>
+   		<mx:State name="expanded" basedOn="colapsed" >
+   			<mx:SetProperty target="{this}" name="height" />
+   		</mx:State>
+   	</mx:states>
+   	<mx:transitions>
+   		<mx:Transition fromState="colapsed" toState="expanded">
+	   		<mx:Sequence id="sequenceCtoE" effectEnd="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_COMPLETE));this._atState='expanded'}"
+	   			 effectStart="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_BEGIN))}">
+	   			 <mx:Resize target="{vr1}" heightTo="0"/>
+	   			<mx:AddChildAction position="after" target="{this.body}" relativeTo="{this.hr1}"/>
+	   			<mx:AddChildAction position="after" target="{this.footer}" relativeTo="{this.hr2}"/>
+	   			<mx:SetPropertyAction target="{this}" name="height" value="NaN" />
+				<mx:SetPropertyAction targets="{[this.header,this.body,this.footer]}" name="currentState" value="expanded"/>
+				<mx:Resize targets="{[hr1,hr2]}" widthTo="{this.width}"/>
+				<mx:SetPropertyAction targets="{[this.body,this.footer]}" name="data" value="{data}"/>
+				<mx:Pause duration="1000" />
+	   		</mx:Sequence>
+   		</mx:Transition>
+   		<mx:Transition fromState="expanded" toState="colapsed">
+	   		<mx:Sequence id="sequenceEtoC" effectEnd="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_COMPLETE));this._atState='colapsed'}"
+	   			 effectStart="{this.dispatchEvent(new MAListEvent(MAListEvent.RESIZE_BEGIN))}">
+				<mx:SetPropertyAction targets="{[this.body,this.footer]}" name="data" value="{null}"/>
+				<mx:Pause duration="1000" />
+				<mx:Resize targets="{[hr1,hr2]}" widthTo="0"/>
+				<mx:SetPropertyAction targets="{[this.header,this.body,this.footer]}" name="currentState" value="colapsed"/>
+				<!--<mx:SetPropertyAction target="{this}" name="height" value="200" />-->
+				<mx:Resize target="{this}" heightTo="200"/>
+	   			<mx:RemoveChildAction target="{this.footer}" />
+	   			<mx:RemoveChildAction target="{this.body}" />
+	   			 <mx:Resize target="{vr1}" heightTo="200"/>
+	   		</mx:Sequence>
+   		</mx:Transition>
+   	</mx:transitions>
+   	<mx:Number id="hrX">0</mx:Number>
+    <mx:Metadata>
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeBegin",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.effects.Resize;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import mx.core.UIComponent;
+			import mx.controls.listClasses.IListItemRenderer;
+			import com.hphant.modsite.site.assets.calendar.MAEventItemBody;
+			import com.hphant.modsite.site.assets.calendar.MAEventItemFooter;
+			import com.hphant.modsite.site.assets.calendar.MAEventItemHeader;
+			import mx.core.IUIComponent;
+			import mx.effects.easing.Circular;
+			import mx.effects.easing.Back;
+			[Bindable]
+			public var bgColor:uint;
+			[Bindable]
+			public var hdr:XMLList;
+			[Bindable]
+			public var bd:XMLList;
+			[Bindable]
+			public var ftr:XMLList;
+			
+			private var _atState:String = "colapsed";
+			private var _headerFactory:IFactory = new ClassFactory(com.hphant.modsite.site.assets.calendar.MAEventItemHeader);
+			
+			[Inspectable]
+			public function get headerRenderer():Object{return this._headerFactory;}
+			public function set headerRenderer(value:Object):void{
+				if(value is String){
+					this._headerFactory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._headerFactory = IFactory(value);
+				} else if(value is Class){
+					this._headerFactory = new ClassFactory(Class(value));
+				}
+				ClassFactory(this._headerFactory).properties = this.factoryStyleNames;
+			}
+			
+			private var _footerFactory:IFactory = new ClassFactory(com.hphant.modsite.site.assets.calendar.MAEventItemFooter);
+			
+			[Inspectable]
+			public function get footerRenderer():Object{return this._footerFactory;}
+			public function set footerRenderer(value:Object):void{
+				if(value is String){
+					this._footerFactory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._footerFactory = IFactory(value);
+				} else if(value is Class){
+					this._footerFactory = new ClassFactory(Class(value));
+				}
+				ClassFactory(this._footerFactory).properties = this.factoryStyleNames;
+			}
+			
+			private var _bodyFactory:IFactory = new ClassFactory(com.hphant.modsite.site.assets.calendar.MAEventItemBody);
+			
+			[Inspectable]
+			public function get bodyRenderer():Object{return this._bodyFactory;}
+			public function set bodyRenderer(value:Object):void{
+				if(value is String){
+					this._bodyFactory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._bodyFactory = IFactory(value);
+				} else if(value is Class){
+					this._bodyFactory = new ClassFactory(Class(value));
+				}
+				ClassFactory(this._bodyFactory).properties = this.factoryStyleNames;
+			}
+			[Bindable]
+			private var _header:IListItemRenderer;
+			[Bindable]
+			private var _footer:IListItemRenderer;
+			[Bindable]
+			private var _body:IListItemRenderer;
+			private function addEventListeners(value:IListItemRenderer):void{
+				value.addEventListener(MAListItemEvent.EXPAND_CLICK,this.handleMAListItemEvent);
+				value.addEventListener(MAListItemEvent.COLAPSE_CLICK,this.handleMAListItemEvent);
+				value.addEventListener(MALinkClickEvent.LINK_CLICKED,this.handleMALinkClickEvent);
+				value.addEventListener(MAFormEvent.SEND_EMAIL,this.handleMAFormEvent);
+			}
+			private function handleMAListItemEvent(event:MAListItemEvent):void{
+				this.dispatchEvent(new MAListItemEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			private function handleMALinkClickEvent(event:MALinkClickEvent):void{
+				this.dispatchEvent(new MALinkClickEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			private function handleMAFormEvent(event:MAFormEvent):void{
+				this.dispatchEvent(new MAFormEvent(event.type,event.formData,event.bubbles,event.cancelable));
+			}
+			
+			[Bindable]
+			public function get header():IListItemRenderer{return this._header;}
+			public function set header(value:IListItemRenderer):void{this._header = value;}
+			
+			[Bindable]
+			public function get footer():IListItemRenderer{return this._footer;}
+			public function set footer(value:IListItemRenderer):void{this._footer = value;}
+			
+			[Bindable]
+			public function get body():IListItemRenderer{return this._body;}
+			public function set body(value:IListItemRenderer):void{this._body = value;}
+			
+			private var _prevData:Object = null;
+			private function dataChanged():void{
+				if(!this._clearData && this._prevData != data){
+					this._prevData = data;
+					if(this._header){this.header.data=data};
+					if(this._footer){this.footer.data=data};
+					if(this._body){this.body.data=data};
+				}
+			}
+			[Bindable]
+			public function get clearData():Boolean{return _clearData;}
+			public function set clearData(value:Boolean):void{
+				this._clearData = value;
+				if(value){
+					this.data = null;
+					this._prevData = null;
+					if(this._header){this.header.data=null};
+					if(this._footer){this.footer.data=null};
+					if(this._body){this.body.data=null};
+				}
+			}
+			private var _clearData:Boolean = false;
+			private function initCompleted():void{
+				
+				this.header = this._headerFactory.newInstance();
+				this.footer = this._footerFactory.newInstance();
+				this.body = this._bodyFactory.newInstance();
+				this.addEventListeners(this.header);
+				this.addEventListeners(this.footer);
+				this.addEventListeners(this.body);
+				if(data){
+					this._header.data=data;
+					if(this.currentState=="expanded"){
+						this._footer.data=data;
+						this._body.data=data;
+					}
+				}
+			}
+			[Inspectable]
+			[Bindable]
+			public override function get styleName():Object{return super.styleName;}
+			public override function set styleName(value:Object):void{
+				super.styleName = value;
+			}
+			
+			private var factoryStyleNames:Object = new Object();
+			
+			[Inspectable]
+			[Bindable]
+			public function get hRuleStyleName():String{return _hRuleStyleName;}
+			public function set hRuleStyleName(value:String):void{
+				_hRuleStyleName = value;
+				factoryStyleNames.hRuleStyleName = value;
+				if(this._headerFactory){
+					ClassFactory(this._headerFactory).properties = factoryStyleNames;
+				}
+				if(this._footerFactory){
+					ClassFactory(this._footerFactory).properties = factoryStyleNames;
+				}
+				if(this._bodyFactory){
+					ClassFactory(this._bodyFactory).properties = factoryStyleNames;
+				}
+			}
+			private var _hRuleStyleName:String;
+			
+			
+			[Inspectable]
+			[Bindable]
+			public function get suggestionsStyleName():String{return _suggestionsStyleName;}
+			public function set suggestionsStyleName(value:String):void{
+				_suggestionsStyleName = value;
+				factoryStyleNames.suggestionsStyleName = value;
+				if(this._headerFactory){
+					ClassFactory(this._headerFactory).properties = factoryStyleNames;
+				}
+				if(this._footerFactory){
+					ClassFactory(this._footerFactory).properties = factoryStyleNames;
+				}
+				if(this._bodyFactory){
+					ClassFactory(this._bodyFactory).properties = factoryStyleNames;
+				}
+			}
+			private var _suggestionsStyleName:String;
+			
+			public function get addHeader():Boolean{return _addHeader;}
+			public function set addHeader(value:Boolean):void{
+				if(value != _addHeader){
+					_addHeader = value;
+					//var vr1Resize:Resize = new Resize(this.vr1);
+					if(value && this.header && !this.header.parent){
+						this.content.addChildAt(DisplayObject(this.header),0);
+						//vr1Resize.heightTo = 200;
+						if(this.currentState=="expanded"){
+							this.sequenceCtoE.play();
+						}
+					} else if (!value && this.header && this.header.parent==this){
+						this.content.removeChild(DisplayObject(this.header));
+						//vr1Resize.heightTo = 0;
+					}
+					//vr1Resize.play();
+				}
+				
+			}
+			private var _addHeader:Boolean;
+			
+			
+			private function drawVR1EndCircles():void{
+				if(this.vr1.height>20){
+					this.vr1.graphics.beginFill(this.vr1.getStyle('strokeColor'),1);
+					this.vr1.graphics.drawCircle(0,0,5);
+					this.vr1.graphics.drawCircle(0,this.vr1.height,5);
+					this.vr1.graphics.endFill();
+				}
+			}
+			private function drawHR1EndCircles():void{
+				if(this.hr1.width>20){
+					this.hr1.graphics.beginFill(this.hr1.getStyle('strokeColor'),1);
+					this.hr1.graphics.drawCircle(0,0,5);
+					this.hr1.graphics.drawCircle(this.hr1.width,0,5);
+					this.hr1.graphics.endFill();
+				}
+			}
+			private function drawHR2EndCircles():void{
+				if(this.hr2.width>20){
+					this.hr2.graphics.beginFill(this.hr2.getStyle('strokeColor'),1);
+					this.hr2.graphics.drawCircle(0,0,5);
+					this.hr2.graphics.drawCircle(this.hr2.width,0,5);
+					this.hr2.graphics.endFill();
+				}
+			}/* 
+			[Bindable("currentStateChange")]
+			public override function get currentState():String{
+				return this._atState;
+			}
+			public override function set currentState(value:String):void{
+				super.currentState = value;
+			} */
+		]]>
+	</mx:Script>
+</mx:Canvas>

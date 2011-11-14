@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" direction="vertical" backgroundColor="#FFFFFF" backgroundAlpha="0" 
+       	implements="com.hphant.modsite.site.assets.containers.interfaces.ISiteBody"
+		dragComplete="{this.dragCompleteListener(event)}"
+	    dragDrop="{this.dragDropListener(event)}"   
+	    dragEnter="{this.dragEnterListener(event)}"
+	    dragExit="{this.dragExitListener(event)}"
+	    dragOver="{this.dragOverListener(event)}"
+	    dragStart="{this.dragStartListener(event)}">
+	<mx:Metadata>
+		[Event(name="dropComplete",type="com.hphant.modsite.site.events.SiteBodyDropEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.SiteBodyDropEvent;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.controls.Image; 
+			import mx.core.IFlexDisplayObject;
+			import mx.core.DragSource;
+			import mx.containers.BoxDirection;
+			import mx.core.UIComponent;
+			import mx.managers.DragManager;
+			import com.hphant.modsite.site.modules.ModuleClassInfo;
+			import com.hphant.utils.Logger;
+			import mx.events.DragEvent;
+			
+			private var _dragEnabled:Boolean = false;
+			public function get dragEnabled():Boolean{
+				return this._dragEnabled; 
+			}
+			public function set dragEnabled(value:Boolean):void{
+				this._dragEnabled = value;
+			}
+			
+			private var _dropIndicator:UIComponent = new UIComponent();
+			
+			private function dragEnterListener(event:DragEvent):void{
+				if(this.dragEnabled)
+					DragManager.acceptDragDrop(this);
+			}
+			
+			private function dragExitListener(event:DragEvent):void{
+				this.graphics.clear(); 
+			}
+			
+			private function dragOverListener(event:DragEvent):void{
+				var obj:Object = this.getDropedOnModule(event.localX,event.localY);
+				var r:Rectangle = Rectangle(obj.rectangle);
+				log("Drag Drop "+obj.child);
+				if(_overChild){
+					_overChild.filters = [];
+				}
+				_overChild = UIComponent(obj.child);
+				this.graphics.clear();
+				if(!obj.child){
+					this.graphics.beginFill(0xFF0000);
+					this.graphics.drawRect(r.x,r.y,r.width,r.height);
+					this.graphics.endFill();
+				} else {
+					_overChild.filters = [new GlowFilter(0xFF0000)];
+				}
+			}
+			private var _overChild:UIComponent;
+			private function dragStartListener(event:DragEvent):void{
+				
+			}
+			private function dragDropListener(event:DragEvent):void{
+				var obj:Object = this.getDropedOnModule(event.localX,event.localY);
+				var dropedObject:Object;
+				log("Drag Drop "+obj.child);
+				var idx:uint = (obj.child ? this.getChildIndex(UIComponent(obj.child)) : obj.prev ? this.getChildIndex(UIComponent(obj.prev))+1 : 0)
+				if(event.dragSource.formats[0]!="module"){
+					var mci:ModuleClassInfo = ModuleClassInfo(event.dragSource.dataForFormat(String(event.dragSource.formats[0]))[0]);
+					dropedObject = mci;
+				} else {
+					var uic:UIComponent = UIComponent(event.dragSource.dataForFormat(String(event.dragSource.formats[0])));
+					log(uic);
+					this.setChildIndex(uic,idx);
+					dropedObject = uic;
+				}
+				if(_overChild){
+					_overChild.filters = [];
+				}
+				_overChild = null;
+				this.graphics.clear();
+				this.dispatchEvent(new SiteBodyDropEvent(SiteBodyDropEvent.DROP_COMPLETE,dropedObject,UIComponent(obj.child),idx));
+			}
+			private function dragCompleteListener(event:DragEvent):void{
+				log("Drag complete "+this.getDropedOnModule(event.localX,event.localY));
+				this.isMouseDown = false;
+				this.isMouseMove = false;
+			}
+			protected function log(message:Object,level:int = 0):void{
+				Logger.log("[SiteBody] "+message,level);
+			}
+			private var prevOver:UIComponent;
+			private function getDropedOnModule(x:Number=0, y:Number=0):Object{
+				var point:Point = this.localToGlobal(new Point(x,y));
+				var isVert:Boolean = this.direction==BoxDirection.VERTICAL;
+				var r:Rectangle = new Rectangle(0,0,isVert ? this.width : this.getStyle('verticalGap'),isVert ? this.getStyle('horizontalGap') : this.height);
+				var prev:UIComponent = null;
+				for each(var child:UIComponent in this.getChildren()){
+					r.x = prevOver ? prevOver.x+(isVert ? 0 : prevOver.width) : 0;
+					r.y = prevOver ? prevOver.y+(!isVert ? 0 : prevOver.height) : 0;
+					if(child.hitTestPoint(point.x,point.y)){
+						r.width = child.width;
+						r.height = child.height; 
+						prevOver = prev;
+						return {child:child,rectangle:r,prev:prev};
+					}
+					prev = child;
+		
+				}
+				return {child:null,rectangle:r,prev:prevOver};
+			}
+			public override function addChildAt(child:DisplayObject, index:int):DisplayObject{
+				var c:DisplayObject = super.addChildAt(child,index);
+				if(c){
+					UIComponent(c).addEventListener(MouseEvent.MOUSE_DOWN,this.mouseDownEventListener);
+					UIComponent(c).addEventListener(MouseEvent.MOUSE_UP,this.mouseUpEventListener);
+					UIComponent(c).addEventListener(MouseEvent.ROLL_OVER,this.rollOverEventListener);
+					UIComponent(c).addEventListener(MouseEvent.ROLL_OUT,this.rollOutEventListener);
+					UIComponent(c).addEventListener(MouseEvent.MOUSE_MOVE,this.mouseMoveEventListener);
+				}
+				return c;
+			}
+			public override function removeChildAt(index:int):DisplayObject{
+				var c:DisplayObject = super.removeChildAt(index);
+				if(c){
+					UIComponent(c).removeEventListener(MouseEvent.MOUSE_DOWN,this.mouseDownEventListener);
+					UIComponent(c).removeEventListener(MouseEvent.MOUSE_UP,this.mouseUpEventListener);
+					UIComponent(c).removeEventListener(MouseEvent.ROLL_OVER,this.rollOverEventListener);
+					UIComponent(c).removeEventListener(MouseEvent.ROLL_OUT,this.rollOutEventListener);
+					UIComponent(c).removeEventListener(MouseEvent.MOUSE_MOVE,this.mouseMoveEventListener);
+				}
+				return c;
+			}
+			private function mouseDownEventListener(event:MouseEvent):void{
+				this.isMouseDown = true;
+			}
+			
+			private function mouseMoveEventListener(event:MouseEvent):void{
+				if(this.dragEnabled && isMouseDown && !isMouseMove){
+					isMouseMove  = true;
+					var ds:DragSource = new DragSource();
+					ds.addData(event.currentTarget,"module");  
+					DragManager.doDrag(this,ds,event,this.snapShotDragedItem(UIComponent(event.currentTarget)),-UIComponent(event.currentTarget).x,-UIComponent(event.currentTarget).y);
+				}
+			}
+			private var isMouseDown:Boolean = false;
+			private var isMouseMove:Boolean = false;
+			private function snapShotDragedItem(item:UIComponent):UIComponent{
+			/* 	if(item is IModule){
+					return UIComponent(IModule(item).duplicate());
+				} else { */
+				
+					var bd:BitmapData = new BitmapData(item.width,item.height,false,0xFFFFFF);
+				try{
+					bd.draw(item);
+				} catch(e:Error){
+					
+				}
+				var b:Bitmap = new Bitmap(bd);
+					var i:Image = new Image();
+					i.source = b;
+					i.width = b.width;
+					i.height = b.height;
+					return i;
+			}
+			private function mouseUpEventListener(event:MouseEvent):void{
+				if(!this.isMouseMove){
+					UIComponent(event.currentTarget).dispatchEvent(new MouseEvent(MouseEvent.CLICK,event.bubbles,event.cancelable,event.localX,event.localY,event.relatedObject,event.ctrlKey,event.altKey,event.shiftKey,event.buttonDown,event.delta));
+				}
+				this.isMouseDown = false;
+				this.isMouseMove = false;
+			}
+			private function rollOverEventListener(event:MouseEvent):void{
+				if(this.dragEnabled){
+					UIComponent(event.currentTarget).enabled = false;
+				}
+			}
+			private function rollOutEventListener(event:MouseEvent):void{
+				if(!UIComponent(event.currentTarget).enabled){
+					UIComponent(event.currentTarget).enabled = true;
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

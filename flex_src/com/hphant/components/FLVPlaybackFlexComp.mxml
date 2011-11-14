@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FLVPlaybackFlex xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" initialize="this.init()">
+	<mx:Metadata>
+		[Event(name="complete", type="mx.events.VideoEvent")]
+		[Event(name="metadataReceived", type="mx.events.MetadataEvent")]
+		
+		[Bindable]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import fl.video.VideoEvent;
+			import fl.video.MetadataEvent;
+			import mx.events.VideoEvent;
+			import mx.events.MetadataEvent;
+			
+		private function init():void
+		{
+			this.player.addEventListener(fl.video.VideoEvent.COMPLETE,videoCompleteHanlder);
+			this.player.addEventListener(fl.video.MetadataEvent.METADATA_RECEIVED, metadataReceivedHandler); 
+		}
+		
+		
+		private function videoCompleteHanlder(eIn:fl.video.VideoEvent):void
+		{
+			var eOut:mx.events.VideoEvent = new mx.events.VideoEvent(mx.events.VideoEvent.COMPLETE,eIn.bubbles,eIn.cancelable,eIn.state,eIn.playheadTime);
+			dispatchEvent(eOut);
+		}
+		
+		private function metadataReceivedHandler(eIn:fl.video.MetadataEvent):void
+		{
+			var eOut:mx.events.MetadataEvent = new mx.events.MetadataEvent(mx.events.MetadataEvent.METADATA_RECEIVED,eIn.bubbles,eIn.cancelable,eIn.info);
+			dispatchEvent(eOut);
+		}
+		
+		
+		
+		/**
+		 * Prompts the player to load and play FLV located at the URL provided as peramiter of type String. If URLPath is left null, 
+		 * the player checks if it's source property is set, if the source is set, it plays it's current source FLV. 
+		 * If the source property is not set, it does nothing.
+		 *
+		 * @peram path relative or absolute URL path to FLV to be loaded and played.  Can be null. 
+		 *
+		 **/
+	
+	
+		public function playVideo(path:String = null):void{
+
+			path ? player.play(path) : player.source ? player.play() : null;
+
+		}
+		
+		/**
+		 * A string that specifies the URL of the FLV file to stream and how to stream it. The URL can be an HTTP URL to an FLV file, an RTMP URL to a stream, or an HTTP URL to an XML file.
+		 * 
+		 * If you set this property through ActionScript, it immediately calls the VideoPlayer.load() method when the autoPlay property is set to false or it calls the VideoPlayer.play() method when the autoPlay property is set to true. The autoPlay, totalTime, and isLive properties affect how the new FLV file is loaded, so if you set these properties, you must set them before setting the source property.
+		 */
+		 //[Bindable]
+		 [Inspectable]
+		 public function set source(valueIn:String):void
+		 {
+			 player.source = valueIn ? valueIn : "http://noVideo";
+		 }
+		 public function get source():String
+		 {
+			 return (player.source=="http://noVideo") ? "" : player.source;
+		 }
+		 
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(defaultValue="SkinOverPlayStopSeekMuteVol.swf")]
+		 public function get skin():String
+		 {
+			 return player.skin;
+		 }
+		 public function set skin(valueIn:String):void
+		 {
+			 player.skin = valueIn;
+		 }
+		 
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(defaultValue="true") ]
+		 public function set autoPlay(valueIn:Boolean):void
+		 {
+			 player.autoPlay = valueIn;
+		 }
+		 public function get autoPlay():Boolean
+		 {
+			 return player.autoPlay;
+		 }
+		 
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(catagory="general", defaultValue="maintainAspectRatio", enumeration="exactFit,maintainAspectRatio,noScale") ]
+		 public function set scaleMode(valueIn:String):void
+		 {
+			 player.scaleMode = valueIn;
+		 }
+		 public function get scaleMode():String
+		 {
+			return player.scaleMode;
+		 }
+		 
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(catagory="general", defaultValue="true", enumeration="true,false")]
+		 public function set skinAutoHide(valueIn:Boolean):void
+		 {
+			 player.skinAutoHide = valueIn;
+		 }
+		 public function get skinAutoHide():Boolean
+		 {
+			 return player.skinAutoHide;
+		 }
+		 
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(catagory="general", defaultValue="#000000")]
+		 public function set skinBackgroundColor(valueIn:uint):void
+		 {
+			 player.skinBackgroundColor = valueIn;
+		 }
+		 public function get skinBackgroundColor():uint
+		 {
+			 return player.skinBackgroundColor;
+		 }
+
+
+
+		 
+		 //[Bindable]
+		 [Inspectable(catagory="general", defaultValue="1000")]
+		 public function set skinFadeTime(valueIn:int):void
+		 {
+			 player.skinFadeTime = valueIn;
+		 }
+		 public function get skinFadeTime():int
+		 {
+			 return player.skinFadeTime;
+		 }
+
+
+
+		 
+		 
+		 //[Bindable]
+		 [Inspectable(catagory="general", defaultValue=".5")]
+		 public function set skinBackgroundAlpha(valueIn:Number):void
+		 {
+			 player.skinBackgroundAlpha = valueIn;
+		 }
+		 public function get skinBackgroundAlpha():Number
+		 {
+			 return player.skinBackgroundAlpha;
+		 }
+		 
+		 
+		 
+		// [Bindable]
+		 [Inspectable(catagory="general", defaultValue=".8")]
+		 public function set volume(valueIn:Number):void
+		 {
+			 player.volume = valueIn;
+		 }
+		 public function get volume():Number
+		 {
+			 return player.volume;
+		 }
+		
+		
+		
+		 public function get metadata():Object
+		 {
+			 return player.metadata;
+		 }
+		 
+		 
+		 public override function get height():Number{
+		 	return super.height;
+		 }
+		 public override function set height(value:Number):void{
+		 	super.height = value;
+		 }
+		 
+		 public override function get width():Number{
+		 	return super.width;
+		 }
+		 public override function set width(value:Number):void{
+		 	super.width = value;
+		 }
+		]]>
+	</mx:Script>
+</FLVPlaybackFlex>

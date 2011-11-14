@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="0"
+	height="0"
+  	autoLayout="true" 
+	xmlns:images="com.hphant.modsite.site.assets.images.*" 
+	xmlns:text="com.hphant.modsite.site.assets.text.*" 
+	xmlns:inventory="com.hphant.modsite.site.assets.inventory.*" 
+	verticalScrollPolicy="off" 
+	horizontalScrollPolicy="off"
+	 clipContent="true"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset" currentState="state0"
+    addedToStage="this.addedToStageListener()">
+    <mx:Metadata>
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:states>
+		<mx:State name="state0">
+			<mx:RemoveChild target="{content}"/>
+		</mx:State>
+		<mx:State name="state1" basedOn="state0">
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+			<mx:SetProperty target="{this}" name="height" value="50"/>
+		</mx:State>
+		<mx:State name="state2" basedOn="state1">
+			<mx:SetProperty target="{this}" name="minHeight" value="50"/>
+			<mx:AddChild target="{content}"/>
+		</mx:State>
+		<mx:State name="state3" basedOn="state2">
+			<mx:SetProperty target="{this.content}" name="currentState" value="opened"/>
+			<mx:SetProperty target="{this}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{dispatchStateReached()}">
+   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state0">
+			<mx:Sequence effectEnd="{dispatchTransitionCompleted()}">
+				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+				<mx:Resize target="{this}" duration="500"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state2">
+			<mx:Sequence effectEnd="{dispatchStateReached()}">
+				<mx:AddChildAction target="{this.content}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state1">
+			<mx:Sequence effectEnd="{dispatchStateReached()}">
+				<mx:RemoveChildAction target="{this.content}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state3">
+			<mx:Sequence effectEnd="{dispatchTransitionCompleted()}">
+				<mx:SetPropertyAction target="{this.content}"/>
+				<mx:Resize target="{this}"/>
+				<!--<mx:AnimateProperty target="{this.content}" isStyle="true" property="verticalGap" toValue="5" fromValue="0"/>-->
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state2">
+			<mx:Sequence effectEnd="{dispatchStateReached()}">
+				<mx:SetPropertyAction target="{this.content}" name="currentState" value="closed"/>
+				<!--<mx:AnimateProperty target="{this.content}" isStyle="true" property="verticalGap" toValue="0" fromValue="5"/>-->
+				<mx:Resize target="{this}" duration="500"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<inventory:MAInventoryItemContent id="content" hRuleStyleName="{hRuleStyleName}" data="{data}"  suggestionsStyleName="{suggestionsStyleName}" suplimental="{this.suplimental}" headerXML="{hdr}" bodyXML="{bd}" footerXML="{ftr}" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}" colapseClick="{this.dispatchEvent(new MAListItemEvent(event.type,event.item))}" expandClick="{this.dispatchEvent(new MAListItemEvent(event.type,event.item))}"  sendEmail="{this.dispatchEvent(new MAFormEvent(event.type,event.formData))}"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.effects.easing.Elastic;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			include "../interfaces/AssetIncludes.as";
+			import mx.effects.easing.Exponential;
+			import mx.effects.easing.Back;
+			private function addedToStageListener():void{
+				if(this._css){
+					
+				}
+			}
+			
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			[Bindable]
+			public var bgColor:uint;
+			[Bindable]
+			public var hdr:XMLList;
+			[Bindable]
+			public var bd:XMLList;
+			[Bindable]
+			public var ftr:XMLList;
+			[Bindable]
+			public var suplimental:XMLList;
+			
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					this.setHeaderXML();
+					this.setBodyXML();
+					this.setFooterXML();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function setHeaderXML():void{
+				hdr = this._xml.div.(attribute("class")=="MAInventoryItemHeader");
+			}
+			private function setBodyXML():void{
+				bd = this._xml.div.(attribute("class")=="MAInventoryItemBody");
+			}
+			private function setFooterXML():void{
+				ftr = this._xml.div.(attribute("class")=="MAInventoryItemFooter");
+			}
+			
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

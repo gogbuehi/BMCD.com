@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"  backgroundAlpha="0" dataChange="{applyData()}"
+		   verticalScrollPolicy="off" horizontalScrollPolicy="off" currentState="closed"
+		   width="984" xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:inventory="com.hphant.modsite.site.assets.inventory.*" xmlns:images="com.hphant.modsite.site.assets.images.*">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:VBox id="leftSide" width="640" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="25">
+		<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="15">
+			<!--<text:MAText styleName="subTitle" xml="{spcs_lbl}" width="100%"/>-->
+			<!--<text:MAText paddingLeft="10" styleName="specs" xml="{spcs}" width="100%"/>-->
+			<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-5">
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{vn_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{vn}"/>
+				</mx:HBox>
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{sn_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{sn}"/>
+				</mx:HBox>
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{eng_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{eng}"/>
+				</mx:HBox>
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{trn_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{trn}"/>
+				</mx:HBox>
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{mlg_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{mlg}"/>
+				</mx:HBox>
+				<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+					<text:MAText styleName="subTitle" xml="{clr_lbl}"/>
+					<text:MAText paddingLeft="10" styleName="specs" xml="{clr}"/>
+				</mx:HBox>
+			</mx:VBox>
+			<mx:VBox width="100%" verticalScrollPolicy="off" verticalGap="-2" horizontalScrollPolicy="off">
+				<text:MAText styleName="subTitle" xml="{eqp_lbl}" width="100%"/>
+				<mx:TileList paddingLeft="20" paddingRight="20" styleName="specs" id="equipment" paddingBottom="0" paddingTop="0" textAlign="left" dataProvider="{eqp_array}" columnCount="{colCnt}"
+					width="100%" backgroundAlpha="0"  borderThickness="0" rowHeight="{rHeight}" height="{eqHeight}"
+					selectable="false">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:Text width="100%" height="100%" htmlText="{StringUtil.trim(String(data))}">
+								<mx:Script>
+								<![CDATA[
+									import mx.utils.StringUtil;
+								]]>
+							</mx:Script>
+							</mx:Text>
+						</mx:Component>
+						
+					</mx:itemRenderer>
+				</mx:TileList>
+			</mx:VBox>
+		</mx:VBox>
+		
+		<text:MAText xml="{dlr_msg}" styleName="specs" width="100%"/>
+	</mx:VBox>
+	<mx:VBox id="rightSide" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<inventory:MASuggestedItems hRuleStyleName="{hRuleStyleName}" width="300" styleName="{suggestionsStyleName}" id="suggestions" xml="{null}" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}"/>
+		<mx:Box width="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false">
+			<images:MAImage id="carfax" autoLoad="true" autoSize="true" xml="{cfx}" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}"/>
+		</mx:Box>
+	</mx:VBox>
+	<mx:states>
+		<mx:State name="colapsed">
+			<mx:SetProperty target="{rightSide}" name="height" value="0"/>
+			<mx:SetProperty target="{leftSide}" name="height" value="0"/>
+		</mx:State>
+		<mx:State name="expanded" basedOn="colapsed">
+			<mx:SetProperty target="{rightSide}" name="height"/>
+			<mx:SetProperty target="{leftSide}" name="height"/>
+			<mx:SetProperty target="{this}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="*" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize targets="{[this.rightSide,this.leftSide]}"/>
+				<mx:SetPropertyAction target="{suggestions}" name="xml" value="{this.suplimental}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="*" toState="colapsed">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{suggestions}" name="xml" value="{null}"/>
+				<mx:SetPropertyAction target="{this}" name="suplimental" value="{null}"/>
+				<mx:Resize targets="{[this.rightSide,this.leftSide]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.DataItem;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.utils.StringUtil;
+			import com.hphant.modsite.data.inventory.BMCDInventoryItemData;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var suggestionsStyleName:String;
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			private var eqp:XMLList;
+			[Bindable]
+			private var dlr_msg:XMLList;
+			[Bindable]
+			private var dlr_blrb:XMLList;
+			[Bindable]
+			private var dsc:XMLList;
+			[Bindable]
+			private var eqp_lbl:XMLList;
+			[Bindable]
+			private var dlr_msg_lbl:XMLList;
+			[Bindable]
+			private var dlr_blrb_lbl:XMLList;
+			[Bindable]
+			private var dsc_lbl:XMLList;
+			[Bindable]
+			private var sgg:XMLList;
+			[Bindable]
+			private var cfx:XMLList;
+			[Bindable]
+			private var spcs:XMLList;
+			[Bindable]
+			private var spcs_lbl:XMLList;
+			[Bindable]
+			private var vn:XMLList;
+			[Bindable]
+			private var vn_lbl:XMLList;
+			[Bindable]
+			private var eng:XMLList;
+			[Bindable]
+			private var eng_lbl:XMLList;
+			[Bindable]
+			private var trn:XMLList;
+			[Bindable]
+			private var trn_lbl:XMLList;
+			[Bindable]
+			private var sn:XMLList;
+			[Bindable]
+			private var sn_lbl:XMLList;
+			[Bindable]
+			private var mlg:XMLList;
+			[Bindable]
+			private var mlg_lbl:XMLList;
+			[Bindable]
+			private var clr:XMLList;
+			[Bindable]
+			private var clr_lbl:XMLList;
+			[Bindable]
+			private var eqp_array:Array;
+			[Bindable]
+			private var spcs_array:Array;
+			
+			[Bindable]
+			private var rHeight:Number = 25;
+			[Bindable]
+			private var colCnt:Number = 2;
+			[Bindable]
+			private var eqHeight:Number = 0;
+			[Bindable]
+			private var spcsHeight:Number = 0;
+			
+			[Inspectable]
+			[Bindable]
+			public function get suplimental():XMLList{
+				return BMCDInventoryItemData.supplemental;
+			}
+			public function set suplimental(value:XMLList):void{
+				this._suplimental = value;
+				if(this.currentState=="expanded"){
+					this.suggestions.xml = this._suplimental;
+				}
+			}
+			private var _suplimental:XMLList;
+			
+			private function applyData():void{
+				if(this.data){
+					var di:BMCDInventoryItemData = new BMCDInventoryItemData();
+					di.row = XML(this.data);
+					this.buildSpecs(di);
+					this.dlr_blrb = XMLList(di.dealerBlurb.data);
+					this.dlr_blrb_lbl = XMLList(di.dealerBlurb.label);
+					this.dsc = XMLList(di.description.data);
+					this.dsc_lbl = XMLList(di.description.label);
+					this.dlr_msg = XMLList(di.dealerMessage.data);
+					this.dlr_msg_lbl = XMLList(di.dealerMessage.label);
+					var s:String  = XMLList(BMCDInventoryItemData.urlTemplates.li.(@['class']=="carfax").children()).toXMLString();
+					this.cfx = XMLList(s.replace("["+di.vin.label+"]",di.vin.data));
+					//this.suplimental = BMCDInventoryItemData.supplemental;
+				this.buildEquipmentList(di);
+				} else {
+					this.suplimental = null;
+					this.dlr_blrb = null;
+					this.dlr_blrb_lbl = null;
+					this.dlr_msg = null;
+					this.dlr_msg_lbl = null;
+					this.dsc = null;
+					this.cfx = null;
+					this.spcs = null;
+					this.spcs_lbl = null;
+					this.dsc_lbl = null;
+					this.eqp_array = null;
+					this.eqp_lbl = null;
+				}
+			}
+			private function buildSpecItem(di:DataItem):XMLList{
+			//	return new XML("<p><h1><i>"+di.label+":</i> </h1><h1>"+di.data+"</h1></p>");
+			//	return [di.label+":",di.data];
+				return XMLList("<p class='spclbl'>"+di.label+":</p><p class='spcs'>"+di.data+"</p>");
+			}
+			protected function buildSpecs(di:BMCDInventoryItemData):void{
+				/*  var ts:XML = <ts />;
+				ts.appendChild(this.buildSpecItem(di.vin));
+				ts.appendChild(this.buildSpecItem(di.engine));
+				ts.appendChild(this.buildSpecItem(di.transmission));
+				ts.appendChild(this.buildSpecItem(di.stockNumber));
+				ts.appendChild(this.buildSpecItem(di.mileage));
+				ts.appendChild(this.buildSpecItem(di.color));
+				spcs = ts.p.(@['class']=='spcs');
+				spcs_lbl = ts.p.(@['class']=='spclbl');  */
+				/*  spcs_lbl = XMLList(<p>Specifications:</p>);
+				var ts:Array = this.buildSpecItem(di.vin);
+				ts = ts.concat(this.buildSpecItem(di.engine));
+				ts = ts.concat(this.buildSpecItem(di.transmission));
+				ts = ts.concat(this.buildSpecItem(di.stockNumber));
+				ts = ts.concat(this.buildSpecItem(di.mileage));
+				ts = ts.concat(this.buildSpecItem(di.color));
+				spcs_array = ts;  */
+				/*  var h:Number = rHeight*spcs.length();
+				spcsHeight = h;  */
+				this.vn = XMLList(di.vin.data);
+				this.vn_lbl = XMLList(di.vin.label+":");
+				this.eng = XMLList(di.engine.data);
+				this.eng_lbl = XMLList(di.engine.label+":");
+				this.trn = XMLList(di.transmission.data);
+				this.trn_lbl = XMLList(di.transmission.label+":");
+				this.sn = XMLList(di.stockNumber.data);
+				var t:String = (XML(di.stockNumber.label).toString()=="StockNumber") ? "Stock #" : di.stockNumber.label;
+				this.sn_lbl = XMLList(t+":");
+				this.mlg = XMLList(di.mileage.data);
+				this.mlg_lbl = XMLList(di.mileage.label+":");
+				this.clr = XMLList(di.color.data);
+				this.clr_lbl = XMLList(di.color.label+":");
+			}
+			private function buildEquipmentList(di:BMCDInventoryItemData):void{
+				this.eqp_lbl = XMLList(di.equipment.label);
+				eqp_array = String(di.equipment.data).split(",");
+				
+				var h:Number = rHeight*Math.ceil(eqp_array.length/colCnt);
+				eqHeight = h;
+				/* var ul:XML = <ul />;
+				for each(var item:String in eqp_array){
+					ul.appendChild(new XML("<li>"+item+"</li>"));
+				}
+				this.eqp = XMLList(ul); */
+				
+			}
+		]]>
+	</mx:Script>
+	<mx:resizeEffect>
+		<mx:Resize id="autoResizeEffect"/>
+	</mx:resizeEffect>
+</mx:HBox>

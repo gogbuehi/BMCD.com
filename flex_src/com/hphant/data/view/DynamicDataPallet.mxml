@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" verticalGap="0" label="Dynamic Data" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:buttons="com.hphant.components.buttons.*" xmlns:view="com.hphant.data.view.*">
+	<!--<buttons:PalletButton label="Inventory" palletLabel="Inventory Data" width="100%" palletPosition="none">
+		<buttons:pallet>
+			<view:InventoryPallet />
+		</buttons:pallet>
+	</buttons:PalletButton>-->
+	<buttons:PalletButton label="Boutique" palletLabel="Boutique Data" width="100%"  palletPosition="none">
+		<buttons:pallet>
+			<view:BoutiquePallet />
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<buttons:PalletButton label="Calendar" palletLabel="Calendar Data" width="100%"  palletPosition="none">
+		<buttons:pallet>
+			<view:CalendarPallet />
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<buttons:PalletButton label="Model Info" palletLabel="Model Info Data" width="100%"  palletPosition="none">
+		<buttons:pallet>
+			<view:ModelInfoPallet />
+		</buttons:pallet>
+	</buttons:PalletButton>
+	
+	<!--<buttons:PalletButton label="Data Filters" palletLabel="Filters" width="100%"  palletPosition="none">
+		
+	</buttons:PalletButton>-->
+	<!--<buttons:PalletButton label="Suggestions" palletLabel="Suggestions Data" width="100%"  palletPosition="none">
+		<buttons:pallet>
+			<view:SuggestionsPallet />
+		</buttons:pallet>
+	</buttons:PalletButton>-->
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.PalletManager;
+			import com.hphant.components.buttons.PalletButton;
+			import mx.core.UIComponent;
+			public override function reset():void{
+				super.reset();
+				for each(var bttn:UIComponent in this.getChildren()){
+					if(bttn is PalletButton){
+						PalletManager.closePallet(PalletButton(bttn).pallet);
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+</Pallet>

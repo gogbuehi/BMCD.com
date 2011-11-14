@@ -1,0 +1,17 @@
+Steps to Update Mars Release:
+ - Database updates
+	page_file
+	- Needs new page added
+	user
+	- Create user acounts
+	content_library_crop
+	content_library_master
+	content_library_thumbnail
+	content_library_video
+	
+ - Server Configs
+	Update vhost.conf to allow /templates to be accessed for 901 and 999
+	Update vhost.conf for www needs to be applied
+		"assets" needs to be viewable
+ - Update all caches
+	

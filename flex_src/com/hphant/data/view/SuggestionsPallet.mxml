@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataGridPallet xmlns="com.hphant.data.view.*" creationComplete="{init();}" 
+	dataProvider="{DataModelLocator.getInstance().suggestions}"
+	label="Suggestions Data" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<columns>
+		<DataRecordColumn headerText="Item ID" propertyName="itemID" propertyType="string" width="100"/>
+		<DataRecordColumn propertyName="itemType" propertyType="string" width="100"/>
+		<DataRecordColumn headerText="Module ID" propertyName="moduleID" width="100"/>
+		<DataRecordColumn propertyName="page" propertyType="string" width="100"/>
+		<DataRecordColumn propertyName="url" propertyType="string" width="300"/>
+		<DataRecordColumn headerText="Image URL" propertyName="imageURL" propertyType="string" width="300"/>
+		<DataRecordColumn propertyName="text" propertyType="html" width="300"/>
+	</columns>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.model.SuggestionsRecord;
+			import com.hphant.data.control.event.SuggestionsEvent;
+			import com.hphant.data.control.DataModelLocator;
+			private function init():void{
+				this.cmAdd.enabled = false;
+				this.dataClass = SuggestionsRecord;
+				this.eventClass = SuggestionsEvent;
+				this.getAllEvent = new SuggestionsEvent(SuggestionsEvent.GET_ALL);
+				this.getAllEvent.dispatch();
+			}
+		]]>
+	</mx:Script>
+</DataGridPallet>

@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:comp	="com.hphant.components.*"
+	xmlns:viewer="com.hphant.components.imagePreview.*"
+	implements="com.hphant.contentlibrary.control.IResponder"
+	width="100%"
+	paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+	>
+	<!--
+	creationComplete="onCreationComplete()"
+	-->
+	
+
+	<mx:Metadata>
+		[Event(name="eventSelectMaster", type="com.adobe.cairngorm.control.CairngormEvent")] 
+		[Event(name="eventEditThumb", type="com.adobe.cairngorm.control.CairngormEvent")] 
+	</mx:Metadata>
+
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.CollectionUtil;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.model.Master;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import mx.core.Application;
+			import com.hphant.contentlibrary.control.event.ContentLibraryEvent;
+			import mx.events.ListEvent;
+			import mx.events.ItemClickEvent;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.control.GeneralEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import com.hphant.contentlibrary.control.ImageConstants;
+			import mx.controls.Alert;
+			import com.adobe.cairngorm.control.CairngormEvent;
+			
+	        
+			/**
+			 * 	TODO:
+			 * 
+			 * 	Implement Storylines:
+			 *
+			 * 	[Select Master]
+			 * 
+			 * 	ISSUE:	thumb caching issue, after thumb update. 	
+			 * 
+			 */
+			 
+			 	
+            [Bindable]
+            private var modelLocator 	: ContentModelLocator = ContentModelLocator.getInstance();
+            //	for object rollback in case remote service's fault
+            private var _originalMaster	: Master;
+	        
+	        
+			private function onCreationComplete():void 
+			{
+				
+			}
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	UI events handlers.
+			 */	
+			private function fireSelectMasterEvent():void 
+			{
+				discardUpdates();
+ 				var event : CairngormEvent = new CairngormEvent("eventSelectMaster");
+				event.data = createMasterInfo( modelLocator.selectedMaster, ImageConstants.EDIT_MODE_CUSTOM_CROP );
+				dispatchEvent( event );
+			}
+			
+			private function fireEditThumbEvent():void 
+			{
+				discardUpdates();
+ 				var event : CairngormEvent = new CairngormEvent("eventEditThumb");
+				event.data = createMasterInfo( modelLocator.selectedMaster, ImageConstants.EDIT_MODE_THUMB );
+				dispatchEvent( event );
+			}
+
+			private function fireCancellationEvent():void {
+				/*
+				//	Usecase
+				
+					[Cancel and Return] button pressed
+					ContentLibrary.dispatchEvent(ContentLibrartyEvent.IMAGE_CANCELED)
+					Content Library Closes
+				*/
+				discardUpdates();
+				var e:ContentLibraryEvent = new ContentLibraryEvent( ContentLibraryEvent.IMAGE_CANCELED );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				Application.application.dispatchEvent( e );
+			}
+			
+			private function handlerMasterPicked( e : ListEvent ):void {
+				/*
+					Usecase:
+				
+					[Double Click on table row]
+					descriptionEditor.reset();
+					set preview area with crop and thumb images.
+					Crop Loads into Preview Area
+					Thumb loads into Preview Area					 
+				*/
+				
+				//	Mark selected Master and populate view
+				modelLocator.selectedMaster = Master( e.itemRenderer.data );
+				//	to populate screen
+				loadData( modelLocator.selectedMaster );
+			}
+			
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Functionality & Helper methods.
+			 */
+			private function loadData( master:Master ):void {
+				//	loading images
+				/*
+				viewerImage.loadImage( Constants.CONTENT_STORAGE_URL_IMAGES + master.masterLocation );
+				viewerThumb.loadImage( Constants.CONTENT_STORAGE_URL_IMAGES + master.thumbnailLocation );
+				*/
+				var masterUrl : String;
+				var thumbUrl : String;
+				//masterUrl = "http://" + master.masterLocation; 
+				//thumbUrl = "http://" + master.thumbnailLocation; 
+				masterUrl = master.masterLocation; 
+				thumbUrl = master.thumbnailLocation; 
+				 
+				viewerImage.loadImage( masterUrl );
+				viewerThumb.loadImage( thumbUrl );
+				trace("loading Master: masterLocation = " + master.masterLocation + "  thumbnailLocation = " + master.thumbnailLocation );
+				trace("loading Master: masterUrl = " + masterUrl + "  thumbUrl = " + thumbUrl );
+				
+				//	this supposes Description will be accessible regardless images' accessibility
+				valueEditor.value = master.shortDescription;
+				/*
+				valueEditor.enabled = true;
+				
+				//	enable navigation buttons
+				btnSelectMaster.enabled = true;
+				btnEditThumb.enabled = true;
+				btnEnlarge.enabled = true;
+				*/
+				setControlsEnabled( true );
+			}
+			
+			public function refreshData( master:Master ):void {
+				
+				//	Blank master's thumb preview 
+				//	call getMasterById()
+				//	upon result, load thumb
+				
+				//viewerThumb.loadImage( "assets/images/No_Photo.jpg" );
+				viewerThumb.loadImage( "" );
+				setControlsEnabled( false );
+				
+				trace();
+				trace("GET master by id: started.");
+				var e : ImageEvent = new ImageEvent( ImageEvent.GET_MASTER_BY_ID );
+				e.data = master.id;
+				e.responder = this;
+				e.dispatch();
+				
+			}
+
+			private function setControlsEnabled( v:Boolean ):void {
+				valueEditor.enabled = v;
+				btnSelectMaster.enabled = v;
+				btnEditThumb.enabled = v;
+				btnEnlarge.enabled = v;
+			}
+			
+			private function createMasterInfo( master:Master, mode:String ):Object 
+			{
+				
+				var imageInfo:Object;
+				
+				if (mode == ImageConstants.EDIT_MODE_CUSTOM_CROP) 
+				{
+	 				imageInfo = {
+						masterLocation	: master.masterLocation,
+						cropWidth		: ImageConstants.MASTER_WIDTH, // ?? MAImageEditorEvent.imageInfo.imageBoxW;
+		     			cropHeight		: ImageConstants.MASTER_HEIGHT,// ?? MAImageEditorEvent.imageinfo.imageBoxH;
+						scale			: 100,			
+						rotation		: 0,		
+						offsetX			: 0,		
+						offsetY			: 0		
+	 				}
+				} 
+				else if (mode == ImageConstants.EDIT_MODE_THUMB)
+				{
+	 				imageInfo = {
+						masterLocation	: master.masterLocation,//:String,
+						cropWidth		: ImageConstants.THUMB_WIDTH,//:Number=0,
+		     			cropHeight		: ImageConstants.THUMB_HEIGHT,//:Number=0,
+						scale			: master.scale,			//:Number=100,
+						rotation		: master.rotation,		//:Number=0,
+						offsetX			: master.offsetX,		//:Number=0,
+						offsetY			: master.offsetY		//:Number=0
+	 				}
+				}
+				/*
+				//	passing description
+				imageInfo.description = master.shortDescription;
+				*/
+				imageInfo.master = master;
+				return imageInfo;
+			}
+			
+			
+			private function updateDescription( event : CairngormEvent ):void {
+				//	make data update
+				if (!modelLocator.selectedMaster) {
+					trace("ERROR: in ["+this+"]");
+					trace("ERROR: can't update description for selectedMaster = "+modelLocator.selectedMaster);
+					//	Rollback valueEditor
+					valueEditor.reset();
+					return;
+				}
+				trace("UPDATE master: started.");
+				//	storing original value in case remote update fails
+				_originalMaster = modelLocator.selectedMaster.clone();
+				
+				modelLocator.selectedMaster.shortDescription = event.data;
+				var e : ImageEvent = new ImageEvent( ImageEvent.UPDATE_MASTER_IMAGE );
+				e.data = modelLocator.selectedMaster;
+				e.responder = this;
+				e.dispatch();
+			}
+			
+			/**
+			 * 	To discard all updates started on the screen but never committed. 
+			 */
+			private function discardUpdates():void {
+				//valueEditor.reset();//	no need, defult behavior is OK 
+			}
+			
+			private function labelFunction(item:Object, column:DataGridColumn):String {
+				var res : String = "";
+				switch(column)
+				{
+				    case colSize:
+				    	res = item.dimensionWidth + "x" + item.dimensionHeight;
+				        break;
+				        
+				    case colDate:
+				    	var dt : Date = new Date( item.dt * 1000 ); 
+				    	res = dt.toDateString();
+				        break;
+				        
+				    default:
+				        trace("ERROR: ["+this+"].labelFunction(): Can't determine column !");
+				        break;
+				}
+				return res;
+			}
+			 	
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Callbacks.
+			 */	
+			public function handleResult(event:GeneralEvent, result:Object)	: void 
+			{
+				switch (event.type) 
+				{
+				    case ImageEvent.GET_ALL_MASTERS:
+						trace("GET all master images: completed.");
+				        break;
+				        
+				    case ImageEvent.GET_MASTER_BY_ID:
+						trace("GET master by id: completed.");
+
+						//	processing result
+						//var m:Master = Master( result );
+						modelLocator.selectedMaster = Master( result );
+						trace("thumbnailLocation: " + modelLocator.selectedMaster.thumbnailLocation);
+						setControlsEnabled( true );
+						//	refresh screen with updates
+						loadData( modelLocator.selectedMaster );
+						/*
+						viewerThumb.loadImage( m.thumbnailLocation );
+						//viewerThumb.loadImage( m.thumbnailLocation + "?s=" + new Date().getUTCMilliseconds() );
+						*/
+						
+						
+						//	Find & Update in DataGrid an Object with specified id
+						var done:Boolean = CollectionUtil.replaceObjectByID( ArrayCollection(dgMasterImages.dataProvider), modelLocator.selectedMaster, modelLocator.selectedMaster.id );
+						if (!done) {
+							var mes:String = "ERROR: Can't implement updates for object: " + modelLocator.selectedMaster;
+					        trace( mes );
+							trace();
+			 				Alert.show( mes, "Error");
+			 				return;
+						}
+
+				        break;
+				        
+				    case ImageEvent.UPDATE_MASTER_IMAGE:
+						trace("UPDATE master: completed.");
+				        break;
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+			}
+			
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void
+			{
+				trace("FAULT: in ["+this+"] : event.type="+event.type+"; fault="+fault);
+				var operation:String = "";
+ 				
+				switch (event.type) 
+				{
+				    case ImageEvent.GET_ALL_MASTERS:
+				    	//	nothing..
+				    	operation = "Getting All Masters";
+				        break;
+				        
+				    case ImageEvent.GET_MASTER_BY_ID:
+				    	operation = "Get Master by ID";
+						setControlsEnabled( true );
+				        break;
+				        
+				    case ImageEvent.UPDATE_MASTER_IMAGE:
+						//	Rollback updates
+				    	operation = "Update";
+						
+						//	important !!!
+						modelLocator.selectedMaster = _originalMaster;
+						//	in case user had enough time to double-click on another master from DataGrig,
+						//	and to rollback valueEditor. 
+						loadData( modelLocator.selectedMaster );
+						
+						//	Find in DataGrid an Object with id=_rollbackMasterID
+						//	Rollback that exactly object, not currently selectedMaster - they can differ
+						var done:Boolean = CollectionUtil.replaceObjectByID( ArrayCollection(dgMasterImages.dataProvider), _originalMaster, _originalMaster.id );
+						if (!done) {
+							var mes:String = "ERROR: Can't rollback updates for object: " + _originalMaster;
+					        trace( mes );
+							trace();
+			 				Alert.show( mes+"\nDue to remote service fault:\n\n"+fault.message, "Error");
+			 				return;
+						}
+						trace("UPDATE master: rolled back.");
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+ 				Alert.show( "Operation: "+operation+"\nhas not been completed due to remote service fault:\n\n"+fault.message, "Error");
+ 				
+			}
+			
+		]]>
+	</mx:Script>
+
+
+	<mx:HBox width="100%">
+		<mx:VBox height="100%" verticalAlign="top">
+			<mx:Label text="Masters Library" fontWeight="bold" fontSize="19"/>
+		</mx:VBox>
+		<mx:Spacer width="50"/>
+		<mx:VBox height="100%" width="100%">
+			<mx:Label text="Search" fontWeight="bold"/>
+			<mx:TextInput width="100%"/>
+		</mx:VBox>
+	</mx:HBox>
+	
+	<mx:Spacer height="20"/>
+		
+	<mx:DataGrid id="dgMasterImages" width="100%" height="150"
+		dataProvider="{modelLocator.masters}"
+		doubleClickEnabled="true" itemDoubleClick="handlerMasterPicked(event);"
+		>
+		<!--
+		click="handlerMasterPicked(event);"
+		-->
+		
+		<mx:columns>
+			<mx:DataGridColumn headerText="ID" width="35" dataField="id"/>
+			<mx:DataGridColumn headerText="Short Description" dataField="shortDescription"/>
+			<mx:DataGridColumn headerText="Size" width="200" id="colSize" labelFunction="labelFunction"/>
+			<mx:DataGridColumn headerText="Date Added" width="200" 
+				id="colDate"
+				labelFunction="labelFunction"
+				/>
+				<!--
+				dataField="dt"
+				-->
+		</mx:columns>
+	</mx:DataGrid>
+
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button id="btnSelectMaster" label="Select Master" 
+			enabled="false"
+			click="fireSelectMasterEvent()"
+			/>
+		<!--
+		<mx:Button label="Test" color="red" click="test()"/>
+		-->
+		<mx:Spacer width="20"/>
+	</mx:HBox>
+	
+	<!--
+	<mx:Spacer height="10"/>
+	-->
+	
+	<mx:HBox width="100%">
+		<mx:VBox width="50%" horizontalAlign="center">
+			<mx:Button id="btnEnlarge" label="Click to View Full Size Image" enabled="false"/>
+			
+			<viewer:ImagePreviewArea id="viewerImage" 
+				areaWidth="{ImageConstants.MASTER_WIDTH / 2}"
+				areaHeight="{ImageConstants.MASTER_HEIGHT / 2}"
+				/>
+
+			<mx:Label text="scaled to 50% of actual size" fontWeight="bold"/>
+		</mx:VBox>
+		
+		<mx:VBox width="50%" horizontalAlign="center">
+		
+			<mx:Button visible="false" label="stub..."/>
+			<!--
+			<mx:Label visible="false" text="stub..." fontWeight="bold"/>
+			-->
+			
+			<comp:ValueEditor id="valueEditor" width="100%" borderStyle="solid"
+				enabled="false"
+				valueMaxLength="{ImageConstants.MASTER_IMAGE_DESCRIPTION_MAX_LENGHT}"
+				valueChanged="updateDescription(event)"
+				/>
+				<!--
+				value="{dgMasterImages.selectedItem.shortDescription}"
+				-->
+			
+			<mx:Spacer height="30"/>
+
+			<!--
+			<mx:Box borderStyle="solid">
+				<mx:Image id="imgThumb" width="{Constants.THUMB_WIDTH}" height="{Constants.THUMB_HEIGHT}"/>
+			</mx:Box>
+			-->
+			<viewer:ImagePreviewArea id="viewerThumb" 
+				areaWidth="{ImageConstants.THUMB_WIDTH}"
+				areaHeight="{ImageConstants.THUMB_HEIGHT}"
+				progressIndicatorSize="{ImagePreviewArea.PROGRESS_INDICATOR_SIZE_SMALL}"
+				shortErrorMessage="true"
+				/>
+				
+			<mx:Button id="btnEditThumb" label="Edit Thumb" 
+				enabled="false"
+				click="fireEditThumbEvent()"
+				/>
+		</mx:VBox>
+	</mx:HBox>
+	
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button label="Cancel and Return" click="fireCancellationEvent()"/> 
+	</mx:HBox>
+	
+	
+</mx:VBox>

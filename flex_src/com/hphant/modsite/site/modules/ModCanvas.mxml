@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box autoLayout="true" borderThickness="0" currentState="state0" height="0" width="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" implements="com.hphant.modsite.site.modules.interfaces.IModule" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+		include "interfaces/ModuleIncludes.as";
+		import mx.core.UIComponent;
+		import mx.effects.easing.Exponential;
+		import mx.effects.easing.Back;
+		public function duplicate():IModule{
+			var m:ModCanvas = new ModCanvas();
+			m.xml = this.xml;
+			m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+			m.validateNow();
+			return m;
+		}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="state0"/>
+		<mx:State name="state1">
+			<mx:SetProperty target="{this}" name="height" value="150"/>
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+   		<mx:Transition fromState="state1" toState="state0">
+   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+				<mx:Resize target="{this}" duration="500" />
+   			</mx:Sequence>
+   		</mx:Transition>
+	</mx:transitions>
+</mx:Box>

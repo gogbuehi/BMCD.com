@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox styleName="loginForm" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*">
+	<mx:Text width="300" id="msg" htmlText="{message}" />
+	<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center">
+		<mx:Button id="ok" label="OK" click="{this.dispatchEvent(new Event(Event.SELECT))}"/>
+	</mx:HBox>
+	<mx:Metadata>
+		[Event(name="select",type="flash.events.Event")]
+		[Exclude(name="msg",kind="property")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			[Bindable]
+			[Inspectable]
+			public var message:String;
+		]]>
+	</mx:Script>
+</mx:VBox>

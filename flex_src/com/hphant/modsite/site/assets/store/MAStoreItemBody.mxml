@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" width="984" 
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   backgroundAlpha="0" dataChange="{dataChanged()}"
+		   currentState="colapsed"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" visible="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" height="0">
+	<mx:UIComponent id="_ds"/>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+	<mx:VBox id="vb" verticalScrollPolicy="off" horizontalScrollPolicy="off" alpha="1" width="100%">
+		<mx:HBox id="showHolder" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" horizontalAlign="center">	
+			<images:MAImagePlayer autoLoad="true" id="images" xml="{this.imageXML}" height="350" width="460" autoSize="false"/>
+			<mx:HBox id="controls" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+				<mx:VBox id="buttons" horizontalAlign="right" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+					<mx:ComboBox id="options" width="150" styleName="{this.styleName+'Button'}" close="{this.changeSelectedOption()}" dataChange="{this.cbDataChange()}" buttonMode="true" useHandCursor="true" dataProvider="{this.optionData}" labelFunction="cbLabelFunction"/>
+					<mx:Button id="addToCart" styleName="{this.styleName+'Button'}" buttonMode="true" click="{setItemProperties()}" useHandCursor="true" label="Add To Cart"/>
+					<mx:Button id="viewCart" styleName="{this.styleName+'Button'}" buttonMode="true" click="{showShoppingCart()}" useHandCursor="true" label="Visit Cart"/>
+				</mx:VBox>
+				<mx:NumericStepper buttonMode="true" maximum="NaN" styleName="{this.styleName+'Button'}" change="{quantityChange()}" useHandCursor="true" id="quantity" minimum="1" width="100%"/>
+			</mx:HBox>
+			
+		</mx:HBox>
+		<mx:VBox horizontalAlign="center"  autoLayout="true" styleName="modelText" verticalScrollPolicy="off" horizontalScrollPolicy="off" minHeight="{email.height - images.height - vb.getStyle('verticalGap')}" width="100%">
+			<text:MAText id="details" xml="{this.detailsXML}" width="100%"/>
+			<mx:resizeEffect>
+				<mx:Resize />
+			</mx:resizeEffect>
+		</mx:VBox>
+	</mx:VBox>
+	<forms:MAStoreEmail id="email" width="250" data="{dataItem}" sendEmail="{this.dispatchEvent(new MAFormEvent(event.type,event.formData))}"/>
+	</mx:HBox>		
+	<mx:states>
+		<mx:State name="colapsed">
+		</mx:State>
+		<mx:State name="expanded" basedOn="colapsed">
+			<mx:SetProperty name="visible" value="true"/>
+			<mx:SetProperty name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="colapsed" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="colapsed">
+			<mx:Sequence>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:XMLListCollection id="optionData" source="{this.optionXML}"/>
+	
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.BrowserScrollManager;
+			import com.hphant.modsite.site.forms.SubmittedPopUp;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.Application;
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import com.hphant.modsite.site.assets.store.cart.MAStoreCartSingleton;
+			import mx.managers.PopUpManager;
+			import com.hphant.modsite.data.store.BMCDShoppingCart;
+			import com.hphant.modsite.data.store.BMCDStoreItemData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as"; 
+			
+			private var applicationDisabledAlpha:Number;
+			private function centerPopUp(pop:IFlexDisplayObject):void{
+				pop.x = BrowserScrollManager.getInstance().horizontal+BrowserScrollManager.getInstance().width/2-pop.width/2;
+				pop.y = BrowserScrollManager.getInstance().vertical+BrowserScrollManager.getInstance().height/2-pop.height/2;
+			}
+			private function showShoppingCart():void{
+				var pop:MAStoreCartSingleton = MAStoreCartSingleton.getInstance();
+				Application.application.setStyle('disabledOverlayAlpha',.75);
+				Application.application.enabled = false;
+				PopUpManager.addPopUp(pop,DisplayObject(Application.application));
+				this.centerPopUp(pop);
+			}
+			
+			
+			private function cbLabelFunction(item:Object):String{
+				var sz:String = XML(item.td[1]).toString();
+				var clr:String = XML(item.td[2]).toString();
+				return sz+((sz>"" && clr>"") ? ", " : "")+clr;
+			}
+			[Bindable]
+			[Inspectable]
+			public override function get styleName():Object{return super.styleName;}
+			public override function set styleName(value:Object):void{
+				super.styleName = value;
+			}
+			private function cbDataChange():void{
+				if(this.options && optionXML){
+					var w:Number = this.options.width;
+					for each (var obj:Object in this.options.dataProvider){
+						var nw:Number = this.options.measureText(this.cbLabelFunction(obj)).width+this.options.getStyle('paddingLeft')+this.options.getStyle('paddingRight');
+						w = (w<nw) ? nw : w;
+					}
+					this.options.dropdownWidth = w;
+					if(this.dataItem.selectedOption){
+						this.options.selectedItem = this.dataItem.selectedOption;
+					} else {
+						this.dataItem.selectedOption = optionXML[0];
+					}
+					/* for(var i:uint=0;i<optionXML.length();i++){
+						if(optionXML[i].@selected=="selected"){
+							this.options.selectedIndex=i;
+						}
+					} */
+				}
+			}
+			private function quantityChange():void{
+				if(this.data){
+					dataItem.quantity=this.quantity.value;
+				}
+			}
+			private function nsDataChange():void{
+				 if(this.quantity){
+					if(dataItem){
+						this.quantity.value = dataItem.quantity;
+					} else if(this.data){
+						dataItem.quantity = this.quantity.value = 1;
+					}
+				} 
+			}
+			private function changeSelectedOption():void{
+				this.dataItem.selectedOption = XML(this.options.selectedItem);
+			}
+			private function setItemProperties():void{
+				if(data){
+					dataItem.quantity = this.quantity.value;
+					BMCDShoppingCart.getInstance().addItem(dataItem);
+					changeSelectedOption();
+				}
+			}
+			[Bindable]
+			private var imageXML:XMLList;
+			[Bindable]
+			private var optionXML:XMLList;
+			[Bindable]
+			private var detailsXML:XMLList;
+			
+			[Bindable]
+			private var dataItem:BMCDStoreItemData;
+			
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			protected function dataChanged():void{
+				if(data){
+					var di:BMCDStoreItemData = new BMCDStoreItemData();
+					di.row = XML(data);
+					dataItem = di;
+					var tmp:XMLList = XMLList(di.images.data);
+					var ui:XML = <ui />
+					ui.@['class'] = "images";
+					for each(var img:XML in tmp){
+						ui.appendChild(XML('<li>'+img.toXMLString()+'</li>'));
+					}
+					imageXML = XMLList(ui);
+					optionXML = XML(di.options.data).tbody.tr;
+					detailsXML = XMLList(di.long.data);
+					this.cbDataChange();
+					this.nsDataChange();
+					
+				} else {
+					imageXML = null;
+					optionXML = null;
+					detailsXML = null;
+				}
+				
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

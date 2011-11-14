@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox autoLayout="true"  verticalScrollPolicy="off" horizontalScrollPolicy="off"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import com.hphant.renderers.IVListItemRenderer;
+			import mx.containers.Box;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			include "MAImageSelectorIncludes.as";
+			
+			private var _factory:IFactory = new ClassFactory(com.hphant.modsite.site.assets.images.MASubtitledImage);
+			
+			[Inspectable]
+			public function get itemRenderer():Object{return this._factory;}
+			public function set itemRenderer(value:Object):void{
+				if(value is String){
+					this._factory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._factory = IFactory(value);
+				} else if(value is Class){
+					this._factory = new ClassFactory(Class(value));
+				}
+			}
+			private function getRendererInstance():IMAsset{
+				var obj:IMAsset = IMAsset(this._factory.newInstance());
+				return obj;
+			}
+			
+			private function createNewImage():IMAsset{
+				var img:UIComponent = UIComponent(getRendererInstance());
+				//img.autoSize = false;
+				//img.percentWidth = 100;
+				img.addEventListener(MALinkClickEvent.LINK_CLICKED,this.imageClicked);
+				return IMAsset(img);
+			}
+			public function sizeImage(b:Box):void{
+					b.percentWidth = 100;
+					b.percentHeight = 100;
+			}
+			private function doSizeImages(value:Boolean):void{
+				/* var resize:Resize = new Resize();
+				resize.addEventListener(EffectEvent.EFFECT_END, this.resizeEnd);
+				var targs:Array = new Array();
+				for(var i:uint = 0;i<this.numChildren;i++){
+					targs.push(Box(this.getChildAt(i)).getChildAt(0));
+				}
+				this._resizeCount = 0;
+				if(value){
+					resize.heightFrom = 0;
+					resize.heightTo = this.imgHeight;
+					resize.widthFrom = 0;
+					resize.widthTo = this.imgWidth;	
+				} else {
+					resize.heightFrom = this.imgHeight;
+					resize.heightTo = 0;
+					resize.widthFrom = this.imgWidth;
+					resize.widthTo = 0;	
+				}
+				resize.play(targs); */
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

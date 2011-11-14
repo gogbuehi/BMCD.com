@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns="com.hphant.components.containers.*" creationComplete="{defineListeners()}" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:ui="flash.ui.*">
+	<mx:Tree itemRollOver="{this.itemOverChanged(event)}" itemClick="{this.itemClicked(event)}" id="tree" dataProvider="{DataURLManager.getInstance().tree}" width="200" labelField="@label" folderClosedIcon="{null}" folderOpenIcon="{null}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+	</mx:Tree>
+	<mx:Metadata>
+		[Exclude(name="tree", kind="property")]
+		
+		[Event(name="urlSelect", type="com.hphant.events.URLEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.events.URLEvent;
+			import com.hphant.managers.DataURLManager;
+			import mx.utils.URLUtil;
+			import mx.core.Application;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.events.ListEvent;
+			
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var copyURL:ContextMenuItem = new ContextMenuItem("Copy URL");
+
+			private function defineListeners():void{
+				this._cmArray.push(this.copyURL);
+				this.copyURL.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);			
+			}
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.copyURL:
+
+						if(overRow){
+							var textToCopy:String = XML(overRow.data).@link;
+							/* if(textToCopy.indexOf("http://")!=0 && textToCopy.indexOf("mailto:")){
+								textToCopy = "http://"+URLUtil.getServerName(Application.application.url)+textToCopy;
+							} */
+							System.setClipboard(textToCopy);
+							this.dispatchEvent(new URLEvent(URLEvent.URL_SELECT,textToCopy));
+						}
+					break;
+					default:
+						
+					break;
+				}
+			}
+			private var overRow:IListItemRenderer;
+			private function itemOverChanged(event:ListEvent):void{
+				overRow = event.itemRenderer;
+			}
+			private function itemClicked(event:ListEvent):void{
+				this.dispatchEvent(new URLEvent(URLEvent.URL_SELECT,XML(event.itemRenderer.data).@link));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

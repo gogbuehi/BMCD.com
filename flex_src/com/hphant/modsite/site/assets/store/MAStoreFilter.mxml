@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+  	       implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="1"
+		   xmlns:text="com.hphant.modsite.site.assets.text.*" 
+		   verticalScrollPolicy="off"
+		   horizontalScrollPolicy="off"
+		   verticalAlign="bottom"
+		   creationComplete="{this.creationCompleted()}">
+	<text:MAText id="title" width="100%" styleName="title" text="Choose a Category"/>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="left" width="100%">
+			<mx:ButtonBar styleName="{this.styleName+'Button'}"  updateComplete="dataChanged()" id="toggles" dataProvider="{this.filterList}" itemClick="{this.updateSelectedIndexes(event);}">
+			</mx:ButtonBar>
+		</mx:HBox>
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="right">
+			<mx:ComboBox styleName="{this.styleName+'Button'}" id="sorts" text="Sort options" close="{sendSortEvent();}">
+				<mx:dataProvider>
+					<mx:ArrayCollection id="sortList" source="{this.sortOptions}"/>
+				</mx:dataProvider>
+			</mx:ComboBox>
+		</mx:HBox>
+	</mx:HBox>
+	<mx:Array id="sortOptions"/>
+	<mx:Array id="filterList"/>
+	<mx:Array id="selectedIndexes"/>
+	<mx:XMLList id="sortXML" xmlns="">
+		<li id="price_a">
+			Price Ascending
+		</li>
+		<li id="price_d">
+			Price Descending
+		</li>
+		<li id="title_a">
+			Name Ascending
+		</li>
+		<li id="title_d">
+			Name Descending
+		</li>
+	</mx:XMLList>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import mx.controls.Button;
+			import mx.events.ItemClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			
+			[Bindable]
+			[Inspectable]
+			public override function get styleName():Object{return super.styleName;}
+			public override function set styleName(value:Object):void{
+				super.styleName = value;
+			}
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml){
+					var li:XMLList = this._xml.li;
+					this.filterList = new Array();
+					for each (var item:XML in li){
+						this.filterList.push(item.toString());
+					}
+					this.xmlChanged = false;
+					
+				}
+				super.commitProperties();
+			}
+			private function creationCompleted():void{
+				this.sortOptions = new Array();
+				for each (var item:XML in this.sortXML){
+					this.sortOptions.push(item.toString());
+				}
+			}
+			private function dataChanged():void{
+				this.selectedIndexes = new Array();
+				if(this._xml){
+				for(var i:uint=0;i<this._xml.li.length();i++){
+					if(this._xml.li[i].@selected && this._xml.li[i].@selected=="selected" && i<this.toggles.numChildren){
+						Button(this.toggles.getChildAt(i)).selected = true;
+						this.selectedIndexes.push(i);
+					}
+				}
+				}
+			}
+			private function sendSortEvent():void{
+				if(this.sorts.selectedIndex>=0){
+					Logger.log("MAStoreFilter.dispatchEvent(MAStoreEvent.SORT_SELECTED):index="+this.sorts.selectedIndex+":item="+XML(this.sortXML[this.sorts.selectedIndex]).toXMLString());
+					this.dispatchEvent(new MAStoreEvent(MAStoreEvent.SORT_SELECTED,XML(this.sortXML[this.sorts.selectedIndex])));
+				}
+			}
+			private function updateSelectedIndexes(e:ItemClickEvent):void{
+				var found:Boolean = false;
+				for(var i:uint=0;i<this.selectedIndexes.length;i++){
+					if(this.selectedIndexes[i]==e.index){
+						found = true;
+						this.selectedIndexes.splice(i,1);
+						Button(this.toggles.getChildAt(e.index)).selected = false;
+						this._xml.li[e.index].@selected = "";
+						break;
+					}
+				}
+				if(!found){
+					Button(this.toggles.getChildAt(e.index)).selected = true;
+					this._xml.li[e.index].@selected = "selected";
+					this.selectedIndexes.push(e.index);
+				}
+				var item:XML = <filters />
+				for(var j:uint=0;j<this.selectedIndexes.length;j++){
+					item.appendChild(XML(this._xml.li[this.selectedIndexes[j]]))
+				}
+				this.dispatchEvent(new MAStoreEvent(MAStoreEvent.FILTER_SELECTED,item));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

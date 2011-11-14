@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" label="New Image" creationComplete="{setMastersListener()}" 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:imageCropper="com.hphant.components.imageCropper.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:managers="com.hphant.managers.*" xmlns:view="com.hphant.contentlibrary.view.*" xmlns:ui="flash.ui.*">
+	<mx:Label text="Available Master Images" />
+	<mx:TileList id="list" dataProvider="{mastersList}" change="{selectedImageChenged()}" 
+		direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on"
+	    rowCount="1"
+	    columnWidth="50" width="100%" rowHeight="50">
+	    <mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image source="{data.thumbnailLocation}" width="100%" height="100%" />
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	<view:EditMediaPallet id="media" process="{process}" cropSizes="{cropSizes}" html="{html}">
+		<view:imageCrop>
+			<imageCropper:ImageCropper />
+		</view:imageCrop>
+	</view:EditMediaPallet>
+	<mx:Binding destination="html" source="media.html"/>
+	<mx:Binding destination="media.data" source="data" />
+	<mx:Binding destination="list.selectedItem" source="data" />
+	<mx:Binding destination="this.cmRemoveMaster.enabled" source="Boolean(this.list.selectedItem)" />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import com.hphant.components.AlertPallet;
+			import mx.controls.ComboBox;
+			import com.hphant.components.imageCropper.ICropper;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.process.*;
+			import mx.core.Application;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import com.hphant.components.imageCropper.ImageCropper;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			
+			private var cmUploadMaster:ContextMenuItem = new ContextMenuItem("Add New Master");
+			private var cmRemoveMaster:ContextMenuItem = new ContextMenuItem("Remove Selected Master");
+						
+			public function get cropSize():ComboBox{
+				return this.media.cropSize;
+			}
+			
+			public function get imageCrop():ICropper{
+				return this.media.imageCrop;
+			}
+			
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet==this){
+					this.process = this.newCropProcess;
+					PalletManager.closePallet(media.descriptionButton.pallet);
+				}
+			}
+			private function defineListeners():void{
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,palletClosed);
+			}
+			[Bindable]
+			[Inspectable]
+			public function get cropSizes():Array{return _cropSizes;}
+			public function set cropSizes(value:Array):void{
+				this._cropSizes = value;
+			}
+			
+			private var _cropSizes:Array;
+			
+			import com.hphant.contentlibrary.process.IImageProcess;
+			[Bindable]
+			[Inspectable]
+			public function get process():IImageProcess{
+				return this._process;
+			}
+			private var _process:IImageProcess;
+			public function set process(value:IImageProcess):void{
+				this._process = value;
+			}
+			[Bindable]
+			[Inspectable]
+			public var newMasterProcess:IImageProcess = new NewMasterProcess();
+			
+			[Bindable]
+			[Inspectable]
+			public var editMasterProcess:IImageProcess = new EditMasterProcess();
+			
+			[Bindable]
+			[Inspectable]
+			public var newCropProcess:IImageProcess = new NewCropProcess();
+			
+			[Bindable]
+			[Inspectable]
+			public var editCropProcess:IImageProcess = new EditCropProcess();
+			
+			
+			[Bindable]
+			private var mastersList:ArrayCollection;
+			
+			private function setMastersListener():void{
+				ContentModelLocator.getInstance().addEventListener("mastersChanged",mastersListener);
+				
+				this.newMasterProcess.addEventListener(Event.COMPLETE,processComplete);
+				this.editMasterProcess.addEventListener(Event.COMPLETE,processComplete);
+				this.editCropProcess.addEventListener(Event.COMPLETE,processComplete);
+				this.newCropProcess.addEventListener(Event.COMPLETE,processComplete);
+				
+				this._cmArray.push(this.cmUploadMaster);
+				this._cmArray.push(this.cmRemoveMaster);
+				this.cmUploadMaster.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+			//	this.cmRemoveMaster.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				var getMasters:ImageEvent = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+				getMasters.dispatch();
+				
+			}
+			private function processComplete(event:Event):void{
+				var ie:GeneralEvent;
+				switch(event.currentTarget){
+					case this.newCropProcess:
+						this.process = this.editCropProcess;
+						ie = new CropEvent(CropEvent.GET_ALL_CROPS);
+						//this.setView(false,true,false,true,false,false,true);
+					break;
+					case this.editMasterProcess:
+						ie = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+						//this.setView(false,true,false,false,true,false,true);
+					break;
+					case this.editCropProcess:
+						ie = new CropEvent(CropEvent.GET_ALL_CROPS);
+						//this.setView(false,true,false,true,false,false,true);
+					break;
+					case this.newMasterProcess:
+						this.process = this.newCropProcess;
+						ie = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+						//this.setView(false,true,true,true,false,false,true);
+					break;
+				}
+				if(this.process!=this.newMasterProcess){
+					try{
+						this.media.data = data;
+					} catch(e:Error){
+						
+					}
+				}
+				ie.dispatch();
+			}
+			private function mastersListener(event:Event):void{
+				this.mastersList = ContentModelLocator.getInstance().masters;
+				if(data && this.list){
+					try{
+						this.list.selectedItem = data;
+					}catch(e:Error){
+						log(e,1);
+					}
+				}
+			}
+			private function selectedImageChenged():void{
+				this.process = this.newCropProcess;
+				this.data = this.list.selectedItem;
+			}
+			
+			public override function reset():void{
+				super.reset();
+				try{
+					media.reset();
+				} catch(e:Error){
+					
+				}
+	
+			}
+			
+			[Bindable]
+			public function get html():String{return _html;}
+			public function set html(value:String):void{
+				_html = value;
+			}
+			
+			private var _html:String = "";
+				
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmUploadMaster:
+						log("Start New Master Process");
+						this.reset();
+						this.process = this.newMasterProcess;
+						this.media.selectStep();
+					break;
+					case this.cmRemoveMaster:
+						log("Removing selectd master.");
+						var alert:AlertPallet = AlertPallet.show("Are you sure you want to remove the selected Master Image?",
+																 "Verify Master Removal",
+																 AlertPallet.NO|AlertPallet.YES,
+																 AlertPallet.NO,this.masterRemovelHandler);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			private function masterRemovelHandler(event:CloseEvent):void{
+				if(event.detail==AlertPallet.YES){
+					var er:ImageEvent = new ImageEvent(ImageEvent.REMOVE_MASTER_IMAGE);
+					er.data = this.list.selectedItem;
+					er.dispatch();
+				}
+			}				
+		]]>
+	</mx:Script>
+</Pallet>

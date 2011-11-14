@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{handleData()}"
+    addedToStage="{refreshAllData()}" creationComplete="{init()}" xmlns:ui="flash.ui.*">
+    <mx:Metadata>
+    	[Event(name="change",type="flash.events.Event")]
+    </mx:Metadata>
+    <!--<mx:Binding destination="this.randomFeed" source="rf.selected" />-->
+<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+		<mx:HBox>
+			<mx:Label text="Date Used" />
+			<mx:CheckBox id="rf" labelPlacement="right" label="Random Inventory" selected="{this.randomFeed}" click="{this.randomFeed=!this.randomFeed;updateData()}"/>
+		</mx:HBox>
+		
+		<mx:List id="usedData" enabled="{!this.randomFeed}" dataProvider="{liList}" width="400" height="{sources.height}" dropEnabled="true" allowDragSelection="true" dragMoveEnabled="true"
+			allowMultipleSelection="false" dragEnabled="true" updateComplete="{itemDropped()}"
+			change="{this.dispatchEvent(new Event('dataLimitChanged'))}">
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" toolTip="{data.source}">
+						<mx:Image source="{data.image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+						<mx:Label text="{data.label}" width="100%" selectable="false"/>
+					</mx:HBox>
+				</mx:Component>
+			</mx:itemRenderer>
+			<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    	</mx:contextMenu>
+		</mx:List>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+	<mx:ComboBox id="sourcePicker" dataProvider="{sources.getChildren()}" labelField="label" width="100%" change="{selectedSourceChanged()}"/>
+	<mx:ViewStack id="sources" width="{usedData.width}" selectedIndex="{sourcePicker.selectedIndex}" creationComplete="{selectedSourceChanged()}">
+		<!--<mx:Canvas id="models" data="{modelsList}" label="Model Info" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:List height="500" width="100%" dataProvider="{modelsList}"
+				allowMultipleSelection="false" dragEnabled="true">
+				<mx:itemRenderer>
+				<mx:Component>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+						<mx:Image source="{data.image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+						<mx:Label text="{data.label}" width="100%" selectable="false"/>
+					</mx:HBox>
+				</mx:Component>
+				</mx:itemRenderer>
+			</mx:List>
+		</mx:Canvas>-->
+		<mx:Canvas id="inventory" data="{inventoryList}" label="Inventory" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:List height="500" width="100%" dataProvider="{inventoryList}"
+				allowMultipleSelection="false" dragEnabled="true">
+				<mx:itemRenderer>
+				<mx:Component>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+						<mx:Image source="{data.image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+						<mx:Label text="{data.label}" width="100%" selectable="false"/>
+					</mx:HBox>
+				</mx:Component>
+				</mx:itemRenderer>
+			</mx:List>
+		</mx:Canvas>
+		<mx:Canvas id="store" data="{storeList}" label="Boutique" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:List height="500" width="100%" dataProvider="{storeList}"
+				allowMultipleSelection="false" dragEnabled="true">
+				<mx:itemRenderer>
+				<mx:Component>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+						<mx:Image source="{data.image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+						<mx:Label text="{data.label}" width="100%" selectable="false"/>
+					</mx:HBox>
+				</mx:Component>
+				</mx:itemRenderer>
+			</mx:List>
+		</mx:Canvas>
+		<mx:Canvas id="calendar" data="{calendarList}" label="Calendar" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:List height="500" width="100%" dataProvider="{calendarList}"
+				allowMultipleSelection="false" dragEnabled="true">
+				<mx:itemRenderer>
+				<mx:Component>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+						<mx:Image source="{data.image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+						<mx:Label text="{data.label}" width="100%" selectable="false"/>
+					</mx:HBox>
+				</mx:Component>
+				</mx:itemRenderer>
+			</mx:List>
+		</mx:Canvas>
+	</mx:ViewStack>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<!--<mx:Button label="{selectFiveLable}" click="{setRandomFive()}" selected="{this.randomFeed}"/>-->
+		<mx:Button label="Save Data Setting" click="{updateData()}" enabled="{liList.length==dataLimit}" />
+	</mx:VBox>
+</mx:HBox>
+	<mx:Binding destination="_cmRemove.enabled" source="Boolean(usedData.selectedItem)" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.admin.services.DataTableIDService;
+			import com.hphant.modsite.admin.model.DataDragObject;
+			import mx.collections.XMLListCollection;
+			import com.hphant.data.model.StoreRecord;
+			import com.hphant.data.model.ModelRecord;
+			import com.hphant.data.view.ModelInfoPallet;
+			import com.hphant.data.model.CalendarRecord;
+			import com.hphant.data.model.InventoryRecord;
+			import com.hphant.data.control.event.InventoryEvent;
+			import com.hphant.data.control.event.ModelEvent;
+			import com.hphant.data.control.event.CalendarEvent;
+			import com.hphant.data.control.event.StoreEvent;
+			import com.hphant.remoting.GeneralEvent;
+			import mx.managers.HistoryManager;
+			import com.hphant.data.control.DataModelLocator;
+			import com.hphant.modsite.data.DataToImageTranslator;
+			import mx.collections.ArrayCollection;
+			import com.hphant.modsite.admin.model.ModuleContent;
+			[Bindable]
+			private var liList:ArrayCollection;
+			[Bindable]
+			private var modelsList:ArrayCollection;
+			[Bindable]
+			private var calendarList:ArrayCollection;
+			[Bindable]
+			private var storeList:ArrayCollection;
+			[Bindable]
+			private var inventoryList:ArrayCollection;
+			private var translator:DataToImageTranslator = DataToImageTranslator.getInstance();
+			private var tableDictionary:Dictionary = new Dictionary();
+			private var defaultTableDictionary:Object;
+			private function handleData():void{
+				if(data){
+					liList = new ArrayCollection();
+					for each(var table:XML in XMLList(data)){
+						this.randomFeed = Boolean(String(table.@id)>'' ? String(String(table.@id).split('_')[1])=='0' : false);
+						log('Table ID is:'+String(table.@id)+'|');
+						var source:String = String(String(table.@id)>'' ? String(String(table.@id).split('_')[0]) : table.@['class']).toLowerCase();
+						tableDictionary[source] = table;
+						
+						var ul:XML = translator.quickTranslate(table);
+						
+						for each(var li:XML in ul.li){
+							var ddo:DataDragObject = new DataDragObject();
+							ddo.image = String(li.a.img.@src);
+							ddo.source = source;
+							ddo.label = String(li.p);
+							ddo.data = li;
+							ddo.tr = XML(table.tbody.tr[li.childIndex()]);
+							tableDictionary[li] = table;
+							liList.addItem(ddo);	
+						}
+					}	
+				}
+			}
+			private var _availableDataSources:XMLList;
+			[Inspectable]
+			[Bindable]
+			public function get availableDataSources():XMLList{
+				return _availableDataSources;
+			}
+			public function set availableDataSources(value:XMLList):void{
+				_availableDataSources = value;
+				log("Available Data Sources:\n"+value);
+				defaultTableDictionary = new Object();
+				if(_availableDataSources){
+					for each(var table:XML in _availableDataSources){
+						var source:String = String(table.@['class']).toLowerCase();
+						defaultTableDictionary[source] = table;
+						translator.setHeader(XMLList(table));
+					}	
+				}
+				this.handleData();
+			}
+			
+			private function ddoToTableRow(ddo:DataDragObject):XML{
+				var xml:XML = <tr />;
+				try{
+					xml = XML(tableDictionary[ddo]);
+				}catch(e:Error){
+					log(e.message);
+				}
+				log("The ddo is ["+ddo+"]"+xml+"|");
+				return xml;
+			}
+			private function liNodeToTableRow(li:XML):XML{
+				var id:Array = String(li.@id).split('_');
+				var xml:XML = <tr />;
+				try{
+					var tr:XMLList = tableDictionary[li].tbody.tr;
+					xml = XML(tr[id[id.length-1]]);
+				}catch(e:Error){
+					log(e.message);
+				}
+				log("The li id is ["+li.@id+"]"+xml+"|");
+				return xml;
+			}
+			private function recordToTableRow(record:Object):XML{
+				var xml:XML;
+				try{
+					xml = XML(record.toXMLString());
+				}catch(e:Error){
+					log(e.message);
+				}
+				return xml;
+			}
+			[Bindable('dataLimitChanged')]
+			public function get dataLimit():uint{
+				return this._dataLimit;
+			}
+			public function set dataLimit(value:uint):void{
+				this._dataLimit = value;
+				this.itemDropped();
+				this.dispatchEvent(new Event('dataLimitChanged'));
+				this.dispatchEvent(new Event('selectedlabelChanged'));
+			}
+			[Bindable('dataLimitChanged')]
+			private function get dropEnable():Boolean{
+				return this._dataLimit ? liList.length<this._dataLimit : true;
+			}
+			private var _dataLimit:uint = 5;
+			
+			[Bindable('selectedlabelChanged')]
+			private function get selectFiveLable():String{
+				return "Select "+_dataLimit+" from "+sources.selectedChild.label;
+			}
+			private function setRandomFive():void{
+				liList = new ArrayCollection();
+				var usedIdx:ArrayCollection = new ArrayCollection();
+				inventoryRefresh(null);
+				for(var i:uint=0; i<5; i++){
+					var l:uint = inventoryList.length;
+					var idx:uint = Math.floor(Math.random()*l);
+					if(liList.length<l){
+						while(usedIdx.contains(idx)){
+							idx = Math.floor(Math.random()*l);	
+						}
+						liList.addItem(this.inventoryList.getItemAt(idx));
+						usedIdx.addItem(idx);
+					}
+				}
+			}
+			private function selectedSourceChanged():void{
+				this.dispatchEvent(new Event('selectedlabelChanged'));
+			}
+			[Bindable]
+			private var randomFeed:Boolean = false;
+			private function itemDropped():void{
+				while (liList && liList.length>this.dataLimit && this.dataLimit>0){
+					liList.removeItemAt(liList.length-1);
+				}
+			}
+			private function updateData():void{
+				var currentSource:String = "";
+				var tables:XMLListCollection = new XMLListCollection(XMLList(data));
+				var cnt:uint = 0;//tables.length;
+				var table:XML;
+				var body:XML;
+				if(this.randomFeed){
+					this.setRandomFive();
+				}
+				log(liList);
+				for each(var item:Object in liList){
+					var tr:XML = <tr/>;
+					if(item.data is XML){
+						tr = item.tr;//liNodeToTableRow(XML(item.data));
+					} else {
+						tr = recordToTableRow(item.data);
+					}
+					if(currentSource != item.source){
+						if(table){
+							if(this.randomFeed)
+									table.@id = currentSource+'_0';
+								else
+									DataTableIDService.addTable(table,true);
+							log("Here is where the DataFilter should be created or retreived and updated:"+table.@id);
+							//table.@id = currentSource+"_"+(randomFeed ? 0 : cnt);
+							table.@['class'] = currentSource;
+							
+							table.setChildren(XML(head));
+							table.appendChild(body);
+							if(!tables.contains(table))
+								tables.addItem(table);
+						}
+						currentSource = String(item.source);
+						
+						var head:String = '<thead />';
+						try{
+							head = XMLList(defaultTableDictionary[currentSource].thead).toXMLString();
+						} catch (e:Error){
+							log("Unable to create Table Header for "+currentSource+".",2);
+						}
+						table = (cnt<tables.length) ? XML(tables.getItemAt(cnt)) : null;
+						if(table){
+							if(String(table.@id).indexOf(currentSource)!=0){
+								/* DataTableIDService.removeTable(table);
+								table.@id = currentSource+'_';
+								if(this.randomFeed)
+									table.@id = currentSource+'_0';
+								else
+									DataTableIDService.addTable(table,true);
+								table.@['class'] = currentSource; */
+								
+							}
+						} else {
+							table = XML('<table id="'+currentSource+'_" />');
+							/* if(this.randomFeed)
+								table.@id = currentSource+'_0';
+							else
+								DataTableIDService.addTable(table,true);
+							table.@['class'] = currentSource; */
+						}
+						cnt++;
+						body = <tbody />;
+					} else {
+						//cnt++;
+					}
+					body.appendChild(tr);
+				}
+				while(tables.length>cnt){
+					tables.removeItemAt(tables.length-1);
+				}
+				if(table){
+					if(this.randomFeed)
+									table.@id = currentSource+'_0';
+								else
+									DataTableIDService.addTable(table,true);
+					log("Here is where the DataFilter should be created or retreived and updated:"+table.@id)//+currentSource+"_"+(randomFeed ? 0 : cnt));
+					//table.@id = currentSource+"_"+(randomFeed ? 0 : cnt);
+					//table.@['class'] = currentSource;
+					table.setChildren(XML(head));
+					table.appendChild(body);
+					if(!tables.contains(table))
+						tables.addItem(table);
+				}
+				//data = XMLList(tables.source);
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			
+			private function inventoryRefresh(event:Event):void{
+					inventoryList = new ArrayCollection();
+					for each(var record:InventoryRecord in DataModelLocator.getInstance().inventory){
+						var ddo:DataDragObject = new DataDragObject();
+						ddo.image = String(record.photoURL);
+						ddo.source = String('inventory');
+						ddo.label =String(record.stockNumber+' '+record.make+' '+record.model);
+						ddo.data = record;
+						inventoryList.addItem(ddo);
+					}	
+			}
+			private function storeRefresh(event:Event):void{
+					storeList = new ArrayCollection();
+					for each(var record:StoreRecord in DataModelLocator.getInstance().store){
+						var ddo:DataDragObject = new DataDragObject();
+						ddo.image = String(record.thumb);
+						ddo.source = String('store');
+						ddo.label =String(record.brand+' '+record.title);
+						ddo.data = record;
+						storeList.addItem(ddo);
+						
+					}
+			}
+			private function modelInfoRefresh(event:Event):void{
+					modelsList = new ArrayCollection();
+					for each(var record:ModelRecord in DataModelLocator.getInstance().models){
+						var ddo:DataDragObject = new DataDragObject();
+						ddo.image = String(record.images.split(',')[0]);
+						ddo.source = String('modelinfo');
+						ddo.label =String(record.make+' '+record.model+' '+record.submodel);
+						ddo.data = record;
+						modelsList.addItem(ddo);
+						
+					}
+			}
+			private function calendarRefresh(event:Event):void{
+					calendarList = new ArrayCollection();
+					for each(var record:CalendarRecord in DataModelLocator.getInstance().calendar){
+						var ddo:DataDragObject = new DataDragObject();
+						ddo.image = String(record.thumb);
+						ddo.source = String('calendar');
+						ddo.label =String(record.title+' '+record.date);
+						ddo.data = record;
+						calendarList.addItem(ddo);
+					}
+			}
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			[Bindable]
+			private var _cmRemove:ContextMenuItem = new ContextMenuItem("Remove Item");
+			private function init():void{
+				_cmArray.push(_cmRemove);
+				_cmRemove.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,removeItem);
+				DataModelLocator.getInstance().addEventListener('inventoryChanged',inventoryRefresh);
+				DataModelLocator.getInstance().addEventListener('storeChanged',storeRefresh);
+				DataModelLocator.getInstance().addEventListener('modelsChanged',modelInfoRefresh);
+				DataModelLocator.getInstance().addEventListener('calendarChanged',calendarRefresh);
+			}
+			private function removeItem(event:ContextMenuEvent):void{
+				this.liList.removeItemAt(this.usedData.selectedIndex);
+			}
+			
+			
+			
+			private function refreshAllData():void{
+				
+				var event:GeneralEvent = new StoreEvent(StoreEvent.GET_ALL);
+				event.dispatch();
+				event = new CalendarEvent(CalendarEvent.GET_ALL);
+				event.dispatch();
+				event = new ModelEvent(ModelEvent.GET_ALL);
+				event.dispatch();
+				event = new InventoryEvent(InventoryEvent.GET_ALL);
+				event.dispatch();
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

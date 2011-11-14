@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<project name="bmcd" default="all">
+	
+	<!-- Init the build process -->
+	<target name="init" unless="initialized">
+		<!-- Name of project and version -->
+		<tstamp/>
+		<property name="repos" location="/repos/bmcd_web_repos"/>
+		<property name="FLEX_HOME" location="${repos}/flex_sdk/3.1.0"/>
+		<property name="FLEX_CONFIG" location="${repos}/configs/wjtfleet_local/ant_build_script/flex_config.xml"/>
+		<property name="vhosts" value="/virtualhosts" />
+		<property name="web901" value="${vhosts}/901.bmcd" />
+		<property name="web999" value="${vhosts}/999.bmcd" />
+		<taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}\ant\lib\flexTasks.jar" />
+		<echoproperties/>
+		<property name="initialized" value="true" />
+	</target>
+	
+	
+	<target name="all" depends="init">
+		<antcall target="clean" />
+		<antcall target="compile" />
+		<antcall target="build" />
+	</target>
+	<target name="archive.log" depends="init">
+		<move todir="${vhosts}/archives/logs/${DSTAMP}-${TSTAMP}">
+			<fileset dir="${vhosts}/logs"/>
+		</move>
+		<mkdir dir="${vhosts}/logs" /> 
+		<mkdir dir="${vhosts}/logs/901.bmcd" /> 
+		<mkdir dir="${vhosts}/logs/999.bmcd" /> 
+	</target>
+	<target name="deploy.web" depends="clean">
+		<exec executable="bash">
+			<arg value="-norc"/>
+			<arg value="-c"/>
+			<arg value="svn export --force ${repos}/web ${web901}"/>
+		</exec>
+		<copy todir="${web999}">
+			<fileset dir="${web901}"/>
+		</copy>
+		<exec executable="bash">
+			<arg value="-norc"/>
+			<arg value="-c"/>
+			<arg value="svn export --force ${repos}/901 ${web901}"/>
+		</exec>
+		<exec executable="bash">
+			<arg value="-norc"/>
+			<arg value="-c"/>
+			<arg value="svn export --force ${repos}/configs/wjtfleet_local/config/901 ${web901}/config"/>
+		</exec>
+		<exec executable="bash">
+			<arg value="-norc"/>
+			<arg value="-c"/>
+			<arg value="svn export --force ${repos}/901 ${web999}"/>
+		</exec>
+		<exec executable="bash">
+			<arg value="-norc"/>
+			<arg value="-c"/>
+			<arg value="svn export --force ${repos}/configs/wjtfleet_local/config/999 ${web999}/config"/>
+		</exec>
+	</target>
+	
+	<target name="compile" depends="init">
+		<antcall target="compile.library" />
+		<antcall target="compile.901" />
+		<antcall target="compile.999" />
+		<antcall target="compile.css" />
+	</target>
+	<target name="compile.library" depends="init">
+		<mxmlc debug="false" 
+			output="${repos}/web/swf/moduleLibrary.swf"
+			actionscript-file-encoding="UTF-8"
+			file="${repos}/flex_src/ModuleLibraryContainer.mxml">
+			<load-config filename="${FLEX_CONFIG}" />
+			<source-path path-element="${repos}/flex_src" />
+			<compiler.source-path path-element="${repos}/flex_src" />
+		</mxmlc>
+	</target>
+	<target name="compile.901" depends="init">
+		<mxmlc debug="false" 
+			output="${repos}/web/swf/901.swf"
+			file="${repos}/flex_src/BMCD901.mxml">
+			<load-config filename="${FLEX_CONFIG}" />
+			<source-path path-element="${repos}/flex_src" />
+			<compiler.source-path path-element="${repos}/flex_src" />
+		</mxmlc>
+	</target>
+	<target name="compile.999" depends="init">
+		<mxmlc debug="false" 
+			output="${repos}/web/swf/999.swf"
+			file="${repos}/flex_src/BMCD999.mxml">
+			<load-config filename="${FLEX_CONFIG}" />
+			<source-path path-element="${repos}/flex_src" />
+			<compiler.source-path path-element="${repos}/flex_src" />
+		</mxmlc>
+	</target>
+	<target name="compile.css" depends="init">
+		<antcall target="compile.css.901" />
+		<antcall target="compile.css.999" />
+	</target>
+	<target name="compile.css.901" depends="init">
+		<mxmlc file="${repos}/flex_src/css/BMCD901CSS.css"
+			output="${repos}/web/swf/css/901.swf">
+			<load-config filename="${FLEX_CONFIG}" />
+		</mxmlc>
+	</target>
+	<target name="compile.css.999" depends="init">
+		<mxmlc file="${repos}/flex_src/css/BMCD999CSS.css"
+			output="${repos}/web/swf/css/999.swf">
+			<load-config filename="${FLEX_CONFIG}" />
+		</mxmlc>
+	</target>
+	<target name="deploy.flex" depends="init">
+		<antcall target="deploy.901" />
+		<antcall target="deploy.999" />
+	</target>
+	<target name="deploy.901" depends="init">
+		<copy file="${repos}/web/swf/901.swf" tofile="${web901}/swf/main.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/moduleLibrary.swf" tofile="${web901}/swf/moduleLibrary.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/css/901.swf" tofile="${web901}/swf/css/901.swf" overwrite="true"/>
+		<copy file="${FLEX_HOME}/frameworks/rsls/framework_3.1.0.2710.swz" tofile="${web901}/swf/framework_3.1.0.2710.swz" overwrite="true"/>
+		<copy file="${FLEX_HOME}/frameworks/rsls/framework_3.1.0.2710.swf" tofile="${web901}/swf/framework_3.1.0.2710.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/SkinOverPlayStopSeekMuteVol.swf" tofile="${web901}/swf/SkinOverPlayStopSeekMuteVol.swf" overwrite="true"/>
+	</target>
+	<target name="deploy.999" depends="init">
+		<copy file="${repos}/web/swf/999.swf" tofile="${web999}/swf/main.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/moduleLibrary.swf" tofile="${web999}/swf/moduleLibrary.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/css/999.swf" tofile="${web999}/swf/css/999.swf" overwrite="true"/>
+		<copy file="${FLEX_HOME}/frameworks/rsls/framework_3.1.0.2710.swz" tofile="${web999}/swf/framework_3.1.0.2710.swz" overwrite="true"/>
+		<copy file="${FLEX_HOME}/frameworks/rsls/framework_3.1.0.2710.swf" tofile="${web999}/swf/framework_3.1.0.2710.swf" overwrite="true"/>
+		<copy file="${repos}/web/swf/SkinOverPlayStopSeekMuteVol.swf" tofile="${web999}/swf/SkinOverPlayStopSeekMuteVol.swf" overwrite="true"/>
+	</target>
+	<!-- Build the application -->
+	<target name="build" depends="init">
+		<antcall target="deploy.web" />
+		<antcall target="deploy.flex" />
+	</target>
+	<target name="debug.901" depends="init">
+		<antcall target="compile.library" />
+		<antcall target="compile.901" />
+		<antcall target="compile.css.901" />
+		<antcall target="deploy.901" />
+	</target>
+	<target name="debug.999" depends="init">
+		<antcall target="compile.library" />
+		<antcall target="compile.999" />
+		<antcall target="compile.css.999" />
+		<antcall target="deploy.999" />
+	</target>
+	<!-- Clean build files -->
+	<target name="clean" depends="init">
+		<delete dir="${web901}"/>
+		<delete dir="${web999}"/>
+		<antcall target="archive.log" />
+	</target>
+	
+	<target name="usage" description="Usage documentation">
+		<echo>
+			all - clean and build the project
+		</echo>
+	</target>
+</project>

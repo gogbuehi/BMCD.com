@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<project name="content_library" default="all">
+	
+	<!-- Init the build process -->
+	<target name="init" unless="initialized">
+		<!-- Name of project and version -->
+		<tstamp/>
+		<property name="FLEX_HOME" location="C:\Program Files\Adobe\Flex Builder 3\sdks\3.1.0"/>
+		<property name="webdir" value="C:\web\bmcd" />
+		<property name="proj.name" value="${ant.project.name}" />
+		<property name="proj.shortname" value="${ant.project.name}" />
+		<property name="version.major" value="0" />
+		<property name="version.minor" value="9" />
+		<property name="version.revision" value="0" />
+		<property name="APP_TITLE" value="Content Library" />
+		<property name="APP_WIDTH" value="1200" />
+		<property name="APP_HEIGHT" value="1400" />
+		
+		<!-- Global properties for this build -->
+		<property name="build.dir" location="${webdir}\builds" />
+		<property name="export.file" location="${webdir}\export_bmcd.bat"/>
+		<property name="flex_src" location="${basedir}\src" />
+		
+		<path id="project.classpath">
+			<pathelement path="${java.class.path}" />
+		</path>
+		
+		<taskdef resource="flexTasks.tasks"
+			classpath="${FLEX_HOME}\ant\lib\flexTasks.jar" />
+		
+		
+		<echoproperties/>
+		
+		<property name="initialized" value="true" />
+		
+		<mkdir dir="${build.dir}" />
+	</target>
+	
+	<!-- Default target: clean and build the application -->
+	<target name="all" depends="init">
+		<antcall target="clean" />
+		<antcall target="build" />
+	</target>
+	
+	<!-- Compile Flex files -->
+	<target name="compile.flex" depends="init">
+		<property name="revision.file" value="${basedir}\src\content_library.mxml" />
+		
+		<!-- Copy template file and replace values -->
+		<copy file="${revision.file}" tofile="${revision.file}.backup" overwrite="true"/>
+		<replace file="${revision.file}" token="[BUILD_VERSION]" value="${TODAY} ${TSTAMP}" />
+		
+		
+		<property name="module"
+			value="${ant.project.name}"
+			description="The name of the application module." />
+		<mxmlc file="${flex_src}\${module}.mxml"
+			keep-generated-actionscript="true"
+			output="${build.dir}\${ant.project.name}\${module}.swf"
+			actionscript-file-encoding="UTF-8"
+			incremental="true"
+			context-root="${ant.project.name}"
+			debug="true">
+			<load-config filename="${FLEX_HOME}\frameworks\flex-config.xml" />
+			<source-path path-element="${FLEX_HOME}\frameworks" />
+			<compiler.source-path path-element="${flex_src}" />
+			<compiler.library-path dir="${basedir}\libs" append="true">
+				<include name="Cairngorm.swc" />
+			</compiler.library-path>
+		</mxmlc>
+		
+		<html-wrapper title="${APP_TITLE}"
+			file="index.html"
+			application="app"
+			swf="${module}"
+			width="${APP_WIDTH}"
+			height="${APP_HEIGHT}"
+			version-major="${version.major}"
+			version-minor="${version.minor}"
+			version-revision="${version.revision}"
+			history="true"
+			template="express-installation"
+			output="${build.dir}\${ant.project.name}\" />
+		
+		
+		<copy file="${revision.file}.backup" tofile="${revision.file}" overwrite="true"/>
+		<delete file="${revision.file}.backup"/>
+	</target>
+	<target name="deploy.web" depends="compile.flex" os="windows">
+		<delete dir="C:\web\bmcd\web"/>
+		<exec executable="cmd">  
+			<arg value="/c"/>
+			<arg value="svn export --force c:\web\hphant.com\repos\Sites\bmcd.com\web c:\web\bmcd\web"/>
+		</exec>
+		<exec executable="cmd">
+			<arg value="/c"/>
+			<arg value="svn export --force c:\web\hphant.com\repos\Sites\bmcd.com\configs\windows_local\config c:\web\bmcd\web\includes\config"/>
+		</exec>
+		<copy todir="c:\web\bmcd\web\apps\cl\">
+			<fileset dir="c:\web\bmcd\builds\content_library"/>
+		</copy>
+	</target>
+	
+	<!-- Build the application -->
+	<target name="build" depends="init">
+		<antcall target="deploy.web" />
+	</target>
+	
+	<!-- Clean build files -->
+	<target name="clean" depends="init">
+		<delete dir="${basedir}\generated" />
+		<delete dir="${build.dir}" />
+	</target>
+	
+	<target name="usage" description="Usage documentation">
+		<echo>
+			all - clean and build the project
+		</echo>
+	</target>
+</project>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Text implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+			 focusThickness="0"
+			 buttonMode="false"
+			 condenseWhite="true"
+			 updateComplete="{updateComp()}" creationComplete="{refreshStyleDef()}"
+			 xmlns:mx="http://www.adobe.com/2006/mxml">
+			 <mx:Boolean id="insertBreaks">true</mx:Boolean>
+	<mx:Script>
+		<![CDATA[
+			import mx.resources.ResourceManager;
+			import mx.core.UITextField;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			public override function get textHeight():Number{
+				return (this.textField) ? this.textField.textHeight : super.textHeight;
+			}
+		    private function refreshStyleDef():void{
+		    	
+		    }
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged){
+					if(this._xml){
+						this.setHTML();
+					} else {
+						this.htmlText = "";
+					}
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function setHTML():void{
+				this._css = new StyleSheet();
+				this._css.setStyle("a",{textDecoration:"underline"});
+				XML.ignoreWhitespace = true;
+				var temp:String = "";
+				if(this._xml is XML && this._xml.name()=="div"){
+					temp = this._xml.children().toXMLString();
+				} else {
+					temp = this._xml.toXMLString();
+				}
+				temp = temp.split("href=\"").join("href=\"event:").split("event:mailto:").join("mailto:");
+				temp = temp.split("&gt;").join(">").split("&lt;").join("<");
+				
+				if(this.insertBreaks){
+					temp = temp.split("<br />").join("<a />").split("</p><p").join("</p><p><a /></p><p").split("</p>\n<p").join("</p><p><a /></p><p");
+				}
+				this.htmlText = temp;
+			}
+			
+			private var _textFormat:TextFormat;
+			
+			
+			private function  updateComp():void{
+				if(!this._css){
+					this._css = new StyleSheet();
+					this._css.setStyle("a",{textDecoration:"underline"});
+				}
+				 if(this.textField.styleSheet!=this._css){
+					this.textField.styleSheet = this._css;
+				} 
+			}
+			private var _styleChanged:Boolean = false;
+			public override function styleChanged(styleProp:String):void{
+				super.styleChanged(styleProp);
+				this._styleChanged = true;
+				this.invalidateDisplayList();
+			}
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				 if(this._styleChanged){
+					this.htmlText = "";
+					this.textField.styleSheet = null;
+					this.textField.defaultTextFormat = UITextField(this.textField).getTextStyles();
+					this._styleChanged = false;
+					if(this._xml){
+						this.setHTML();
+					}
+				} 
+			}
+		]]>
+	</mx:Script>
+</mx:Text>

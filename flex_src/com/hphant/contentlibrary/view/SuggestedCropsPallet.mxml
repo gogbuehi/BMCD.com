@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" label="Available Images" xmlns:buttons="com.hphant.components.buttons.*" xmlns:view="com.hphant.contentlibrary.view.*" xmlns:process="com.hphant.contentlibrary.process.*">
+	<mx:TileList rowHeight="50" columnWidth="75" backgroundAlpha="0" rowCount="10" columnCount="3" maxColumns="3" 
+	    dragEnabled="true"
+	    allowDragSelection="{allowDragSelection}"
+	    allowMultipleSelection="{allowMultipleSelection}"
+		dataProvider="{data}">
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" toolTip="{data.title}" source="{data.source}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	<buttons:PalletButton id="newImageButton" palletPosition="none" label="New Image" palletLabel="New Image">
+		<buttons:pallet>
+			<view:NewImageCropPallet data="{master}" process="{newImageProcess}" cropSizes="{cropSizes}"/>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<mx:Boolean id="allowDragSelection">true</mx:Boolean>
+	<mx:Boolean id="allowMultipleSelection">true</mx:Boolean>
+	<process:NewCropProcess id="newImageProcess" complete="{updateCropList(event)}" cropSizes="{cropSizes}" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.model.Master;
+			import com.hphant.constants.ImageConstants;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			
+			[Bindable]
+			[Inspectable]
+			public var master:Master;
+			
+			[Bindable]
+			public function set cropSizes(value:Array):void{
+				this._cropSizes = (value) ? value : ImageConstants.CROP_SIZES;
+			}
+			public function get cropSizes():Array{
+				return this._cropSizes;
+			}
+			
+			private var _cropSizes:Array = ImageConstants.CROP_SIZES;
+			
+			private function updateCropList(event:Event=null):void{
+				var allCrops:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+				allCrops.dispatch();
+			}
+		]]>
+	</mx:Script>
+</Pallet>

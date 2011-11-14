@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas backgroundColor="#FFFFFF" backgroundAlpha="0" width="100%" height="100%"
+    initialize="{this.initApp()}"
+    addedToStage="{addKeyListener();addLoggerListener()}"
+    removedFromStage="{removeKeyListener();removeLoggerListener()}"
+	creationComplete="this.createComplete()"
+	xmlns:local="*"
+ 	disabledOverlayAlpha="0"
+    verticalScrollPolicy="off"
+    horizontalScrollPolicy="off"
+    implements="com.hphant.modsite.IModsite"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:system="com.hphant.modsite.system.*" 
+	xmlns:components="com.hphant.components.*" xmlns:containers="com.hphant.modsite.site.assets.containers.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			import mx.managers.DragManager; 
+			import mx.managers.HistoryManager; 
+			private var _dm:DragManager; 
+			private var _hm:HistoryManager;
+			private var _pm:PopUpManager;
+			// Admin Key
+			[Bindable]
+			[Inspectable]
+			public function get adminKey():String{return this._adminKey;}
+			public function set adminKey(value:String):void{
+				this._adminKey = value;
+			}
+			private var _adminKey:String = "modsiteadmin";
+			private var _adminLock:String = "";
+			private function adminKeyListener(event:KeyboardEvent):void{
+				_adminLock+=String.fromCharCode(event.charCode);
+				Logger.log("Admin Key:"+_adminLock);
+				if(_adminKey.indexOf(_adminLock)==0){
+					if(_adminKey==_adminLock){
+						LoginService.getInstance().login();
+					}
+				} else {
+					_adminLock = "";
+				}
+			}
+			private function addKeyListener():void{
+				this.stage.addEventListener(KeyboardEvent.KEY_DOWN,adminKeyListener);
+			}
+			private function addLoggerListener():void{
+				this.stage.addEventListener(KeyboardEvent.KEY_DOWN,Logger.logKeyListener);
+			}
+			private function removeKeyListener():void{
+				this.stage.removeEventListener(KeyboardEvent.KEY_DOWN,adminKeyListener);
+			}
+			private function removeLoggerListener():void{
+				this.stage.removeEventListener(KeyboardEvent.KEY_DOWN,Logger.logKeyListener);
+			}
+			
+			// SWF Root
+			[Bindable]
+			[Inspectable]
+			public function get rootFolder():String{return this._rootFolder;}
+			public function set rootFolder(value:String):void{
+				this._prevRootFolderValues.push(this._rootFolder);
+				this._rootFolder = value;
+			}
+			private var _rootFolder:String = "/swf/";
+			private var _prevRootFolderValues:Array = new Array();
+			// CSS File
+			[Bindable]
+			[Inspectable]
+			public function get cssFile():String{return this._cssFile;}
+			public function set cssFile(value:String):void{
+				this._prevCssFileValues.push(this._cssFile);
+				this._cssFile = value;
+			}
+			private var _cssFile:String = "css.swf";
+			private var _prevCssFileValues:Array = new Array();
+			// Library File
+			[Bindable]
+			[Inspectable]
+			public function get library():String{return this._libraryFile;}
+			public function set library(value:String):void{
+				this._prevLibraryValues.push(this._libraryFile);
+				this._libraryFile = value;
+			}
+			private var _libraryFile:String = "moduleLibrary.swf";
+			private var _prevLibraryValues:Array = new Array();
+			// Library Version File
+			[Bindable]
+			[Inspectable]
+			public function get libraryVersion():String{return this._libraryVersionFile;}
+			public function set libraryVersion(value:String):void{
+				this._prevLibraryVersionValues.push(this._libraryVersionFile);
+				this._libraryVersionFile = value;
+			}
+			
+			// Content Library Version File
+			[Bindable]
+			[Inspectable]
+			public function get adminContainer():String{return this._adminContainer;}
+			public function set adminContainer(value:String):void{
+				this._prevAdminContainerValues.push(this._adminContainer); 
+				this._adminContainer = value;
+			}
+			private var _adminContainer:String = "admin.swf";
+			private var _prevAdminContainerValues:Array = new Array();
+			
+			private var _libraryVersionFile:String = "library.properties";
+			private var _prevLibraryVersionValues:Array = new Array();
+			// CSS Version File
+			[Bindable]
+			[Inspectable]
+			public function get cssVersion():String{return this._cssVersionFile;}
+			public function set cssVersion(value:String):void{
+				this._prevCssVersionValues.push(this._cssVersionFile);
+				this._cssVersionFile = value;
+			}
+			private var _cssVersionFile:String = "css.properties";
+			private var _prevCssVersionValues:Array = new Array();
+			// Main Version File
+			[Bindable]
+			[Inspectable]
+			public function get mainVersion():String{return this._mainVersionFile;}
+			public function set mainVersion(value:String):void{
+				this._prevMainVersionValues.push(this._mainVersionFile);
+				this._mainVersionFile = value;
+			}
+			private var _mainVersionFile:String = "main.properties";
+			private var _prevMainVersionValues:Array = new Array();
+			// Header Class
+			[Bindable]
+			[Inspectable]
+			public function get headerClass():String{return this._headerClass;}
+			public function set headerClass(value:String):void{
+				this._prevHeaderClassValues.push(this._headerClass);
+				this._headerClass = value;
+			}
+			private var _headerClass:String = "ModHeader";
+			private var _prevHeaderClassValues:Array = new Array();
+			// Footer Class
+			[Bindable]
+			[Inspectable]
+			public function get footerClass():String{return this._footerClass;}
+			public function set footerClass(value:String):void{
+				this._prevFooterClassValues.push(this._footerClass);
+				this._footerClass = value;
+			}
+			private var _footerClass:String = "ModFooter";
+			private var _prevFooterClassValues:Array = new Array();
+			
+			private static var _instance:ModSite;
+			public static function  getInstance():ModSite{
+				return _instance;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.modelInfo.ModelInfoToImageTranslator;
+			import com.hphant.modsite.data.store.ProductToImageTranslator;
+			import com.hphant.modsite.data.calendar.EventToImageTranslator;
+			import com.hphant.modsite.data.inventory.FeaturedItemsTranslator;
+			import com.hphant.modsite.data.DataToImageTranslator;
+			import com.hphant.modsite.system.ModSiteMenuConverter;
+			import com.hphant.managers.MenuManager;
+			import com.hphant.services.js.PasswordRequestService;
+			import com.hphant.services.js.LogoutServiceEvent;
+			import com.hphant.services.js.LogoutService;
+			import com.hphant.services.js.LoginServiceEvent;
+			import com.hphant.services.js.LoginService;
+			import com.hphant.managers.JSServiceManager;
+			import mx.states.State;
+			import com.hphant.modsite.site.assets.containers.interfaces.ISiteBody;
+			import com.hphant.modsite.admin.IAdminManager;
+			import com.hphant.modsite.system.interfaces.IURIManager;
+			import mx.preloaders.DownloadProgressBar;
+			import mx.core.Application;
+			import com.hphant.managers.BrowserScrollManager;
+			import com.hphant.modsite.admin.TemplateHTML;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.utils.VersionInfo;
+			import mx.controls.ToolTip;
+			import mx.managers.ToolTipManager;
+			import com.hphant.utils.SWFResizer;
+			import com.hphant.modsite.data.Size;
+			import com.hphant.modsite.system.events.URISenderEvent;
+			import com.hphant.modsite.system.events.URIRequesterEvent;
+			import com.hphant.modsite.system.events.ViewStateChangeEvent;
+			import mx.events.StateChangeEvent;
+			import mx.events.FlexEvent;
+			import mx.core.UIComponent;
+			import com.hphant.utils.Logger;
+			import mx.events.ModuleEvent;
+			import mx.modules.ModuleLoader;
+			import mx.controls.SWFLoader;
+			import mx.events.ResizeEvent;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.system.interfaces.ICSSLoader;
+			import com.hphant.modsite.site.modules.interfaces.IModuleLibrary;
+			import com.hphant.modsite.system.CSSLoader;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.system.URIManager;
+			import com.hphant.modsite.system.events.URIManagerEvent;
+			private var i:uint = 0;
+			private var _uri:URIManager;
+			
+			public function get uriManager():IURIManager{
+				return this._uri;
+			}
+			
+			private var css:StyleSheet;
+			private var _cssLoader:ICSSLoader;
+			private var _modulelibrary:IModuleLibrary;
+			public function get moduleLibrary():IModuleLibrary{
+				return this._modulelibrary;
+			}
+			private var _libraryLoader:ModuleLoader = new ModuleLoader();
+			private var _adminLoader:ModuleLoader = new ModuleLoader();
+			private var _progress:DownloadProgressBar = new DownloadProgressBar();
+			private var _externalHScrollbar:Boolean;
+			private var _externalVScrollbar:Boolean;
+			private var inOutSequence:Boolean=false;
+			private function start(e:Event):void{
+				Logger.log("Starting Site");
+				if(Application.application.parameters.adminMode=="true"){
+					this.startAdmin();
+				}
+				this._uri.goToURI("");
+			}
+			private function initApp():void{
+				if(Application.application.parameters.logType){
+					Logger.logType = Application.application.parameters.logType;
+				}
+				Logger.log("Initializing Site"); 
+			    MenuManager.getInstance().converter = new ModSiteMenuConverter();
+			    
+			    DataToImageTranslator.registerTranslator('inventory',new FeaturedItemsTranslator());
+			    DataToImageTranslator.registerTranslator('calendar',new EventToImageTranslator());
+			    DataToImageTranslator.registerTranslator('store',new ProductToImageTranslator());
+			    DataToImageTranslator.registerTranslator('modelinfo',new ModelInfoToImageTranslator());
+				JSServiceManager.getInstance().registerService("LoginService",LoginService.getInstance().successCallback,LoginService.getInstance().errorCallback);
+				JSServiceManager.getInstance().registerService("ForgotPasswordService",PasswordRequestService.getInstance().successCallback,PasswordRequestService.getInstance().errorCallback);
+				JSServiceManager.getInstance().registerService("LogoutService",LogoutService.getInstance().successCallback,LogoutService.getInstance().errorCallback);
+				LoginService.getInstance().addEventListener(LoginServiceEvent.LOGIN,loginHandler);
+				LogoutService.getInstance().addEventListener(LogoutServiceEvent.LOGOUT,logoutHandler);
+			//	LoginService.getInstance().addEventListener(LoginServiceEvent.ERROR,loginHandler);
+			/* 	if(!mainVersion){throw new Error("ModSite.mainVersion is null. Previous values were ["+this._prevMainVersionValues+"]");}
+				if(!cssVersion){throw new Error("ModSite.cssVersion is null. Previous values were ["+this._prevCssVersionValues+"]");}
+				if(!libraryVersion){throw new Error("ModSite.libraryVersion is null. Previous values were ["+this._prevLibraryValues+"]");}
+				var mainV:VersionInfo = new VersionInfo(new URLRequest(rootFolder+mainVersion));
+				var cssV:VersionInfo = new VersionInfo(new URLRequest(rootFolder+cssVersion));
+				var libraryV:VersionInfo = new VersionInfo(new URLRequest(rootFolder+libraryVersion));  */
+				ExternalInterface.addCallback("reportWindowSize",windowSizeChanged);
+				ExternalInterface.addCallback("startAdmin",this.startAdmin);
+				ExternalInterface.addCallback("endAdmin",this.removeAdmin);
+				XML.prettyIndent = 0;
+				XML.prettyPrinting = false;
+				XML.ignoreComments = true;
+				XML.ignoreWhitespace = false;
+				XML.ignoreProcessingInstructions = true;
+				SWFResizer.resizeFunction = this.renderStage;
+				this._externalHScrollbar = (this.width < this.site.width);
+				this._uri = new URIManager();
+				this._uri.addEventListener(URIManagerEvent.URI_CHANGED,this.uriChanged);
+				this._uri.addEventListener(URIRequesterEvent.REQUEST_MADE,this.disablePage);
+				this._uri.addEventListener(URISenderEvent.SEND_ERROR,this.uriSendError);
+				this._uri.addEventListener(URIRequesterEvent.REQUEST_ERROR,this.uriRequestError);
+				this._uri.addEventListener(URISenderEvent.SEND_COMPLETE,this.uriSendComplete);
+				this._cssLoader = CSSLoader.getInstance();
+				this._cssLoader.addEventListener(Event.COMPLETE,this.start);
+				this.viewStateController_in.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.allNewModsAdded);
+				this.viewStateController_out.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.allOldModsRemoved);
+				
+				this._libraryLoader.addEventListener(ModuleEvent.READY,this.loadCSSNext);
+				this._libraryLoader.url=rootFolder+this.library;
+				this._libraryLoader.loadModule();
+			}
+			private function loginHandler(event:LoginServiceEvent):void{
+				startAdmin();
+			}
+			private function logoutHandler(event:LogoutServiceEvent):void{
+				removeAdmin();
+			}
+			private var adminLoaded:Boolean = false;
+			private function startAdmin():void{
+				if(!adminLoaded){
+					Logger.log("[Site] Loading Admin Container");
+					this._adminLoader.url = rootFolder+this.adminContainer;
+					this._adminLoader.loadModule();
+					this._adminLoader.addEventListener(ModuleEvent.READY,this.startAdminContainer);
+				} else {
+					startAdminContainer(null);
+				}
+			}
+			public function endAdmin():void{
+				LogoutService.getInstance().logout();
+				//ExternalInterface.call("endAdmin");
+			}
+			private function removeAdmin():void{
+				this.parent.removeChild(this._adminLoader);
+				addKeyListener();
+				//this._adminLoader.unloadModule();
+			}
+			private function startAdminContainer(event:ModuleEvent):void{
+				Logger.log("[Site] Starting Admin Container");
+				adminLoaded = true;
+				removeKeyListener();
+				IAdminManager(this._adminLoader.child).site = this;
+				IAdminManager(this._adminLoader.child).moduleLibrary = this._modulelibrary;
+				this._adminLoader.percentWidth = 100;
+				this._adminLoader.percentHeight = 100;
+				this.parent.addChild(this._adminLoader);
+				IAdminManager(this._adminLoader.child).start();
+			}
+			private function windowSizeChanged(obj:Object):void{
+				if(obj)
+					Logger.log(this+" Size of window changed to : "+obj.width+" X "+obj.height);
+				renderStage();
+			}
+			public function renderStage():void{
+				try{
+					var ws:Object = ExternalInterface.call("getWindowSize");
+					var h:Number = this.siteFrame.height + this.siteLayer.getStyle('paddingTop')+this.siteLayer.getStyle('paddingBottom');
+					var w:Number = this.siteFrame.width;
+					this._externalHScrollbar = !(w < ws.width-1);
+					this._externalVScrollbar = !(h < ws.height-1);
+					var s:Object = new Object();
+					s.width =  (this._externalHScrollbar) ? w : "100%";
+					s.height =  (this._externalVScrollbar) ? h : "100%";
+					ExternalInterface.call("swfResizeEvent",s);
+					 BrowserScrollManager.getInstance().width = ws.width;
+					BrowserScrollManager.getInstance().height = ws.height; 
+				} catch (e:Error){
+					
+				}
+			}
+			private var modsAdded:Boolean;
+			private var modsRemoved:Boolean;
+			private function allNewModsAdded(e:ViewStateChangeEvent):void{
+				Logger.log("[Site] All New Modules added to stage. "+buildCnt);
+				if(buildCnt>0){
+					this.modsAdded=true;
+					this.enablePage();
+				} else {
+					this.newMods = new Array();
+					this.addedMods = new Array();
+					this.createdMods = new Array();
+					this.inOutSequence = false;
+					this.doBuildout = false;
+					this.setBody(this.bodyXML);
+					this.doBuildout = true;
+				}
+				buildCnt++;
+			}
+			private function allOldModsRemoved(e:ViewStateChangeEvent):void{
+				this.modsRemoved = true;
+				Logger.log("[Site] All Old Modules removed from stage.");
+				if(this.inOutSequence){
+					this.viewStateController_in.start();
+				} else {
+					this.enablePage();
+				}
+			}
+			private function enablePage():void{
+				if(this.modsAdded && this.modsRemoved){
+					Logger.log("[Site] Enable page.");
+				 	this.renderStage();
+					this.enabled = true;
+				}
+			}
+			private function disablePage(e:URIRequesterEvent):void{
+				Logger.log("[Site] Disable Page : "+e.uri);
+				e = null;
+				this.enabled = this.modsAdded = this.modsRemoved = false;
+			}
+			private function uriRequestError(e:URIRequesterEvent):void{
+				Logger.log("[Site] Request Error : "+e.uri);
+				e = null;
+				this.modsAdded = this.modsRemoved = true;
+				this.enablePage();	
+			}
+			private function uriSendError(e:URISenderEvent):void{
+				this.enablePage();
+				e = null;
+			}
+			private function uriSendComplete(e:URISenderEvent):void{
+				e.clear();
+			}
+			private function createComplete():void{
+				ModSite._instance = this;
+				 BrowserScrollManager.getInstance();
+			}
+			private function loadCSSNext(e:ModuleEvent):void{
+				this._modulelibrary = IModuleLibrary(this._libraryLoader.child);
+				this._modulelibrary.uriManager = this._uri;
+				this._modulelibrary.css = this._cssLoader;
+				this._cssLoader.url = rootFolder+cssFile;
+			}
+			private var newMods:Array;
+			private var addedMods:Array;
+			private var createdMods:Array;
+			private var doBuildout:Boolean;
+			private function setNewModListeners(mod:IModule):void{
+				Logger.log("[Site] Setting NewMod listeners on "+mod);
+				this.modsChanged = true;
+				this.newMods.push(mod);
+				var d:UIComponent = UIComponent(mod);
+				d.addEventListener(Event.ADDED_TO_STAGE,this.removeAddModListener);
+				d.addEventListener(FlexEvent.CREATION_COMPLETE,this.removeCreatedModListener);
+			}
+			private function setOldModListeners(mod:IModule):void{
+				Logger.log("[Site] Setting OldMod listeners on "+mod);
+				this.modsChanged = true;
+				this.viewStateController_out.addItem(mod);
+				var d:UIComponent = UIComponent(mod);
+				d.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.removeEnterStateModListener);
+			}
+			private function removeEnterStateModListener(e:ViewStateChangeEvent):void{
+				var d:UIComponent = UIComponent(e.currentTarget);
+				Logger.log("[Site] Remove EnterStateMod listeners on "+d);
+				Logger.log("[Site] Remove "+d+" from "+d.parent);
+					d.removeEventListener(FlexEvent.ENTER_STATE,this.removeEnterStateModListener);
+					if(d.parent){
+						d.parent.removeChild(d);
+					}
+			}
+			private function removeAddModListener(e:Event):void{
+				DisplayObject(e.currentTarget).removeEventListener(Event.ADDED_TO_STAGE,this.removeAddModListener);
+				Logger.log("[Site] Remove AddMod listeners on "+e.currentTarget);
+				this.addedMods.push(e.currentTarget);
+				if(this.doBuildout &&this.addedMods.length==this.newMods.length && this.addedMods.length==this.createdMods.length){
+					if(!this.inOutSequence){
+						this.viewStateController_in.start();
+					}
+					this.viewStateController_out.start();
+				}
+			}
+			private function removeCreatedModListener(e:FlexEvent):void{
+				DisplayObject(e.currentTarget).removeEventListener(FlexEvent.CREATION_COMPLETE,this.removeCreatedModListener);
+				Logger.log("[Site] Remove CreateMod listeners on "+e.currentTarget);
+				this.createdMods.push(e.currentTarget);
+				if(this.doBuildout &&this.addedMods.length==this.newMods.length && this.addedMods.length==this.createdMods.length){
+					if(!this.inOutSequence){
+						this.viewStateController_in.start();
+					}
+					this.viewStateController_out.start();
+				}
+			}
+			private function uriChanged(e:URIManagerEvent):void{
+				
+				XML.prettyIndent = 0;
+				XML.prettyPrinting = false;
+				XML.ignoreComments = true;
+				XML.ignoreWhitespace = false;
+				XML.ignoreProcessingInstructions = true;
+				this.newMods = new Array();
+				this.addedMods = new Array();
+				this.createdMods = new Array();
+				this.inOutSequence = false;
+				this.doBuildout = false;
+				if(e.supplemental){
+					var supCnt:int = 0;
+					for each(var string:String in e.supplemental){
+						supCnt++;
+						try{
+							var txml:XML = new XML(string);
+							this._modulelibrary.setSupplementalData(txml.body.div.@id,txml.body.div.toXMLString());
+						}catch(err:Error){
+							Logger.log("[Site] Supplemental data "+supCnt+" of "+e.supplemental.length+" is malformed.",1);
+							Logger.log("[Site] "+err.message,1);
+						}
+						
+					}
+				}
+				if(e.html){
+					Logger.log("[Site] URI changed to "+e.uri);
+					//Logger.log("[Site] HTML changed to [\n"+e.html+"\n]\n");
+					//var display:XML;
+					
+					try{
+						//if(e.html.indexOf("ModInventory")==-1){
+							pageHTML = XML(e.html);
+							var ttl:String = XMLList(pageHTML.head.title).toString();
+							Logger.log("[Site] Setting the current title to '"+ttl+"'");
+							ExternalInterface.call("setCurrentTitle",ttl);
+						/* } else {
+							var tar:Array = e.html.split("<div class=\"floor\"");
+							var tar2:Array = String(tar[tar.length-1]).split("<div");
+							pageHTML = XML(tar[0]+"<div class=\"floor\" /><div"+tar2[tar2.length-1]);
+						} */
+						e = null;
+						System.gc();
+						headerXML = XMLList(pageHTML.body.children()).(attribute("class")==headerClass);
+						footerXML = XMLList(pageHTML.body.children()).(attribute("class")==footerClass);
+						bodyXML = XMLList(pageHTML.body.children()).(attribute("class")=="floor");
+						
+						this.setHeader(headerXML);
+						if(this.headerMod && this.footerMod){
+							this.setBody(bodyXML);
+						}
+						this.setFooter(footerXML);
+					}catch(er:Error){
+						Logger.log("[Site] HTML data is malformed.",1);
+						Logger.log("[Site] "+er.message,1);
+					}
+					this.site.visible = true;
+					this.doBuildout = true;
+					Logger.log("[Site] Site ready for buildout/brackdown transition");
+					if(removeExtra && this.newMods.length==0){
+						Logger.log("[Site] Removing unused modules from the page.");
+						if(!this.inOutSequence){
+							this.viewStateController_in.start();
+						}
+						this.viewStateController_out.start();
+					}
+				} else {
+					this.modsAdded = this.modsRemoved = true;
+					this.enablePage();
+				}
+			}
+			private var pageHTML:XML;
+			public function getPage():XML{
+				var bdy:XML = <body />
+				bdy.appendChild(this.headerMod.xml);
+				bdy.appendChild(this.getBody());
+				bdy.appendChild(this.footerMod.xml);
+				XML(this.pageHTML.body).setChildren(bdy.children());
+				return pageHTML;
+			}
+			
+			private var headerMod:IModule;
+			private var footerMod:IModule;
+			private var headerXML:XMLList;
+			private var bodyXML:XMLList;
+			private var footerXML:XMLList;
+			private var buildCnt:uint = 0;
+			private function setHeader(xml:XMLList):void{
+				var m:IModule
+				if(this.header.numChildren==0){
+					m = this.getModule(String(xml.attribute("class")));
+					this.headerMod = m;
+					this.viewStateController_in.addItem(m);
+					this.setNewModListeners(m);
+					this.header.addChild(DisplayObject(m));
+				} else {
+					m = IModule(this.header.getChildAt(0));
+				}
+				if(m){
+				m.xml = xml;
+				}
+			}
+			private var bottomIndex:int = -1;
+			private var modsChanged:Boolean = false;
+			private function getBody():XMLList{
+				var xml:XML = <temp />;
+				for each(var mod:IModule in this.body.getChildren()){
+					var flr:XML = new XML('<div class="floor" />');
+					flr.appendChild(mod.xml);
+					xml.appendChild(flr);
+				}
+				return xml.children();
+			}
+			private var removeExtra:Boolean = false;
+			private function setBody(xml:XMLList):void{
+				if(xml.children()){
+					Logger.log("[Site] Setting Body Content");
+					this.bottomIndex = -1;
+					this.modsChanged = false;
+					var k:uint = 0;
+					removeExtra = false;
+					for(var i:uint=0;i<xml.children().length();i++){
+						Logger.log("[Site] Setting Floor #"+i);
+						k = this.setFloor(k,XMLList(xml.children()[i]));
+						k++;
+					}
+					Logger.log("[Site] "+(k-1)+"is the last floor index and there are now "+this.body.numChildren+" floors");
+					while(k<this.body.numChildren){
+						var mod:IModule = IModule(this.body.getChildAt(k));
+						this.setOldModListeners(mod);
+						k++;
+						removeExtra = true;
+					}
+					Logger.log("[Site] Looking for extra modules to remove.");
+					if(!this.modsChanged){
+						Logger.log("[Site] Modules Changed. Re-enable page.");
+						this.modsAdded = this.modsRemoved = true;
+						this.enablePage();
+						Logger.log("[Site] Looking for extra modules to remove.");
+						if(removeExtra){
+							Logger.log("[Site] Removing unused modules from the page.");
+							if(!this.inOutSequence){
+								this.viewStateController_in.start();
+							}
+							this.viewStateController_out.start();
+						}
+					}
+					
+				}
+			}
+			public function replaceModule(moduleIn:IModule,moduleOut:IModule):void{
+				Logger.log("[Site] Replacing "+moduleOut+" with "+moduleIn);
+				/* 
+				this.setOldModListeners(moduleOut);
+				this.setNewModListeners(moduleIn);
+				this.body.addChildAt(DisplayObject(moduleIn),this.body.getChildIndex(DisplayObject(moduleOut)));
+				this.viewStateController_in.addItem(moduleIn);
+				this.inOutSequence = true;
+				//this.viewStateController_in.start();
+				this.viewStateController_out.start();
+				 */
+				 UIComponent(moduleIn).currentState = State(UIComponent(moduleIn).states[UIComponent(moduleIn).states.length-1]).name;
+				this.body.addChildAt(DisplayObject(moduleIn),this.body.getChildIndex(DisplayObject(moduleOut)));
+				 this.body.removeChild(DisplayObject(moduleOut));
+				  UIComponent(moduleOut).currentState = State(UIComponent(moduleOut).states[0]).name;
+			}
+			public function insertModule(moduleIn:IModule,index:uint):void{
+				
+				Logger.log("[Site] Inserting "+moduleIn+" at index "+index);
+				/* 
+				this.setNewModListeners(moduleIn);
+				this.body.addChildAt(DisplayObject(moduleIn),index);
+				this.viewStateController_in.addItem(moduleIn);
+				this.viewStateController_in.start();
+				 */
+				 UIComponent(moduleIn).currentState = State(UIComponent(moduleIn).states[UIComponent(moduleIn).states.length-1]).name;
+				
+				 this.body.addChildAt(DisplayObject(moduleIn),index);
+				  
+			}
+			private function setFooter(xml:XMLList):void{
+				var m:IModule;
+				if(this.footer.numChildren==0){
+					m = this.getModule(String(xml.attribute("class")));
+					this.footerMod = m;
+					this.viewStateController_in.addItem(m);
+					this.setNewModListeners(m);
+					this.footer.addChild(DisplayObject(m));
+				} else {
+					m = IModule(this.footer.getChildAt(0));
+				}
+				if(m){
+				m.xml = xml;
+				}
+			}
+			private function setFloor(index:uint,xml:XMLList):uint{
+				var i_:uint = index;
+				var notfound:Boolean = false;
+				for(var i:uint = index;i<this.body.numChildren;i++){
+					var mod:IModule = IModule(this.body.getChildAt(i));
+					Logger.log("[Site] Compairing "+xml.attribute("class")+" against "+mod+" at index "+i);
+					if(!mod.xml || xml.attribute("class")==mod.xml.attribute("class")){
+						Logger.log("[Site] Setting HTML for "+mod+" at index "+i);
+						setModXML(mod,xml);
+						this.bottomIndex = i;
+						return i;
+					} else {
+						Logger.log("[Site] Schedule remove of "+mod+" at index "+i);
+						this.setOldModListeners(mod);
+						removeExtra = true;
+						//this.body.removeChildAt(i);
+						//i--;
+					}
+					i_ = i+1;
+				}
+				//Logger.log("[Site] Evaluating the number of children : "+i_+" == "+this.body.numChildren+" : "+xml.attribute("class"));
+				if(i_==this.body.numChildren){
+					var m:IModule = this.getModule(String(xml.attribute("class")));
+					
+					this.setNewModListeners(m);
+					this.viewStateController_in.addItem(m);
+					this.body.addChildAt(DisplayObject(m),++this.bottomIndex);
+					Logger.log("[Site] Adding "+m+" at index "+this.bottomIndex);
+					if(xml.@sequence && xml.@sequence=="sequence"){
+						this.inOutSequence = true;
+					}
+					setModXML(m,xml);
+				}
+				return i_;
+			}
+			private function getModule(className:String):IModule{
+				var m:IModule = this._modulelibrary.createInstanceOf(className);
+				if(!UIComponent(m).hasEventListener(ViewStateChangeEvent.CHANGE_COMPLETE)){
+					UIComponent(m).addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.refreshSWFSize);
+				}
+				/* if(!UIComponent(m).hasEventListener(MAListEvent.RESIZE_BEGIN)){
+					UIComponent(m).addEventListener(MAListEvent.RESIZE_BEGIN,this.refreshSWFSize);
+				} */
+				if(!UIComponent(m).hasEventListener(MAListEvent.RESIZE_COMPLETE)){
+					UIComponent(m).addEventListener(MAListEvent.RESIZE_COMPLETE,this.refreshSWFSize);
+				}
+				return m;
+			}
+			private function refreshSWFSize(e:Event):void{
+				this.renderStage();
+			} 
+			private function setModXML(mod:Object,xml:XMLList):void{
+				mod.xml = xml;
+			}
+			private function positionHeaderFooter():void{
+				var vg:Number = this.site.getStyle('verticalGap');
+				if(!vg){vg = 5;}
+				this.header.y = 0;
+				try{
+				var m:UIComponent = UIComponent(this.header.getChildAt(0));
+					if(m && m['subMenu']){
+						var h:Number = m['subMenu'].y + m['subMenu'].height;
+						this.header.height = (h>m.height && m['subMenu'].visible) ? h : m.height;
+					}
+				} catch (e:Error){
+					
+				}
+				this.body.y = this.header.y + this.header.height + vg;
+				this.footer.y = this.body.y + this.body.height + vg;
+			}
+			public function get pageBody():ISiteBody{return this.body;}
+			
+		]]>
+	</mx:Script>
+<mx:Box id="siteLayer" width="100%" height="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	horizontalAlign="center" paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10">
+	<mx:HBox id="siteFrame" width="100%" maxWidth="1024" minWidth="1004" horizontalAlign="center" autoLayout="true" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="siteFrame">
+	
+	<mx:Canvas  clipContent="false" visible="false" id="site" styleName="siteBody"  autoLayout="true" verticalScrollPolicy="off" updateComplete="{positionHeaderFooter();}">
+		<mx:VBox clipContent="false" autoLayout="true" backgroundAlpha="0" id="footer" width="100%" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off" />
+		<containers:SiteBody id="body" clipContent="false" styleName="siteBody" width="100%" autoLayout="true" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off"/>
+		<mx:VBox autoLayout="true" clipContent="false" backgroundAlpha="0" id="header" width="100%" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off" />
+	</mx:Canvas>
+	</mx:HBox>
+	
+</mx:Box>
+	<system:ViewStateController id="viewStateController_in"/>
+	<system:ViewStateController id="viewStateController_out" reverse="true"/>
+</mx:Canvas>

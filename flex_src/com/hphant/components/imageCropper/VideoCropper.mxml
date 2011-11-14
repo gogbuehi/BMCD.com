@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="900" height="600" initialize="{defineImage()}"
+	xmlns:spinner="com.hphant.components.spinner.*" implements="com.hphant.components.imageCropper.ICropper"
+	creationComplete="{onCreationComplete()}" xmlns:components="com.hphant.components.*">
+	<mx:Metadata>
+		[Event(name="contentReady",type="com.hphant.events.VideoCropperEvent")]
+		[Event(name="masterReady",type="com.hphant.events.VideoCropperEvent")]
+	</mx:Metadata>
+	 <mx:HBox horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	 	<mx:Label text="Time:" fontWeight="bold"/>
+		<mx:HSlider id="timeSlide" minimum="0" value="{timeStepper.value}" change="{this.timeSlideChange()}" liveDragging="false" width="100"/>
+		<mx:NumericStepper id="timeStepper" maxChars="7" stepSize="1" minimum="0" value="{this.videoTime}" change="{this.timeStepChange()}"/>
+		<mx:Spacer width="20" />
+		<mx:Label text="Scale (%):" fontWeight="bold"/>
+		<mx:HSlider id="scaleSlide"  minimum="1" maximum="120" snapInterval="1" value="{this.srcImgScale}" liveDragging="true" width="100"/>
+		<mx:NumericStepper id="scaleStepper" maxChars="3" maximum="120" stepSize="1" minimum="0" value="{this.scaleSlide.value}" change="{this.srcImgScale=scaleStepper.value}"/>
+		<mx:Spacer width="20" />
+		<mx:Label text="Rotation:" fontWeight="bold"/>
+		<mx:HSlider id="rotateSlide" minimum="0" maximum="360" value="{this.srcImgRotation}"  liveDragging="true" width="100"/>
+		<mx:NumericStepper id="rotateStepper" maxChars="3" stepSize="1" minimum="0" maximum="360" value="{this.rotateSlide.value}" change="{this.srcImgRotation=rotateStepper.value}"/>
+	</mx:HBox>
+	<mx:Canvas id="workAria" width="100%" height="100%"  minHeight="{this.cropHeight}" minWidth="{this.cropWidth}"
+			borderStyle="solid" 
+		    mask="{this.workAreaMask}"
+			horizontalScrollPolicy="off" 
+			verticalScrollPolicy="off"
+			clipContent="true"
+			backgroundColor="#000000"
+			>
+		<spinner:Spinner id="_spinner" tickColor="#66aaff" size="77"
+					x="{this.workAria.width/2-this.spinner.width/2}" y="{this.workAria.height/2-this.spinner.height/2}" 
+					/>
+		<mx:Canvas id="imageScaler" x="{this.workAria.width/2}" y="{this.workAria.height/2}"
+					clipContent="false" 
+					horizontalScrollPolicy="off" verticalScrollPolicy="off">
+			<mx:Canvas backgroundColor="#000000" 
+						mouseDown="{this.imageRotater.startDrag()}" 
+						rotation="{this.rotateSlide.value}"  
+						mouseUp="{this.imageRotater.stopDrag()}" 
+						 rollOut="{this.imageRotater.stopDrag()}"
+						id="imageRotater" creationComplete="{imageRotater.addChild(image)}" 
+						x="{this.srcImgXoffset}" y="{this.srcImgYoffset}"
+						scaleX="{this.scaleSlide.value/100}" scaleY="{this.scaleSlide.value/100}" 
+						clipContent="false" horizontalScrollPolicy="off" verticalScrollPolicy="off"
+						>
+			</mx:Canvas>
+		</mx:Canvas>
+		<mx:Canvas id="workAreaMask" width="{workAria.width}" height="{this.workAria.height}" backgroundAlpha="1" backgroundColor="#000000"/>
+		<mx:Canvas id="imageCropper" 
+					borderStyle="solid" width="{this.cropWidth}" height="{this.cropHeight}" 
+					y="{this.workAria.height/2-this.cropHeight/2}" x="{this.workAria.width/2-this.cropWidth/2}"
+					/>
+	</mx:Canvas>
+	<mx:Binding source="scaleSlide.value" destination="srcImgScale"/>
+	<mx:Binding source="rotateSlide.value" destination="srcImgRotation"/>
+	<mx:Binding source="imageRotater.x" destination="srcImgXoffset"/>
+	<mx:Binding source="imageRotater.y" destination="srcImgYoffset"/>
+	<!--<mx:Binding source="masterPath" destination="image.source"/>-->
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.events.MetadataEvent;
+			import mx.controls.VideoDisplay;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import com.hphant.events.ICropperEvent;
+			import com.hphant.events.VideoCropperEvent;
+			[Bindable(event="change")]
+			public function get spinner():Spinner{return this._spinner;}
+			
+			public var image:VideoDisplay;
+			
+		 	private var srcImgXoffset_init		:Number 	=0;
+		 	private var srcImgYoffset_init		:Number 	=0;
+		 	private var srcImgScale_init		:Number 	=100;
+		 	private var srcImgRotation_init		:Number 	=0;
+     		//	indicator if Cropper was loaded with some image
+     		private var _wasLoaded 				:Boolean 	= false;
+		 	//	contains last happened ImageCropperEvent  
+     		private var _lastVideoCropperEvent	:VideoCropperEvent;
+     		[Bindable]
+     		private var masterPath				:String;
+		 	[Bindable]  
+		 	private var srcImgXoffset			:Number 	=0;
+		 	[Bindable]  
+		 	private var srcImgYoffset			:Number 	=0;
+		 	[Bindable]
+		 	private var srcImgScale				:Number 	=100;
+		 	[Bindable]
+		 	private var srcImgRotation			:Number 	=0;
+		 	[Bindable]
+		 	private var cropWidth				:Number		=0;
+		 	[Bindable]
+		 	private var cropHeight				:Number		=0;
+		 	[Bindable]
+		 	private var videoTime				:Number		=0;
+		 	private function defineImage():void{
+		 		image = new VideoDisplay();
+				image.addEventListener(MetadataEvent.METADATA_RECEIVED,this.imageLoaded);
+				image.addEventListener(ResizeEvent.RESIZE,positionImage);
+				image.addEventListener(FlexEvent.CREATION_COMPLETE,this.imageCreated);
+				image.autoPlay = false;
+		 	}
+			private function onCreationComplete():void 
+			{
+				spinner.stop();	
+				//image.loaderContext.checkPolicyFile=true;
+			}
+			private function imageCreated(event:FlexEvent):void{
+				image.removeEventListener(FlexEvent.CREATION_COMPLETE,this.imageCreated);
+				image.autoPlay = false;
+				image.source = this.masterPath;
+				 image.load();
+			}
+			private function positionImage(event:ResizeEvent):void{
+				image.x = -image.width/2;
+				image.y = -image.height/2;
+			}
+			
+			/**
+			 * 	Loads image into ImageCropper.
+			 * 
+			 * 	@param	masterFilePath : string pointing to physical location of image (e.g. http://server.com/image.jpg)
+			 */
+			public function loadPhoto(masterFilePath:String,
+									cropWidth			:Number=0,
+					     			cropHeight			:Number=0,
+									srcImgScale_init	:Number=100,
+									srcImgRotation_init	:Number=0,
+									srcImgXoffset_init	:Number=0,
+									srcImgYoffset_init	:Number=0,
+									time:Number = 0
+					     			):void
+ 			{
+     			this.srcImgRotation 	= this.srcImgRotation_init 		= srcImgRotation_init;	
+     			this.srcImgScale 		= this.srcImgScale_init			= srcImgScale_init;
+     			this.srcImgXoffset 		= this.srcImgXoffset_init 		= srcImgXoffset_init;
+     			this.srcImgYoffset 		= this.srcImgYoffset_init 		= srcImgYoffset_init;
+     			/* this.rotateSlide.value 	= this.srcImgRotation_init;
+     			this.scaleSlide.value 	= this.srcImgScale_init; */
+     			/* this.imageRotater.x 	= this.srcImgXoffset;
+     			this.imageRotater.y 	= this.srcImgYoffset; */
+     			this.cropWidth 			= cropWidth;
+     			this.cropHeight 		= cropHeight;
+     			var gVars:Object = ExternalInterface.call("getGlobals");
+     			Security.loadPolicyFile("http://"+gVars.CONTENT+"/crossdomain.xml");
+     			var d:Date = new Date();
+     			this.masterPath			= masterFilePath+"?uniq="+d.fullYear+d.month+d.date+d.hours+d.minutes+d.seconds+d.milliseconds;
+     			this.videoTime			= time;
+     			if(this.image && this.imageRotater && this.imageRotater.contains(this.image)){
+					 image.autoPlay = false;
+					this.image.source = this.masterPath;
+     				this.image.load(); 
+     			}
+     			this._wasLoaded = true;
+     				
+     		}
+     		public function setCropSize(width:Number,height:Number):void{
+     			this.cropWidth = width;
+			 	this.cropHeight	= height;
+     		}
+     		public function reset():void{
+     			/* this.masterPath = "";
+     			this.srcImgXoffset_init = 0;
+			 	this.srcImgYoffset_init = 0;
+			 	this.srcImgScale_init = 100;
+			 	this.srcImgRotation_init = 0;
+	     		this._wasLoaded = false; 
+	     		this._lastImageCropperEvent	= null;
+			 	this.srcImgXoffset =0;
+			 	this.srcImgYoffset =0;
+			 	this.srcImgScale =100;
+			 	this.srcImgRotation	=0;
+			 	this.cropWidth = 0;
+			 	this.cropHeight	= 0; */
+     		}
+     		
+     		public function commitCrop():void
+ 			{
+				this.dispatchEvent(this.buildContentReadyEvent());
+     		}
+     		   
+     		private function buildContentReadyEvent():VideoCropperEvent
+     		{
+    			var type				:String 	= VideoCropperEvent.CONTENT_READY;
+    			//var masterName			:String 	= masterName; // // ??? what's this - never used, and with type : Number ?
+				var bubbles				:Boolean 	= false; 
+				var cancelable			:Boolean 	= false;
+				var imageData			:BitmapData = getCropData();
+				//var e : ImageCropperEvent = new ImageCropperEvent(type, imageData, this.srcImgXoffset, this.srcImgYoffset, this.srcImgScale, this.srcImgRotation, masterName, bubbles, cancelable);
+				var e : VideoCropperEvent = new VideoCropperEvent(type, imageData, this.srcImgXoffset, this.srcImgYoffset, this.srcImgScale, this.srcImgRotation, this.videoTime, bubbles, cancelable);
+				this._lastVideoCropperEvent = e; 
+				return e;
+     		}   
+     		private function buildMasterReadyEvent():VideoCropperEvent
+     		{
+    			var type				:String 	= VideoCropperEvent.MASTER_READY;
+    			//var masterName			:String 	= masterName; // // ??? what's this - never used, and with type : Number ?
+				var bubbles				:Boolean 	= false; 
+				var cancelable			:Boolean 	= false;
+				var imageData			:BitmapData = getCropData();
+				//var e : ImageCropperEvent = new ImageCropperEvent(type, imageData, this.srcImgXoffset, this.srcImgYoffset, this.srcImgScale, this.srcImgRotation, masterName, bubbles, cancelable);
+				var e : VideoCropperEvent = new VideoCropperEvent(type, imageData, this.srcImgXoffset, this.srcImgYoffset, this.srcImgScale, this.srcImgRotation, this.videoTime, bubbles, cancelable);
+				this._lastVideoCropperEvent = e; 
+				return e;
+     		}
+     		
+     		private function onImageLoadComplete(e:Event):void{
+     			if(!this.cropWidth){
+     				this.cropWidth = this.image.width;
+     			}
+     			if(!this.cropHeight){
+     				this.cropHeight = this.image.height;
+     			}
+     			
+     		}
+     		private function timeStepChange():void{
+     			try{
+     				image.playheadTime = this.videoTime = this.timeStepper.value;
+     			} catch(e:Error){
+     				
+     			}
+     		}
+     		private function timeSlideChange():void{
+     			try{
+     				image.playheadTime = this.videoTime = this.timeSlide.value;
+     			} catch(e:Error){
+     				
+     			}
+     		}
+     		private function imageLoaded(event:Event):void{
+     			/* (this.image.content as Bitmap).smoothing = true; 
+     			(this.image.content as Bitmap).pixelSnapping = PixelSnapping.NEVER; */
+     			this.timeSlide.maximum = this.image.metadata.duration;
+     			this.timeStepper.maximum = this.image.metadata.duration;
+     			this.timeSlide.snapInterval = 1;//1/Math.ceil(this.image.metadata.framerate ? this.image.metadata.framerate : 1);
+     			try{
+     				image.playheadTime = this.videoTime;
+     			} catch(e:Error){
+     				
+     			}
+     			this.dispatchEvent(this.buildMasterReadyEvent());
+     		}
+     		public function get masterBitmapData():BitmapData{
+     			if(this.image){
+	     			var bd:BitmapData = new BitmapData(this.image.width,this.image.height);
+	     			bd.draw(this.image);
+	     			return bd;
+     			} else {
+     				return null;
+     			} 
+     		}
+     		private function getCropData():BitmapData
+     		{
+     			var cbd:BitmapData = null;
+     			//try{
+	     			this.imageCropper.visible = false;
+	     			var bd:BitmapData = new BitmapData(this.workAria.width,this.workAria.height);
+	     			bd.draw(this.workAria);
+	     			var rect:Rectangle = new Rectangle(Math.ceil(this.imageCropper.x),Math.ceil(this.imageCropper.y),this.cropWidth,this.cropHeight);
+	     			
+	     			if(rect.width && rect.height){
+		     			cbd = new BitmapData(rect.width,rect.height,false,0xFF0000);
+		     			cbd.copyPixels(bd,rect,new Point(0,0));
+		     			var b:Bitmap = new Bitmap(cbd);
+	     			}
+     			/* } catch(e:Error){
+     				cbd = new BitmapData(100,100);
+     			} */
+     			this.imageCropper.visible = true;
+     			return cbd;	
+     		}
+			
+		
+     		private function getCropType():String
+     		{
+     			return "";
+     		}
+     		
+     		public function get wasLoaded():Boolean
+     		{
+     			return _wasLoaded;
+     		}
+     		
+     		public function get lastCropperEvent():ICropperEvent
+     		{
+     			return _lastVideoCropperEvent;
+     		}
+		]]>
+	</mx:Script>
+</mx:VBox>

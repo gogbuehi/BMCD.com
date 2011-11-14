@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:ms="com.hphant.modsite" backgroundAlpha="0" backgroundGradientAlphas="0,0" paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:modsite="com.hphant.modsite.*"
+   verticalScrollPolicy="off" horizontalScrollPolicy="off" layout="absolute"
+    resize="{renderStage()}"
+    creationComplete="{registerEmbeds()}">
+	<mx:Image id="bg_tile" source="@Embed(source='assets/tiles/tile_carbon_04.gif')" visible="false"/>
+	<modsite:ModSite id="site" adminKey="kqvale" cssFile="css/999.swf" headerClass="ModBMCD999Header" footerClass="ModBMCD999Footer" cssVersion="css_999.properties" mainVersion="main_999.properties"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.IPopUpManager; 
+	  		private var iPopUpManager:IPopUpManager;
+		
+			include "css/999_fonts.as";
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				 this.graphics.clear();
+				 if(this.bg_tile.content){
+					this.graphics.beginBitmapFill(Bitmap(this.bg_tile.content).bitmapData);
+					this.graphics.drawRect(0,0,unscaledWidth,unscaledHeight);
+					this.graphics.endFill(); 
+					var m:Matrix = new Matrix();
+					m.createGradientBox(unscaledWidth,unscaledHeight);
+					this.graphics.beginGradientFill(GradientType.RADIAL,[0x000000,0x000000],
+													[0,.6],[0,255],m);
+					this.graphics.drawRect(0,0,unscaledWidth,unscaledHeight);
+						this.graphics.endFill();
+				}
+			}
+			private function renderStage():void{
+				if(site){
+					site.renderStage();
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Application>

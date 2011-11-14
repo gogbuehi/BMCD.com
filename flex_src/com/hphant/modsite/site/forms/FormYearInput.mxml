@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" disabledOverlayAlpha="0" verticalScrollPolicy="off" invalid="{this.initValidator()}"
+	horizontalScrollPolicy="off" backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+	<mx:Label text="{label}" id="dataLabel" styleName="{labelStyleName}"/>
+	<mx:TextInput id="dataInput" creationComplete="{this.initValidator()}" styleName="{inputStyleName}" editable="true" enabled="{this.enabled}" width="100%" />
+	<mx:String id="labelStyleName">emailFormLabel</mx:String>
+	<mx:String id="inputStyleName">emailFormInput</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import mx.validators.NumberValidator;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.DateValidator;
+			
+			
+			
+			public function get text():String{
+				return this.dataInput.text;
+			}
+			public function set text(value:String):void{
+				this.dataInput.text = value;
+			}
+			
+			
+			private var _label:String = "Year";
+			[Bindable]
+			[Inspectable(defaultValue="Year",category="Common")]
+			public override function get label():String{ return this._label;}
+			public override function set label(value:String):void{
+				this._label = value;
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._requiredChanged && this.validator){
+					this.validator.required = _reqired;
+					this._requiredChanged = false;
+				}
+			}
+			private var validator:NumberValidator = new NumberValidator();
+			public function validateData():Boolean{
+				return !(this.validator.validate().type==ValidationResultEvent.INVALID);
+			}
+		    private function initValidator():void{
+				validator.property = "text";
+				validator.source = this.dataInput;
+				validator.minValue = 1900;
+				var d:Date = new Date();
+				validator.maxValue = Number(d.fullYear)+1;
+		    }
+			private var _reqired:Boolean = true;
+			private var _requiredChanged:Boolean = false;
+			[Inspectable]
+			public function get required():Boolean{return this._reqired;}
+			public function set required(value:Boolean):void{
+				this._requiredChanged = true;
+				this._reqired = value;
+				this.invalidateProperties();
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

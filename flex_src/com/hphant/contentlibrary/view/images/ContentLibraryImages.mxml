@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:img="com.hphant.contentlibrary.view.images.*"
+	xmlns:shared="com.hphant.contentlibrary.view.images.shared.*"
+	label="Content Library: Photos and Images"
+	creationComplete="onCreationComplete()"
+	currentStateChange="onCurrentStateChange(event)"
+	>
+	<!--
+	creationPolicy="all"
+	width="800" height="700"
+	-->
+		
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.model.Master;
+			import com.hphant.contentlibrary.control.ImageConstants;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.adobe.cairngorm.control.CairngormEvent;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.components.imageCropper.ImageCropperConfigurator;
+			import mx.core.Application;
+			import mx.controls.Alert;
+			import mx.events.StateChangeEvent;
+			import mx.events.IndexChangedEvent;
+			
+			
+			//	for passing imageInfo to ImageCropper
+			private var _imageInfo : Object;
+			
+			
+			private function onCreationComplete():void
+			{
+				//trace(this+".onCreationComplete():");
+				
+				tabs.addEventListener( IndexChangedEvent.CHANGE, handlerTabChanged ); 
+				
+			}
+			
+			private function onCurrentStateChange(event:StateChangeEvent):void
+			{
+				trace("["+this+"].newState: "+event.newState);
+				
+				switch(event.newState)
+				{
+					//	In both cases image should be loaded,
+					//	just with different params passed in _imageInfo.
+				    case "mastersStep3":
+				    	//	[Edit Thumb]
+				    
+			//	    	viewMasters3.mode = Constants.EDIT_MODE_THUMB;
+						//	pre-populating description		
+						//viewMasters3.description = _imageInfo.description; 
+			//			viewMasters3.master = _imageInfo.master; 
+
+						//	passing _imageInfo to ImageCropper - viewMasters3 !!!
+						//viewMasters3.imageCropper.loadPhoto( Configurator.UPLOAD_STORAGE_URL + _imageInfo.masterLocation, 
+			/* 			viewMasters3.imageCropper.loadPhoto( _imageInfo.masterLocation, 
+								_imageInfo.cropWidth, _imageInfo.cropHeight,  
+								_imageInfo.scale, _imageInfo.rotation, 
+								_imageInfo.offsetX, _imageInfo.offsetY ); */
+						/*
+						masterLocation	: master.masterLocation,//:String,
+						cropWidth		: Constants.THUMB_WIDTH,//:Number=0,
+		     			cropHeight		: Constants.THUMB_HEIGHT,//:Number=0,
+						scale			: master.scale,			//:Number=100,
+						rotation		: master.rotation,		//:Number=0,
+						offsetX			: master.offsetX,		//:Number=0,
+						offsetY			: master.offsetY		//:Number=0
+						*/
+				    
+				        break;
+				        
+
+				    case "mastersStep2":
+				    	//	[Custom Crop]
+				/*     	
+				    	viewMasters2.mode = Constants.EDIT_MODE_CUSTOM_CROP;
+						viewMasters2.master = _imageInfo.master;
+						  */
+						//	passing _imageInfo to ImageCropper - viewMasters2 !!!
+				/* 		viewMasters2.imageCropper.loadPhoto( _imageInfo.masterLocation, 
+								_imageInfo.cropWidth, _imageInfo.cropHeight,  
+								_imageInfo.scale, _imageInfo.rotation, 
+								_imageInfo.offsetX, _imageInfo.offsetY ); */
+				        break;
+				    
+				        
+				    default:
+				        break;
+				}
+				
+			}
+
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	UI actions handling methods.
+			 */
+			 
+			private function handlerTabChanged( event: IndexChangedEvent ):void 
+			{
+				//	TODO
+				//	Finalize this:
+				//	"Suggested Images/Crops" tab
+				
+				/*	
+				//	TODO
+				//	for "Add Master" tab
+				
+				[Any Other Tab]
+				alert('Are you sure you want to leave the "Add A Master" section, 
+				you have not committed any changes', Yes or No.
+				if YES
+					close alert.
+					take them to selected tab
+					AddAMaster.reset();
+				If NO
+					close alert stay in section.
+				*/
+				
+				
+				/*
+				*/
+				if (event.relatedObject == viewMasters1) {
+					//	getting all masters
+					trace();
+					trace("GET all master images: started.");
+					var e : ImageEvent = new ImageEvent( ImageEvent.GET_ALL_MASTERS );
+					e.responder = viewMasters1;
+					e.dispatch();
+					
+				} else if (event.relatedObject == viewSuggestedImages) {
+					//	getting suggested crops
+					trace();
+					trace("GET suggested crops: started.");
+					var evt : CropEvent = new CropEvent( CropEvent.GET_SUGGESTED_CROPS );
+					evt.responder = viewSuggestedImages;
+					evt.dispatch();
+					
+				}
+			}
+			
+			private function handlerSelectMaster(event:CairngormEvent):void 
+			{
+				_imageInfo = event.data;
+				//trace("imageInfo = " + _imageInfo);
+				this.currentState = "mastersStep2";
+			}
+			
+			private function handlerEditThumb(event:CairngormEvent):void 
+			{
+				_imageInfo = event.data;
+				//trace("imageInfo = " + _imageInfo);
+				this.currentState = "mastersStep3";
+			}
+			
+			private function handlerReturnFromCustomCrop():void 
+			{
+				activateMastersLibraryView();
+			}
+			
+			private function handlerReturnFromThumbEdit():void 
+			{
+				activateMastersLibraryView();
+			}
+			
+			private function handlerThumbUpdated( event:CairngormEvent ):void 
+			{
+				//	event.data contains master
+				activateMastersLibraryView();
+				viewMasters1.refreshData( Master(event.data) );
+			}
+			
+			private function handlerCropCreated( event:CairngormEvent ):void 
+			{
+				//	event.data contains ID of new Crop.
+				activateSuggestedImagesView();
+				viewSuggestedImages.refreshData( int(event.data) );
+			}
+
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Helper methods.
+			 */
+			 
+			private function activateMastersLibraryView():void 
+			{
+				this.currentState = "mastersStep1";
+				this.tabs.selectedChild = viewMasters1;
+			}
+			
+			private function activateSuggestedImagesView():void 
+			{
+				this.currentState = "mastersStep1";
+				this.tabs.selectedChild = viewSuggestedImages;
+			}
+			
+		]]>
+	</mx:Script>
+
+		
+	<mx:Accordion id="tabs" width="100%" height="100%"
+		>
+		<!--
+		creationPolicy="all"
+		-->
+	
+		<img:SuggestedImages id="viewSuggestedImages" label="Suggested Images" 
+			width="100%" height="100%"
+			/>
+				
+		<img:MastersLib id="viewMasters1" label="Masters" 
+			width="100%" height="100%"
+			eventSelectMaster="handlerSelectMaster(event)"
+			eventEditThumb="handlerEditThumb(event)"
+			/>
+			
+		<img:AddMaster id="viewAddMaster" label="Add a Master" 
+			width="100%" height="100%"
+			/>
+			
+	</mx:Accordion>
+		
+	<!--	
+	<mx:states>
+		<mx:State name="mastersStep1">
+			
+		</mx:State>
+
+		<mx:State name="mastersStep2">
+			<mx:RemoveChild target="{viewMasters1}"/>
+			<mx:AddChild relativeTo="{viewSuggestedImages}" position="after">
+				<shared:ImageEditView id="viewMasters2" label="Masters" 
+					width="100%" 
+					labelHeader="Custom Crop"
+					labelCancel="Go Back"
+					labelSave="Save Crop"
+					editableDescription="true"
+					eventReturn="handlerReturnFromCustomCrop()"
+					eventCropCreated="handlerCropCreated(event)"
+					/>
+			</mx:AddChild> 
+			<mx:SetProperty target="{tabs}" name="selectedChild" value="{viewMasters2}"/>
+		</mx:State>
+		
+		<mx:State name="mastersStep3">
+			<mx:RemoveChild target="{viewMasters1}"/>
+			<mx:AddChild relativeTo="{viewSuggestedImages}" position="after">
+				<shared:ImageEditView id="viewMasters3" label="Masters" 
+					width="100%" 
+					labelHeader="Edit Thumb"
+					eventReturn="handlerReturnFromThumbEdit()"
+					eventThumbUpdated="handlerThumbUpdated(event)"
+					/>
+			</mx:AddChild> 
+			<mx:SetProperty target="{tabs}" name="selectedChild" value="{viewMasters3}"/>
+		</mx:State>
+	</mx:states>
+		-->
+		
+</mx:Canvas>

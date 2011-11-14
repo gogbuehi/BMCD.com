@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalGap="0">
+	<mx:ComboBox id="hour" dataProvider="{h}" selectedIndex="{hidx}" change="{this.dispatchTimeChangeEvent()}"/>
+	<mx:Label text=":" width="8"/>
+	<mx:ComboBox id="minute" dataProvider="{m}" selectedIndex="{midx}" change="{this.dispatchTimeChangeEvent()}"/>
+	<mx:Spacer width="10" />
+	<mx:ComboBox id="ampm" dataProvider="{ap}" selectedIndex="{apidx}" change="{this.dispatchTimeChangeEvent()}"/>
+	<mx:Metadata>
+		[Event(naem='change',type='flash.events.Event')]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+		
+			import mx.utils.StringUtil;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			private var h:Array = ["01","02","03","04","05","06","07","08","09","10","11","12"];
+			[Bindable]
+			private var m:Array = ["00","05","10","15","20","25","30","35","40","45","50","55"];
+			[Bindable]
+			private var ap:Array = ["AM","PM"];
+			[Bindable]
+			private var hidx:uint = 0;
+			[Bindable]
+			private var midx:uint = 0;
+			[Bindable]
+			private var apidx:uint = 0;
+			
+			
+			[Inspectable]
+			[Bindable('timeChanged')]
+			public function set time(value:String):void{
+				var t:Array = value.split(":");
+				var tc:ArrayCollection = new ArrayCollection(h);
+				hidx = tc.getItemIndex(t[0]);
+				t = String(t[1]).split(" ");
+				tc.source = m;
+				midx = tc.getItemIndex(t[0]);
+				tc.source = ap;
+				apidx = tc.getItemIndex(StringUtil.trim(String(t[1])).toUpperCase());
+				this.dispatchEvent(new Event('timeChanged'));
+			}
+			public function get time():String{
+				return String((hour && hour.selectedItem) ? hour.selectedItem : h[0])+":"+
+					   String((minute && minute.selectedItem) ? minute.selectedItem : m[0])+" "+
+					   String((ampm && ampm.selectedItem) ? ampm.selectedItem : ap[0]);
+			}
+			private function dispatchTimeChangeEvent():void{
+				this.dispatchEvent(new Event('timeChanged'));
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

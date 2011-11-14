@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*">
+<mx:Metadata>
+	[Event(name="change",type="flash.events.Event")]
+	[Event(name="enter",type="mx.events.FlexEvent")]
+</mx:Metadata>
+	<mx:ToggleButtonBar enabled="{this.typesEnabled}" id="linkType" selectedIndex="{_typeIdx}" itemClick="{this.dispatchEvent(new Event(Event.CHANGE))}">
+		<mx:dataProvider>
+			<mx:Array id="linkTypes">
+				<mx:String>none</mx:String>
+				<mx:String>http://</mx:String>
+				<mx:String>mailto:</mx:String>
+			</mx:Array>
+		</mx:dataProvider>
+	</mx:ToggleButtonBar>
+	<text:SelfLabelTextInput maxHeight="400" enter="{this.dispatchEvent(event)}" label="{this.label}" id="link" change="{this.dispatchEvent(event)}" text="{_link}" width="100%"/>
+	<mx:Binding destination="_link" source="link.text"/>
+	<mx:Binding destination="_typeIdx" source="linkType.selectedIndex" />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import flash.events.Event;
+			[Bindable]
+			public var typesEnabled:Boolean = true;
+			[Bindable(event="change")]
+			public function get text():String{
+				return _typeIdx ? linkTypes[_typeIdx] + _link : _link;
+			}
+			public function set text(value:String):void{
+				_linkChanged = false;
+				for (var i:uint=1; i<linkTypes.length;i++){
+					if(value.indexOf(String(linkTypes[i]))>-1){
+						var parts:Array = value.split(String(linkTypes[i]));
+						parts.shift();
+						var txt:String = parts.join(String(linkTypes[i]));
+						_link = txt;
+						_typeIdx = i;
+						_linkChanged = true;
+						break;
+					}
+				}
+				if(!_linkChanged){
+					_link = value;
+					_typeIdx = 0;
+				}
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			[Bindable]
+			private var _typeIdx:uint = 1;
+			[Bindable]
+			private var _link:String = "";
+			private var _linkChanged:Boolean = false;
+		]]>
+	</mx:Script>
+</mx:HBox>

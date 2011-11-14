@@ -1,0 +1,2 @@
+svn export --force c:\web\hphant.com\repos\Sites\bmcd.com\configs\windows_local\includes\config c:\web\bmcd\web\includes\config
+svn export --force c:\web\hphant.com\repos\Sites\bmcd.com\emails c:\web\bmcd\content\emails

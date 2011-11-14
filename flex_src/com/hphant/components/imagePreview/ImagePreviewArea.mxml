@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:spinner="com.hphant.components.spinner.*"
+	borderStyle="solid"
+	>
+	<!--
+	hide="onHide();"
+	show="onShow();"
+	-->
+	
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.spinner.Spinner;
+			import mx.controls.Text;
+			
+
+			/**
+			 * 	Component: ImagePreviewArea
+			 * 	
+			 * 	Shows image from specified source,
+			 * 	with progress indication.  
+			 * 
+			 * 	@param	imageSource
+			 * 	@param	imageSize: width & height
+			 */
+
+			
+			public static const PROGRESS_INDICATOR_SIZE_NORMAL	: int = 80;
+			public static const PROGRESS_INDICATOR_SIZE_SMALL	: int = 30;
+
+			
+			/**
+			 * 	Configuration properties.
+			 */
+			[Bindable] 
+			public var areaWidth 			: int; 
+			[Bindable] 
+			public var areaHeight			: int; 
+			[Bindable] 
+			public var progressIndicatorSize: int = PROGRESS_INDICATOR_SIZE_NORMAL; 
+			[Bindable] 
+			public var shortErrorMessage	: Boolean = false; 
+
+			//	helper vars
+			/*
+            private var progressIndicator	: TitleWindow;
+            private var errorIndicator 		: TitleWindow;
+            */
+
+
+			/**
+			 * 	Loads image from specified source,
+			 * 	with progress indication.  
+			 */
+			public function loadImage( src:String ):void {
+				
+				//	remove messages
+				hideError();
+				//PopUpManager.removePopUp( progressIndicator );
+				//PopUpManager.removePopUp( errorIndicator );
+				
+				//	what if image was loaded already from that 'src' ? 
+				if (image.source == src) {
+					//	do nothing
+					return;
+				}
+				
+				showProgressIndication();
+				image.source = src;
+				//trace("["+this+"].source = " + src);
+			}
+
+	
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Helper methods.
+			 */	
+			private function showProgressIndication():void {
+				spin.play();
+				image.visible = false;
+				image.includeInLayout = false;
+				progressBanner.visible = true;
+				progressBanner.includeInLayout = true;
+				this.invalidateDisplayList();
+				this.validateNow();
+				
+				/*
+				progressIndicator = new TitleWindow();
+				progressIndicator.title = "Progress...";
+				progressIndicator.enabled = false;
+				var spin : Spinner = new Spinner();
+				spin.size = progressIndicatorSize;
+				spin.setStyle( "tickColor", "#66aaff" );
+				spin.play();
+				progressIndicator.addChild( spin );
+				
+				PopUpManager.addPopUp( progressIndicator, this.image, false, PopUpManagerChildList.PARENT );
+				PopUpManager.centerPopUp( progressIndicator );
+				PopUpManager.bringToFront( progressIndicator );
+				*/
+			}
+			
+			private function hideProgressIndication():void {
+				//PopUpManager.removePopUp( progressIndicator );
+				
+				spin.stop();
+				image.visible = true;
+				image.includeInLayout = true;
+				progressBanner.visible = false;
+				progressBanner.includeInLayout = false;
+				this.invalidateDisplayList();
+				this.validateNow();
+			}
+			
+			private function handlerImageLoaded():void {
+				hideProgressIndication();
+			}
+			
+			/*
+			private function onHide():void {
+				trace("Image is hidden !");
+			}
+			
+			private function onShow():void {
+				trace("Image is shown !");
+			}
+			*/
+			
+			private function handlerImageError( e:Event ):void {
+				hideProgressIndication();
+				showError( e.type );
+				
+				/*
+				errorIndicator = new TitleWindow();
+				errorIndicator.title = "Error";
+				errorIndicator.enabled = false;
+				//errorIndicator.showCloseButton = true;
+				
+				//	to hide error message if image isn't  visible anymore 
+				//BindingUtils.bindProperty( errorIndicator, "visible", this.image, "visible" );
+				//ChangeWatcher.watch( image, "visible", onHide ); 
+				
+				if (shortErrorMessage) {
+					var t : Text = new Text();
+					t.text = "Error:" + e.type;
+					errorIndicator.addChild( t );
+				} else {
+					var ta : TextArea = new TextArea();
+					ta.text = "Image can't be loaded due the error: " + e.type;
+					ta.editable = false;
+					errorIndicator.addChild( ta );
+					//image.addChild( ta );
+					//this.addChild( ta );
+				}
+				
+				PopUpManager.addPopUp( errorIndicator, this, false, PopUpManagerChildList.PARENT );
+				PopUpManager.centerPopUp( errorIndicator );
+				//PopUpManager.bringToFront( errorIndicator );
+				*/
+				
+			}
+	
+			private function showError( err: String ):void {
+				if (shortErrorMessage) {
+					errorMessage.text = "Error: " + err;
+				} else {
+					errorMessage.text = "Image can't be loaded due the error: " + err;
+				}
+				image.visible = false;
+				image.includeInLayout = false;
+				errorBanner.visible = true;
+				errorBanner.includeInLayout = true;
+				this.invalidateDisplayList();
+				this.validateNow();
+			}
+			
+			private function hideError():void {
+				image.visible = true;
+				image.includeInLayout = true;
+				errorBanner.visible = false;
+				errorBanner.includeInLayout = false;
+				this.invalidateDisplayList();
+				this.validateNow();
+			}
+			
+		]]>
+	</mx:Script>
+	
+
+	
+	<mx:Image id="image" width="{areaWidth}" height="{areaHeight}"
+		cachePolicy="off"
+		cacheAsBitmap="false"
+		autoLoad="true"
+		
+		complete="handlerImageLoaded();"
+		ioError="handlerImageError( event );"
+		securityError="handlerImageError( event );"
+		/>
+		<!--
+		hide="onHide();"
+		show="onShow();"
+		-->
+
+	<mx:Canvas id="progressBanner" width="{areaWidth}" height="{areaHeight}"
+		visible="false"
+		includeInLayout="false">
+	
+		<mx:VBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		
+			<mx:Text text="Loading..." fontWeight="bold"/>
+			<spinner:Spinner id="spin" size="{progressIndicatorSize}" tickColor="#66aaff"/>
+			
+		</mx:VBox>
+		
+	</mx:Canvas>
+		
+	<mx:Canvas id="errorBanner" width="{areaWidth}" height="{areaHeight}"
+		visible="false"
+		includeInLayout="false">
+	
+		<mx:VBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		
+			<mx:Text id="errorMessage" fontWeight="bold"/>
+			
+		</mx:VBox>
+		
+	</mx:Canvas>
+	
+</mx:Box>

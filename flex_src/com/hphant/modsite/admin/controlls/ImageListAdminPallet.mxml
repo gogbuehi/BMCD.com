@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{defineListeners()}"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:buttons="com.hphant.components.buttons.*" 
+	xmlns:components="com.hphant.components.*"
+	xmlns:controlls="com.hphant.modsite.admin.controlls.*" xmlns:ui="flash.ui.*" xmlns:text="com.hphant.components.text.*">
+	<mx:Label text="Available Images" />
+	<mx:TileList rowCount="1" columnWidth="50" columnCount="15" rowHeight="50"
+		direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on" 
+	    dragEnabled="true"
+	    allowDragSelection="true"
+	    allowMultipleSelection="false"
+		dataProvider="{availableImages}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray1}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" toolTip="{data.title}" source="{data.source}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	<mx:Label text="Selected Images" />	
+	<mx:TileList id="list" dataProvider="{imageList}" change="{selectedImageChenged()}" updateComplete="{replaceObjectsInImageList();itemDropped()}"
+		direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on"
+	    rowCount="1" dragMoveEnabled="true" dragEnabled="true"  dropEnabled="true"
+	    dragComplete="{this.dragCompleteListener(event)}"
+	    dragDrop="{this.dragDropListener(event)}"   
+	    dragEnter="{this.dragEnterListener(event)}"
+	    dragExit="{this.dragExitListener(event)}"
+	    dragOver="{this.dragOverListener(event)}"  
+	    columnWidth="50" columnCount="15" rowHeight="50">
+	    <mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray2}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+		<mx:itemRenderer>
+			<mx:Component>
+				<controlls:ImageListRenderer width="100%" height="100%" />
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	  
+	<mx:HBox paddingLeft="5" paddingRight="5" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<mx:Box verticalScrollPolicy="off" horizontalScrollPolicy="off"
+			width="200" height="200" backgroundAlpha="0"
+			borderThickness="1" borderStyle="solid" verticalAlign="middle" horizontalAlign="center">
+		<mx:Image id="image" source="{imageXML.link}" toolTip="{imageXML.link}" maxHeight="200" maxWidth="200"
+			 scaleContent="true" maintainAspectRatio="true" horizontalAlign="center" verticalAlign="middle"/>
+		</mx:Box>
+		<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+			<text:SelfLabelTextInput label="Title:" id="title" width="100%" text="{imageXML.title}"/>
+			<text:SelfLabelTextInput label="Alternate:" id="alt" width="100%" text="{imageXML.alternat}"/>
+			<mx:HRule width="100%"/>
+			<components:ExtendedRichTextEditor label="Text:" id="text" width="100%" htmlText="{imageXML.text}"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Binding destination="imageList.source" source="imageListXML.images" />
+	<mx:Binding destination="cmRemoveImage.enabled" source="list.selectedItem" />
+	<mx:Binding destination="imageXML.title" source="title.text" />
+	<mx:Binding destination="imageXML.alternat" source="alt.text" />
+	<mx:Binding destination="imageXML.text" source="text.htmlText" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.admin.model.ImageListXML;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.view.NewImageCropPallet;
+			import com.hphant.managers.PalletManager;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.modsite.admin.model.ImageXML;
+			
+			[Bindable]
+			[Inspectable]
+			public var imageXML:ImageXML = new ImageXML();
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("com.hphant.modsite.admin.model.ImageXML")]
+			public var availableImages:Array;
+
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public var imageSizes:Array;
+			
+			[Bindable('dataLimitChanged')]
+			public function get dataLimit():uint{
+				return this._dataLimit;
+			}
+			public function set dataLimit(value:uint):void{
+				this._dataLimit = value;
+				this.itemDropped();
+				this.dispatchEvent(new Event('dataLimitChanged'));
+			}
+			[Bindable('dataLimitChanged')]
+			private function get dropEnable():Boolean{
+				return this._dataLimit ? imageList.length<this._dataLimit : true;
+			}
+			private var _dataLimit:uint = 5;
+			
+
+			[Bindable]
+			[Inspectable]
+			public var imageListXML:ImageListXML = new ImageListXML();
+			
+			[Bindable]
+			private var imageList:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			private var _cmArray1:Array = new Array();
+			[Bindable]
+			private var _cmArray2:Array = new Array();
+			private var cmRemoveImage:ContextMenuItem = new ContextMenuItem("Remove Image");
+			private var cmNewImage:ContextMenuItem = new ContextMenuItem("New Image");
+
+			private function defineListeners():void{
+				this._cmArray1.push(this.cmNewImage);
+				this._cmArray2.push(this.cmRemoveImage);
+				this.cmRemoveImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				this.cmNewImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);			
+			}
+			
+			private function dragOverListener(event:DragEvent):void{
+				
+			}
+			private function dragDropListener(event:DragEvent):void{
+				/*  if(event.dragSource.dataForFormat(event.dragSource.formats[0])[0] is Crop){
+					var crop:Crop = Crop(event.dragSource.dataForFormat(event.dragSource.formats[0])[0]);
+					var master:MastersFilter = new MastersFilter("id",crop.masterId);
+					imageXML = new ImageXML();
+					try{
+						imageXML.source = Master(master.masters[0]).thumbnailLocation ;
+					}catch(e:Error){
+						imageXML.source = "no_image";
+					}
+					imageXML.text = crop.shortDescription;
+					imageXML.link = crop.cropLocation;
+					imageListXML.addImage(imageXML);
+				} else {
+					log(event.dragSource.formats);
+				} */ 
+				//replaceObjectsInImageList();
+				this.list.selectedItem = event.dragSource.dataForFormat(event.dragSource.formats[0])[0];
+				this._selectedIndex = this.list.selectedIndex;
+			}
+			private function itemDropped():void{
+				while (imageList.length>this.dataLimit && this.dataLimit>0){
+					imageList.removeItemAt(imageList.length-1);
+				}
+			}
+			private var _selectedIndex:int = 0;
+			
+			private function replaceObjectsInImageList():void{
+				log("The number of images in the list is "+this.imageList.length);
+				if(this.imageList.length==0)
+					return;
+				var objectsFound:Boolean = false;
+				var newArray:Array = new Array();
+				if(this.list){
+					_selectedIndex = this.list.selectedIndex;
+				}
+				for each(var img:Object in imageList){
+					if(img is ImageXML){
+						newArray.push(img);
+					} else {
+						var imgXML:ImageXML = new ImageXML();
+						for (var i:String in img){
+							try{
+								imgXML[i] = img[i];
+							} catch(e:Error){}
+						}
+						objectsFound = true;
+						newArray.push(imgXML);
+					}
+				}
+				if(objectsFound){
+					this.imageListXML.images = newArray;
+				}
+				if(this.list){
+					if(newArray.length<=_selectedIndex){
+						_selectedIndex = newArray.length-1;
+					}
+					this.list.selectedIndex = this._selectedIndex;
+					selectedImageChenged();
+				}
+			}
+			
+			
+			private function dragEnterListener(event:DragEvent):void{
+				//DragManager.acceptDragDrop(this.list);
+			}
+			private function dragCompleteListener(event:DragEvent):void{
+				//replaceObjectsInImageList();
+			}
+			
+			private function dragExitListener(event:DragEvent):void{
+			}
+			private function selectedImageChenged():void{
+				if(this.list.selectedItem is ImageXML){
+					this.imageXML = ImageXML(this.list.selectedItem);
+				} else {
+					imageXML = new ImageXML();
+					for (var i:String in this.list.selectedItem){
+						try{
+							imageXML[i] = this.list.selectedItem[i];
+						} catch(e:Error){}
+					}
+				}
+				this.dispatchEvent(new Event('dataLimitChanged'));
+			}
+			
+			private function editImage():void{
+				log('editImage()');
+			}
+			private function addImage():void{
+				log('addImage()');
+			}
+			private function removeImage():void{
+				log('removeImage()');
+			}
+			
+			private function titleChange():void{
+				imageXML.title = this.title.text;
+			}
+			private function altChange():void{
+				imageXML.alternat = this.alt.text;
+			}
+			private function textChange():void{
+				imageXML.text = this.text.htmlText;
+			}
+			public override function reset():void{
+				super.reset();
+				//this.link.text = "http://";
+				this.alt.text = "";
+				this.title.text = "";
+				this.text.htmlText = "";
+				//this.imageXML = new ImageXML();
+				//this.imageListXML.parse(null);
+				//this.imageListXML = null;
+			}
+			
+			private var newImagePallet:NewImageCropPallet;
+			
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmRemoveImage:
+						log("Remove the selected image");
+						if(this.list.selectedItem){
+							this.imageList.removeItemAt(this.list.selectedIndex);
+							replaceObjectsInImageList();
+						}
+					break;
+					case this.cmNewImage:
+						if(!this.newImagePallet){
+							this.newImagePallet = new NewImageCropPallet();
+						} else {
+							this.newImagePallet.reset();
+						}
+						this.newImagePallet.cropSizes = this.imageSizes;
+						PalletManager.openPallet(this.newImagePallet);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+		]]>
+	</mx:Script>
+</Pallet>

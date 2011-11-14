@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas width="0" xmlns="com.hphant.modsite.site.modules.*"  height="0"
+	       xmlns:mx="http://www.adobe.com/2006/mxml" 
+	       xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       currentState="state0"
+	       backgroundAlpha="1" xmlns:images="com.hphant.modsite.site.assets.images.*">
+	<mx:VBox autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<mx:HBox id="text1Holder" width="100%">
+			<mx:VBox id="vbox" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+				<text:MAText id="title" link="{this.sendLink(event)}" styleName="personnelTitle" width="100%" alpha="1"/>
+				<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" id="textHolder" styleName="textHolder" width="100%">
+					<text:MAText id="text1" link="{this.sendLink(event)}" styleName="personnelText" width="100%" alpha="1"/>
+				</mx:VBox>
+			</mx:VBox>
+			<mx:Box id="imageHolder" width="{imgwt}" height="{imght}" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="true" verticalAlign="middle" horizontalAlign="center"> 
+				<images:MAImage autoSize="false" id="image" height="0" width="0" creationComplete="{this.image.addEventListener(MALinkClickEvent.LINK_CLICKED,imageClicked)}"/>
+			</mx:Box>
+		</mx:HBox>
+		<text:MAText id="text2" link="{this.sendLink(event)}" styleName="personnelText" width="100%" alpha="1" />
+	</mx:VBox>
+	<states>
+	   		<mx:State name="state0">
+	   			<!--<mx:RemoveChild target="{vbox}" />-->
+	   		</mx:State>
+	   		<mx:State name="state1" basedOn="state0">
+	   			<mx:SetProperty target="{this}" name="width" value="984"/>
+	   			<mx:SetProperty target="{this}" name="height" value="{ht}"/>
+	   		</mx:State>
+	   		<mx:State name="state2" basedOn="state1">
+	   			<!--<mx:AddChild target="{vbox}"/>-->
+	   		</mx:State>
+	   		<mx:State name="state3" basedOn="state2">
+	   			<mx:SetProperty target="{this.image}" name="width" value="{imgwt}"/>
+	   			<mx:SetProperty target="{this.image}" name="height" value="{imght}"/>
+	   		</mx:State>
+	   		<mx:State name="state4" basedOn="state3">
+	   			<mx:SetProperty target="{this.title}" name="xml" value="{ttl}"/>
+	   			<mx:SetProperty target="{this.text1}" name="xml" value="{txt1}"/>
+	   			<mx:SetProperty target="{this.text2}" name="xml" value="{txt2}"/>
+	   		</mx:State>
+	   		<mx:State name="state5" basedOn="state4">
+	   			<mx:SetProperty target="{this.image}" name="xml" value="{img}"/>
+	   			<mx:SetProperty target="{this}" name="height"/>
+	   		</mx:State>
+	   </states>
+	   <transitions>		
+	   		<mx:Transition fromState="state0" toState="state1">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+					<mx:Resize target="{this}"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state2" toState="state1">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<!--<mx:RemoveChildAction target="{vbox}"/>-->
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state1" toState="state2">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<!--<mx:AddChildAction target="{this.vbox}"/>-->
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state2" toState="state3">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Resize target="{image}" />
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state3" toState="state4">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:SetPropertyAction target="{this.title}"/>
+	   				<mx:SetPropertyAction target="{this.text1}"/>
+	   				<mx:SetPropertyAction target="{this.text2}"/>
+	   				<mx:Parallel>
+		   				<mx:Fade target="{this.title}" alphaFrom="0" alphaTo="1"/>
+		   				<mx:Fade target="{this.text1}" alphaFrom="0" alphaTo="1"/>
+		   				<mx:Fade target="{this.text2}" alphaFrom="0" alphaTo="1"/>
+	   				</mx:Parallel>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state4" toState="state3">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Parallel>
+		   				<mx:Fade target="{this.title}" alphaFrom="1" alphaTo="0"/>
+		   				<mx:Fade target="{this.text1}" alphaFrom="1" alphaTo="0"/>
+		   				<mx:Fade target="{this.text2}" alphaFrom="1" alphaTo="0"/>
+	   				</mx:Parallel>
+	   				<mx:SetPropertyAction target="{this.title}"/>
+	   				<mx:SetPropertyAction target="{this.text1}"/>
+	   				<mx:SetPropertyAction target="{this.text2}"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state3" toState="state2">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Resize target="{image}" />
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state4" toState="state5">
+	   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+	   				<mx:SetPropertyAction target="{this.image}"/>
+	   				<mx:Resize target="{this}" duration="500" />
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state5" toState="state4">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Resize target="{this}" duration="500" />
+	   				<mx:SetPropertyAction target="{this.image}"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state1" toState="state0">
+	   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+	   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+					<mx:Resize target="{this}" duration="500" />
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   	 <mx:Transition fromState="state0" toState="state5">
+	   			<mx:Sequence>
+	   				<mx:SetPropertyAction target="{this.title}" name="xml" value="{this.ttl}"/>
+	   				<mx:SetPropertyAction target="{this.text1}" name="xml" value="{this.txt1}"/>
+	   				<mx:SetPropertyAction target="{this.text2}" name="xml" value="{this.txt2}"/>
+	   				<mx:SetPropertyAction target="{this.image}" name="xml" value="{this.img}"/>
+	   				<!--<mx:AddChildAction target="{this.vbox}"/>-->
+	   				
+	   				<mx:SetPropertyAction target="{this.text1}" name="alpha" value="1"/>
+	   				<mx:SetPropertyAction target="{this.text2}" name="alpha" value="1"/>
+	   				<mx:SetPropertyAction target="{this.title}" name="alpha" value="1"/>
+		   			<mx:SetPropertyAction target="{this.image}" name="width" value="{imgwt}"/>
+		   			<mx:SetPropertyAction target="{this.image}" name="height" value="{imght}"/>
+	   				<mx:SetPropertyAction target="{this}" name="height"/>
+	   				<mx:SetPropertyAction target="{this}" name="width" value="984"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state5" toState="state0">
+	   			<mx:Sequence>
+	   				<mx:SetPropertyAction target="{this.text1}" name="alpha" value="0"/>
+	   				<mx:SetPropertyAction target="{this.text2}" name="alpha" value="0"/>
+	   				<mx:SetPropertyAction target="{this.title}" name="alpha" value="0"/>
+		   			<mx:SetPropertyAction target="{this.image}" name="width" value="0"/>
+		   			<mx:SetPropertyAction target="{this.image}" name="height" value="0"/>
+	   				<!--<mx:RemoveChildAction target="{this.vbox}"/>-->
+	   				<mx:SetPropertyAction target="{this}" name="height" value="0"/>
+	   				<mx:SetPropertyAction target="{this}" name="width" value="0"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   </transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.effects.easing.Exponential;
+			import mx.effects.easing.Circular;
+			include "ModArticleTextIncludes.as";
+			public override function duplicate():IModule{
+				var m:ModPersonnelImageLeft = new ModPersonnelImageLeft();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+</ModCanvas>

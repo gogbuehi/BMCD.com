@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:utils="com.hphant.utils.*">
+	<mx:Metadata>
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeBegin",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="groupExpandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="groupColapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Event(name="opened",type="com.hphant.components.events.ListGroupEvent")]
+		[Event(name="closed",type="com.hphant.components.events.ListGroupEvent")]
+		[Event(name="expanded",type="com.hphant.components.events.ListGroupEvent")]
+	</mx:Metadata>
+	<utils:DataGrouping id="dataGrouping" collectionChanged="{this.refreshItems(event)}" propFilter="{propertyFilter}" type="{groupingType}"/>
+	<mx:String id="groupHeaderStyle">listGroupHeader</mx:String>
+	<mx:Number id="headerHeight">50</mx:Number>
+	<mx:String id="oddStyleName">oddItem</mx:String>
+	<mx:String id="evenStyleName">evenItem</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.IGroupFilter;
+			import com.hphant.utils.DataGrouping;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.utils.Logger;
+			import com.hphant.renderers.IVListItemRenderer;
+			import com.hphant.components.events.ListGroupEvent;
+			import com.hphant.modsite.site.assets.inventory.MAInventoryItemRenderer;
+			import mx.events.CollectionEvent;
+			import mx.collections.XMLListCollection;
+			import mx.events.FlexEvent;
+			import mx.controls.Button;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.renderers.ExpandableItemRenderer;
+			import mx.collections.IList;
+			//private var _factory:IFactory = new ClassFactory(com.hphant.renderers.ExpandableItemRenderer);
+			private var _factory:IFactory = new ClassFactory(com.hphant.modsite.site.assets.inventory.MAInventoryItemRenderer);
+			private var _groups:Array = new Array();
+			private var _items:Array = new Array();
+			[Bindable]
+			[Inspectable]
+			public var propertyFilter:IGroupFilter;
+			[Bindable]
+			[Inspectable]
+			public var groupingType:String = DataGrouping.MAX_LENGTH;
+			private var _groupIndexs:Dictionary = new Dictionary(true);
+			
+			
+			private var _labelFuntion:Function;
+			
+			protected override function commitProperties():void{
+				super.commitProperties();
+				log("commitProperties()");
+				log("\tdataProviderChanged:"+_dataProviderChanged);
+				log("\tselectedGroupChanged:"+_selectedGroupChanged);
+				log("\tselectedItemChanged:"+_selectedItemChanged);
+				if(this._dataProviderChanged){
+					log("commit dataProvider");
+					if(!this._dataProvider){
+						this._selectedItem = null;
+					}
+					this.refreshItems();
+					this._dataProviderChanged = false;
+				}
+				if(this._selectedGroupChanged){
+					log("commit selectedGroup = "+this._selectedGroup);
+					this._selectedGroupChanged = false;
+					if(this._selectedGroup){
+						this.selectedGroup.selectedItem = (this._selectedGroup.data == this.dataGrouping.getGroupByItem(this.selectedItem)) ? this.selectedItem : null;
+					} else {
+						this.selectedItem = null;
+					}
+					log("selectedGroupIndex = "+this.selectedGroupIndex);
+				}
+				if(this._selectedItemChanged && this._dataProvider){
+					log("commit selectedItem");
+					log("selectedIndex = "+this.selectedIndex);
+					if(this._selectedItem){
+						var gid:int = this.dataGrouping.getGroupIndexByItem(this._selectedItem);
+						var group:VListGroup = this._groups[gid];
+						if(this.selectedGroup!=group){
+							this.selectedGroup = group;
+						}
+					}
+					if(this.selectedGroup){// && this.selectedGroup.selectedItem!= this.selectedItem){
+						this.selectedGroup.selectedItem = this.selectedItem;
+					}
+					this._selectedItemChanged = false;
+				}
+				
+			}
+			
+			[Inspectable]
+			[Bindable]
+			public function set labelFunction(value:Function):void{
+				this._labelFuntion = value;
+			}
+			public function get labelFunction():Function{
+				return (this._labelFuntion!=null) ? this._labelFuntion : this.defaultLabelFunction;
+			}
+			
+			[Inspectable]
+			public function get itemRenderer():Object{return this._factory;}
+			public function set itemRenderer(value:Object):void{
+				if(value is String){
+					this._factory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._factory = IFactory(value);
+				} else if(value is Class){
+					this._factory = new ClassFactory(Class(value));
+				}
+			}
+			[Inspectable]
+			[Bindable]
+			public function get dataProvider():IList{return this._dataProvider;}
+			public function set dataProvider(value:IList):void{
+				if(this._dataProvider!=value){
+					this._dataProviderChanged = true;
+					if(value){
+						if(!this._dataProvider){
+							this._groups = new Array();
+						}
+					} else {
+					}
+					this._dataProvider = value;
+					this.dataGrouping.data = value;
+					this.invalidateProperties();
+				}
+			}
+			private var _dataProvider:IList;
+			private var _dataProviderChanged:Boolean = false;
+			public function refreshItems(event:CollectionEvent=null):void{
+				log("Items Refreshed");
+				var groupData:Array = this.dataGrouping.groups;
+				while(groupData.length<this._groups.length){
+					try{
+						var group:VListGroup = this._groups.pop();
+						group.currentState="closed";
+					} catch (e:Error){
+						
+					}
+				}
+				var i:int = 0;
+				for each(var gd:ArrayCollection in groupData){
+					this.setGroupAt(gd,i);
+					i++;
+				}
+			}
+			private var _selectedGroup:VListGroup;
+			private var _selectedGroupChanged:Boolean = false;
+			public function get selectedGroup():VListGroup{
+				return this._selectedGroup;
+			}
+			public function set selectedGroup(value:VListGroup):void{
+				log("set selectedGroup = "+value);
+				this._selectedGroupChanged = true;
+				if(this._selectedGroup && this._selectedGroup!=value){
+					this._selectedGroup.currentState = "opened";
+					this._selectedGroup.selectedItem = null;
+				}
+				this._selectedGroup = value;
+				if(this._selectedGroup && this._selectedGroup.currentState != "expanded"){
+					this._selectedGroup.currentState = "expanded";
+				}
+				this.invalidateProperties();
+			}
+			public function itemToRenderer(item:Object):IVListItemRenderer{
+				return this.selectedGroup.items.getItemRenderer(item)
+			}
+			public function set selectedGroupIndex(index:int):void{
+				log("set selectedGroupIndex = "+index);
+				this.selectedGroup = (index>-1 && index < this._groups.length) ? VListGroup(this._groups[index]) : null;
+			}
+			public function get selectedGroupIndex():int{
+				return (this.selectedGroup) ? this._groupIndexs[this.selectedGroup]: -1;
+			}
+			private var _selectedItem:Object;
+			private var _selectedItemChanged:Boolean = false;
+			[Inspectable]
+			public function set selectedItem(value:Object):void{
+				log("set selectedItem");
+				this._selectedItem=value;
+				this._selectedItemChanged = true;
+				this.invalidateProperties();
+			}
+			public function get selectedItem():Object{
+				return this._selectedItem;
+			}
+			[Inspectable]
+			public function set selectedIndex(value:int):void{
+				log("set selectedIndex = "+value);
+				this._selectedItem = (this._dataProvider && value>-1) ? this._dataProvider.getItemAt(value) : null;
+				this._selectedItemChanged = true;
+				this.invalidateProperties();
+			}
+			public function get selectedIndex():int{
+				return (this._dataProvider && this._selectedItem) ? this._dataProvider.getItemIndex(this._selectedItem) : -1;
+			}
+			private function setGroupListeners(group:VListGroup):void{
+				group.addEventListener(MAListEvent.RESIZE_BEGIN,this.handleMAListEvent);
+				group.addEventListener(MAListEvent.RESIZE_COMPLETE,this.handleMAListEvent);
+				group.addEventListener(MAListItemEvent.EXPAND_CLICK,handleMAListItemEvent);
+				group.addEventListener(MAListItemEvent.COLAPSE_CLICK,handleMAListItemEvent);
+				group.addEventListener(MAListItemEvent.GROUP_COLAPSE_CLICK,handleMAListItemEvent);
+				group.addEventListener(MAListItemEvent.GROUP_EXPAND_CLICK,handleMAListItemEvent);
+				group.addEventListener(MAFormEvent.SEND_EMAIL,handleMAFormEvent);
+				group.addEventListener(MALinkClickEvent.LINK_CLICKED,handleMALinkClickEvent);
+				group.addEventListener(FlexEvent.ADD,this.groupAdded);
+				group.addEventListener(FlexEvent.REMOVE,this.groupRemoved);
+				group.addEventListener(ListGroupEvent.CLOSED,this.handleListGroupEvent);
+				group.addEventListener(ListGroupEvent.OPENED,this.handleListGroupEvent);
+				group.addEventListener(ListGroupEvent.EXPANDED,this.handleListGroupEvent);
+				
+			}
+			
+			private function unsetGroupListeners(group:VListGroup):void{
+				group.removeEventListener(MAListEvent.RESIZE_BEGIN,this.handleMAListEvent);
+				group.removeEventListener(MAListEvent.RESIZE_COMPLETE,this.handleMAListEvent);
+				group.removeEventListener(MAListItemEvent.EXPAND_CLICK,handleMAListItemEvent);
+				group.removeEventListener(MAListItemEvent.COLAPSE_CLICK,handleMAListItemEvent);
+				group.removeEventListener(MAListItemEvent.GROUP_COLAPSE_CLICK,handleMAListItemEvent);
+				group.removeEventListener(MAListItemEvent.GROUP_EXPAND_CLICK,handleMAListItemEvent);
+				group.removeEventListener(MAFormEvent.SEND_EMAIL,handleMAFormEvent);
+				group.removeEventListener(MALinkClickEvent.LINK_CLICKED,handleMALinkClickEvent);
+				group.removeEventListener(FlexEvent.ADD,this.groupAdded);
+				group.removeEventListener(ListGroupEvent.CLOSED,this.handleListGroupEvent);
+				group.removeEventListener(ListGroupEvent.OPENED,this.handleListGroupEvent);
+				group.removeEventListener(ListGroupEvent.EXPANDED,this.handleListGroupEvent);
+				
+			}
+			private function handleListGroupEvent(event:ListGroupEvent):void{
+				switch(event.type){
+					case ListGroupEvent.CLOSED:
+						this.removeChild(DisplayObject(event.currentTarget));
+					break;
+					case ListGroupEvent.OPENED:
+					
+					break;
+					case ListGroupEvent.EXPANDED:
+					
+					break;
+					default:
+					break;
+				}
+				this.dispatchEvent(new ListGroupEvent(event.type,event.bubbles,event.cancelable));
+			}
+			private var _resizeCount:uint = 0;
+			private function handleMAListEvent(event:MAListEvent):void{
+				this._resizeCount = (event.type==MAListEvent.RESIZE_BEGIN) ? this._resizeCount+1 : (event.type==MAListEvent.RESIZE_COMPLETE) ? this._resizeCount-1 : this._resizeCount;
+				if((event.type==MAListEvent.RESIZE_BEGIN && this._resizeCount == 1) || (event.type==MAListEvent.RESIZE_COMPLETE && this._resizeCount==0)){
+					this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable));
+				}
+			}
+			private function groupAdded(event:FlexEvent):void{
+				VListGroup(event.currentTarget).currentState = "opened";
+			}
+			private function groupRemoved(event:FlexEvent):void{
+				//this.unsetGroupListeners(VListGroup(event.currentTarget));
+			}
+			private function handleMAListItemEvent(event:MAListItemEvent):void{
+				if(event.type==MAListItemEvent.GROUP_COLAPSE_CLICK){
+					this.selectedGroup = null;
+				} else if(event.type==MAListItemEvent.GROUP_EXPAND_CLICK) {
+					this.selectedGroup = VListGroup(event.currentTarget);
+				}
+				this.dispatchEvent(new MAListItemEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			private function handleMAFormEvent(event:MAFormEvent):void{
+				this.dispatchEvent(new MAFormEvent(event.type,event.formData,event.bubbles,event.cancelable));
+			}
+			private function handleMALinkClickEvent(event:MALinkClickEvent):void{
+				this.dispatchEvent(new MALinkClickEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			public function removeAll():void{
+				this._dataProvider.removeAll();
+			}
+			public function removeItemAt(index:int):void{
+				try{
+					var gid:int = Math.floor(index/this.maxGroupLength);
+					 VListGroup(this._groups[gid]).items.removeItemAt(index-gid*this.maxGroupLength);
+				} catch(e:Error){
+					
+				}
+			}
+			public function defaultLabelFunction(item:Object,group:VListGroup):String{
+				var s:String = (item) ? (this._dataProvider.getItemIndex(ArrayCollection(group.data).getItemAt(0))+1)+" to "+(this._dataProvider.getItemIndex(ArrayCollection(group.data).getItemAt(ArrayCollection(group.data).length-1))+1) : "";
+				return s;
+			}
+			public function setGroupAt(items:ArrayCollection,index:int):void{
+				if(index>=0){
+					if(index<this._groups.length){
+						VListGroup(this._groups[index]).data = items;
+					} else {
+						var group:VListGroup = new VListGroup();
+						group.itemRenderer = this.itemRenderer;
+						group.labelFunction = this.labelFunction;
+						group.headerHeight = this.headerHeight;
+						group.groupHeaderStyle = this.groupHeaderStyle;
+						group.evenStyleName = this.evenStyleName;
+						group.oddStyleName = this.oddStyleName;
+						this.setGroupListeners(group);
+						this._groups.push(group);
+						this._groupIndexs[group] = this._groups.length-1;
+						group.data = items;
+						this.addChild(group);
+					}
+				}
+			}
+			public function setItemAt(item:Object,index:int):void{
+				if(index>=0){
+					try{
+						var gid:int = Math.floor(index/this.maxGroupLength);
+						 VListGroup(this._groups[gid]).items.setItemAt(item,index-gid*this.maxGroupLength);
+						if(index<this._items.length){
+						 	this._items[index]=item;
+						} else {
+							this._items.push(item);
+						}
+					} catch(e:Error){
+						
+					}
+				}
+			}
+			
+			private function log(message:Object,level:int=0):void{
+				Logger.log("[GroupedVList] "+message,level);
+			}
+		]]>
+	</mx:Script>
+	<mx:Number id="maxGroupLength">4</mx:Number>
+	
+</mx:VBox>

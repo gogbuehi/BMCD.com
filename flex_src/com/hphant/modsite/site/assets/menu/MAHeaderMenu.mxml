@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+  	       implements="com.hphant.modsite.site.assets.interfaces.IMAsset">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.MenuManager;
+			import mx.controls.Button;
+			import mx.core.UIComponent;
+			include "../interfaces/AssetIncludes.as";
+			import mx.controls.LinkButton;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					MenuManager.getInstance().menu = this._xml;
+					var buttons:XMLList = this._xml.li;
+					this.selectedIndex = -1;
+					for(var i:uint=0;i<buttons.length();i++){
+						var l:Button;
+						if(i<this.numChildren){
+							l = Button(this.getChildAt(i));
+						} else {
+							l = new Button();
+							l.styleName = "headerMenuButton";
+							this.addChild(l);
+							l.addEventListener(MouseEvent.CLICK,this.linkClicked);
+						}
+						l.label = buttons[i].a.children();
+						l.data = buttons[i];
+						if(buttons[i].@selected=="selected"){
+							this.selectedIndex = i;
+						}
+						//log("Setting Menu Button : label='"+l.label+"' selected='"+l.selected+"' data='"+l.data+"'");
+					}
+					while(this.numChildren>buttons.length()){
+						this.removeChildAt(this.numChildren-1);
+					}
+					this.xmlChanged = false;
+				}
+				this._selectedIndexChanged = false;
+				super.commitProperties();
+			}
+			
+			private function linkClicked(e:MouseEvent):void{
+				//log("Link Clicked : "+e.currentTarget.data);
+				//this.itemTypes.selectedIndex = this.itemTypes.getChildIndex(LinkButton(e.currentTarget));
+			}
+			private var _selectedIndex:int = -1;
+			private var _selectedIndexChanged:Boolean = false;
+			[Inspectable]
+			[Bindable(event="selectedIndexChanged")]
+			public function get selectedIndex():int{return this._selectedIndex;}
+			public function set selectedIndex(value:int):void{
+				this._selectedIndexChanged = (this._selectedIndex!=value);
+				if(this._selectedIndexChanged){
+					this.unHilightSelctedItem(value);
+					this.invalidateProperties();
+					this.dispatchEvent(new Event("selectedIndexChanged"));
+				}
+			}
+			protected function unHilightSelctedItem(index:int):void{
+				var child:Button;
+		
+		        // Un-hilite the current selection.
+		        if (selectedIndex != -1 && selectedIndex < numChildren)
+		        {
+		            child = Button(getChildAt(selectedIndex));
+		            child.selected = false;
+		        }
+		        this._selectedIndex = index;
+		        // Hilite the new selection.
+		        if (selectedIndex != -1 && selectedIndex < numChildren)
+		        {
+			        child = Button(getChildAt(selectedIndex));
+			        child.selected = true;
+		        }
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

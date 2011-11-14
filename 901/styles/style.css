@@ -1,0 +1,102 @@
+body {
+    display:inline;
+    background-color:#D0D0D0;
+}
+body,h1,h2,h3,p,li,a,span {
+	color:#000060;
+	font-family:Arial;
+    margin-top:1px;
+    margin-bottom:1px;
+}
+h3 p {
+    margin-top:0px;
+    margin-bottom:1px;
+}
+
+
+h1 {
+	font-size:2em;
+	font-weight:bold;
+}
+h2 {
+	font-size:1em;
+	font-weight:bold;
+}
+h3 {
+	font-size:1em;
+	font-weight:normal;
+}
+
+.message {
+    color:purple;
+    font-weight:bold;
+    border:black 1px solid;
+}
+
+.ModBMCD901Header div {
+    display:inline;
+}
+
+.MAHeaderMenu, li ul, .Subsection, .Section a, .Section p,
+.Page_File li {
+    display:inline;
+}
+.object_class {
+    font-weight:bold;
+    padding:3px;
+}
+.Page_File li {
+	margin:5px;
+
+	font-size:0.76em;
+}
+
+.Page_Edit li {
+    margin:0px;
+}
+li.link {
+	display:block;
+    border:none;
+}
+.link {
+    font-weight:bold;
+}
+li .Page_Edit {
+	display:block;
+}
+.Page_Edit li {
+
+}
+li.Page_Edit {
+    display:none;
+}
+li.first {
+    display:list-item;
+}
+.first li{
+    font-size:1em;
+    margin:5px;
+    display:list-item;
+}
+
+.MAHeaderMenu li,.MAFooterMenu li {
+    padding:3px;
+}
+
+.Subsection {
+	border:black 1px solid;
+ }
+.Subsection, li, .Page_Edit, .Page_File {
+   margin:1px;
+    padding:1px;
+    border:none;
+
+}
+td a, .url {
+	font-size:0.76em;
+	color:#0000FF;
+}
+
+tr.inventoryRow td {
+	/* figure out how to create fixed-sized table cells */
+}

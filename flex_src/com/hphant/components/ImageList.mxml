@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TileList xmlns:mx="http://www.adobe.com/2006/mxml" updateComplete="{replaceObjectsInImageList()}" creationComplete="{buildContextMenu();}"
+	direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on" dataProvider="{imageCollection}"
+    rowCount="1" dragMoveEnabled="true" dragEnabled="true" dropEnabled="true" allowMultipleSelection="false"
+    columnWidth="50" columnCount="15" rowHeight="50" xmlns:ui="flash.ui.*">
+    <mx:contextMenu>
+    	<ui:ContextMenu customItems="{this._cmArray}">
+    		<ui:builtInItems>
+    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+    		</ui:builtInItems>
+    	</ui:ContextMenu>
+    </mx:contextMenu>
+	<mx:itemRenderer>
+		<mx:Component>
+			<mx:Image toolTip="{data}" source="{data}" width="100%" height="100%" />
+		</mx:Component>
+	</mx:itemRenderer>
+	<mx:Binding destination="imageCollection.source" source="images"/>
+	<mx:Binding destination="cmRemoveImage.enabled" source="Boolean(selectedItem)" />
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import flash.ui.ContextMenuItem;
+			[Bindable]
+			[Inspectable]
+			public var images:Array;
+			[Bindable]
+			private var imageCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			[ArrayElementType("flash.ui.ContextMenuItem")]
+			private var _cmArray:Array = [];
+			private var cmRemoveImage:ContextMenuItem = new ContextMenuItem("Remove Selected");
+			private function buildContextMenu():void{
+				this._cmArray.push(this.cmRemoveImage);
+				this.cmRemoveImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.cmRemoveImageClicked);
+			}
+			private function cmRemoveImageClicked(event:ContextMenuEvent):void{
+				this.imageCollection.removeItemAt(this.selectedIndex);
+			}
+			
+			[Bindable]
+			[Inspectable]
+			public var sourceProperty:String = "source";
+			private function replaceObjectsInImageList():void{
+				var objectsFound:Boolean = false;
+				var newArray:Array = new Array();
+				for each(var img:Object in dataProvider){
+					if(img is String){
+						newArray.push(img);
+					} else {
+						objectsFound = true;
+						newArray.push(img[sourceProperty]);
+					}
+				}
+				if(objectsFound){
+					this.images = newArray;
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:TileList>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" styleName="emailForm" currentState="form" width="100%" clipContent="false" backgroundAlpha="0" borderThickness="0" verticalAlign="middle" horizontalAlign="center" xmlns:forms="com.hphant.modsite.site.forms.*" xmlns:text="com.hphant.modsite.site.assets.text.*">
+	<mx:Text id="sentText" styleName="emailFormLabel" width="100%"/>
+	<forms:FormInput id="data1" label="First Name" type="name"/>
+	<forms:FormInput id="data2" label="Last Name" type="name"/>
+	<forms:FormInput id="data3" label="Phone Number" type="phone"/>
+	<forms:FormInput id="data4" label="Email" type="email"/>
+	<forms:FormInputTextArea id="message" label="Comment" type="text"/>
+	<mx:HBox verticalScrollPolicy="off" styleName="emailFormButtonContainer" horizontalScrollPolicy="off" width="100%" backgroundAlpha="0" borderThickness="0" horizontalAlign="center" >
+		<mx:Button buttonMode="true" styleName="emailFormButton" useHandCursor="true" click="this.sendEmail();" label="Send" minWidth="75" id="send"/>
+		<mx:Button buttonMode="true" styleName="emailFormButton" useHandCursor="true" click="this.clearForm();" label="Clear" minWidth="75" id="clear"/>
+	</mx:HBox>
+	<forms:EmailFormDataMap id="dataMap"/>
+	<mx:String id="formName">EmailForm</mx:String>
+	<mx:states>
+		<mx:State name="form" />
+		<mx:State name="sent">
+			<mx:SetProperty target="{data1}" name="enabled" value="false"/>
+			<mx:SetProperty target="{data2}" name="enabled" value="false" />
+			<mx:SetProperty target="{data3}" name="enabled" value="false" />
+			<mx:SetProperty target="{data4}" name="enabled" value="false" />
+			<mx:SetProperty target="{message}" name="enabled" value="false" />
+			<mx:SetProperty target="{send}" name="enabled" value="false" />
+			<mx:SetProperty target="{sentText}" name="text" value="" />
+			<mx:SetProperty target="{clear}" name="label" value="Reset" />
+			
+		</mx:State>
+	</mx:states>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="clearForm",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function sendEmail():void{
+				var valid:Boolean = data1.validateData() && data2.validateData() && data3.validateData() && data4.validateData() && message.validateData();
+				
+				if(valid){
+					var form:EmailFormData = new EmailFormData();
+					form.formName = this.formName;
+					form[dataMap.data1] = data1.dataInput.text;
+					form[dataMap.data2] = data2.dataInput.text;
+					form[dataMap.data3] = data3.dataInput.text;
+					form[dataMap.data4] = data4.dataInput.text;
+					form[dataMap.message] = message.dataInput.text;
+					this.dispatchEvent(new MAFormEvent(MAFormEvent.SEND_EMAIL,form));
+					//this.clearForm();
+				}
+			}
+			private function clearForm():void{
+				this.data1.dataInput.text = "";
+				this.data2.dataInput.text = "";
+				this.data3.dataInput.text = "";
+				this.data4.dataInput.text = "";
+				this.message.dataInput.text = "";
+				if(this.currentState=="sent"){
+					this.currentState = "form";
+				}
+				this.dispatchEvent(new MAFormEvent(MAFormEvent.CLEAR_FORM,null));
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

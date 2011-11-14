@@ -1,0 +1,18 @@
+TRACE Screen
+LOG Screen
+USER bmcdftp
+PASS bmcdlambo910999
+CONNECT 70.32.120.158
+LCD F:/web/bmcd/web
+CD httpdocs/
+DEL index.php
+PUT index.php
+LCD F:/web/bmcd/901
+CD ../subdomains/901/httpdocs/
+DEL index.php
+PUT index.php
+LCD F:/web/bmcd/999
+CD ../../../subdomains/999/httpdocs/
+DEL index.php
+PUT index.php
+CLOSE

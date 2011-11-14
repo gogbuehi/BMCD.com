@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*"  implements="com.hphant.remoting.IResponder"
+		xmlns:mx="http://www.adobe.com/2006/mxml" addedToStage="{getAllPDFs()}"
+		xmlns:buttons="com.hphant.components.buttons.*" creationComplete="{init()}"
+	     xmlns:view="com.hphant.contentlibrary.view.*">
+	<mx:VBox enabled="{isEnabled}" verticalGap="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" disabledOverlayAlpha=".05">
+		
+	<mx:ProgressBar width="100%" mode="manual" id="pb" height="5" visible="false"/> 
+	<mx:DataGrid styleName="adminGrid" id="grid" rowCount="10" doubleClick="{editPDF()}" doubleClickEnabled="true" width="100%" dataProvider="{ContentModelLocator.getInstance().pdfs}" allowMultipleSelection="false" allowDragSelection="false">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Title" width="300">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Text htmlText="{data.title}" width="100%" height="100%"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button label="Delete Selected" click="{removePDF()}" enabled="{Boolean(grid.selectedItem)}"/>
+		<mx:Button label="Edit Selected" click="{editPDF()}" enabled="{Boolean(grid.selectedItem)}"/>
+		<mx:Button label="New" click="{newPDF()}"/>
+	</mx:HBox>
+	</mx:VBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.events.PalletEvent;
+			import com.hphant.remoting.GeneralEvent;
+			import mx.rpc.Fault;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.contentlibrary.model.PDF;
+			import com.hphant.components.AlertPallet;
+			import com.hphant.events.PDFUploadManagerEvent;
+			import com.hphant.managers.PDFUploadManager;
+			import com.hphant.contentlibrary.control.event.PDFEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			
+			private var manager:PDFUploadManager = new PDFUploadManager();
+			private var info:PDFInfoPallet = new PDFInfoPallet();
+			private function getAllPDFs():void{
+				var ga:PDFEvent = new PDFEvent(PDFEvent.GET_ALL_PDFS);
+				ga.dispatch();
+			}
+			private function init():void{
+				info.addEventListener(PalletEvent.CLOSE,infoClosed);
+				manager.addEventListener(PDFUploadManagerEvent.PDF_UPLOAD_COMPLETE,this.uploadComplete);
+				manager.addEventListener(PDFUploadManagerEvent.PDF_UPLOAD_ERROR,this.uploadError);
+				manager.addEventListener(PDFUploadManagerEvent.PDF_UPLOAD_START,this.uploadStart);
+				manager.addEventListener(ProgressEvent.PROGRESS,this.progressUpdate);
+			}
+			private function uploadStart(event:PDFUploadManagerEvent):void{
+				if(pb){
+					pb.visible = true;
+				}
+			}
+			private function progressUpdate(event:ProgressEvent):void{
+				if(pb){
+					pb.setProgress(event.bytesLoaded,event.bytesTotal);
+				}
+			}
+			private function infoClosed(event:PalletEvent):void{
+				this.isEnabled = true;
+			}
+			private function newPDF():void{
+				this.isEnabled = false;
+				manager.uploadFileReference();
+			}
+			private function editPDF():void{
+				info.data = grid.selectedItem;
+				info.isNew = false;
+				this.isEnabled = false;
+				PalletManager.openPallet(info);
+			}
+			[Bindable]
+			private var isEnabled:Boolean = true;
+			private function removePDF():void{
+				var evt:PDFEvent = new PDFEvent(PDFEvent.REMOVE_PDF);
+				evt.data = grid.selectedItem;
+				evt.responder = this;
+				evt.dispatch();
+			}
+			private function uploadComplete(event:PDFUploadManagerEvent):void{
+				var pdf:PDF = new PDF();
+				pdf.location = manager.url;
+				info.data = pdf;
+				info.isNew = true;
+				PalletManager.openPallet(info);
+				PalletManager.centerPallet(info);
+				if(pb){
+					pb.visible = false;
+				}
+			}
+			private function uploadError(event:PDFUploadManagerEvent):void{
+				AlertPallet.show("The upload failed or was canceled.\nPlease try again.","Upload Terminated",
+					AlertPallet.OK, AlertPallet.OK);
+				this.isEnabled = true;
+				if(pb){
+					pb.visible = false;
+				}
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				switch(event.type){
+					case PDFEvent.REMOVE_PDF:
+						AlertPallet.show("PDF Successfully Removed.","Success",AlertPallet.OK,AlertPallet.OK);
+					break;
+					default:
+						log("Service Result type = "+event.type);
+					break;
+				}
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				AlertPallet.show("PDF Failed.\n"+fault,"Error",AlertPallet.OK,AlertPallet.OK);
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

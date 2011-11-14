@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox styleName="loginForm" horizontalAlign="left" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*" creationComplete="{setEnabled()}">
+	<text:SelfLabelTextInput label="User:" id="usr" width="300" textChange="{setEnabled()}"/>
+	<mx:VBox verticalGap="0" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="Password:" id="pword" width="300" displayAsPassword="true" textChange="{setEnabled()}"/>
+		<mx:LinkButton color="#0000FF" paddingLeft="0" paddingRight="0" left="0" right="0" id="forgot" label="forgot password" textDecoration="underline" fontSize="12" click="{this.dispatchEvent(new LoginFormEvent(LoginFormEvent.FORGOT))}" />
+	</mx:VBox>
+	<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center">
+		<mx:Button id="login" enabled="{en}" label="Login" click="{this.dispatchEvent(new Event(Event.SELECT))}"/>
+		<mx:Button id="cancel" label="Cancel" click="{this.dispatchEvent(new Event(Event.CANCEL))}"/>
+	</mx:HBox>
+	<mx:Metadata>
+		[Event(name="cancel",type="flash.events.Event")]
+		[Event(name="select",type="flash.events.Event")]
+		[Event(name="forgot",type="com.hphant.components.events.LoginFormEvent")]
+		[Exclude(name="usr",kind="property")]
+		[Exclude(name="pword",kind="property")]
+		[Exclude(name="forgot",kind="property")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.events.LoginFormEvent;
+			[Bindable]
+			[Inspectable]
+			public function get user():String{
+				return usr ? usr.text : _usr;
+			}
+			public function set user(value:String):void{
+				if(usr){
+					usr.text = value;
+				}
+				_usr = value;
+			}
+			private var _usr:String = "";
+			
+			[Bindable]
+			[Inspectable]
+			public function get password():String{
+				return pword ? pword.text : _pword;
+			}
+			public function set password(value:String):void{
+				if(pword){
+					pword.text = value;
+				}
+				_pword = value;
+			}
+			private var _pword:String;
+			[Bindable]
+			private var en:Boolean = false;
+			private function setEnabled():void{
+				en = user && password;
+			}
+			public function clear():void{
+				if(usr)
+					usr.text = "";
+				if(pword)
+					pword.text = "";
+				setEnabled();
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

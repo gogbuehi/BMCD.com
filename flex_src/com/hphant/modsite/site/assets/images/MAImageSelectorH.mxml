@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	xmlns:mx="http://www.adobe.com/2006/mxml" height="{this.imageHeight+5}">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Boolean id="showText">true</mx:Boolean>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import mx.effects.Resize;
+			import mx.containers.Box;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			include "MAImageSelectorIncludes.as";
+			
+		    
+			private function createNewImage():IMAsset{
+				var img:MAImage = new MAImage();
+				img.showText = this.showText;
+				img.addEventListener(MALinkClickEvent.LINK_CLICKED,this.imageClicked);
+				img.autoSize = false;
+				img.width = this._qsi ? this.imgWidth : 0;//this.imageWidth;
+				img.height = this._qsi ? this.imgHeight : 0;//this.imageHeight;
+				return img;
+			}
+			public function sizeImage(b:Box):void{
+					b.width = imgWidth;
+					b.height = imgHeight;
+			}
+			private function doSizeImages(value:Boolean):void{
+				
+				var resize:Resize = new Resize();
+				resize.addEventListener(EffectEvent.EFFECT_END, this.resizeEnd);
+				var targs:Array = new Array();
+				for(var i:uint = 0;i<this.numChildren;i++){
+					var img:UIComponent = UIComponent(Box(this.getChildAt(i)).getChildAt(0));
+					if(this._qsi){
+						img.height = value ? this.imgHeight : 0;
+						img.width = value ? this.imgWidth : 0;
+					} else {
+						targs.push(img);
+					}
+				}
+				this._resizeCount = 0;
+				
+				if(!this._qsi){
+					if(value){
+						resize.heightFrom = 0;
+						resize.heightTo = this.imgHeight;
+						resize.widthFrom = 0;
+						resize.widthTo = this.imgWidth;	
+					} else {
+						resize.heightFrom = this.imgHeight;
+						resize.heightTo = 0;
+						resize.widthFrom = this.imgWidth;
+						resize.widthTo = 0;	
+					}
+					resize.play(resizeTargets);
+				} else {
+					resizeEnd(null);
+				}
+				this.invalidateDisplayList();
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

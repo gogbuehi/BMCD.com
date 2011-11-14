@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="500" height="300" xmlns:view="com.hphant.data.view.*">
+	<mx:Metadata>
+		[Exclude(name="list", kind="property")]
+		[Exclude(name="sources", kind="property")]
+		
+		[Event(name="urlSelect", type="com.hphant.events.URLEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.control.DataModelLocator;
+			import com.hphant.events.URLEvent;
+			import com.hphant.managers.MenuManager;
+			import mx.utils.URLUtil;
+			import mx.core.Application;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.events.ListEvent;
+			
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var copyURL:ContextMenuItem = new ContextMenuItem("Copy URL");
+
+			private function defineListeners():void{
+				this._cmArray.push(this.copyURL);
+				this.copyURL.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);			
+			}
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.copyURL:
+
+						if(overRow){
+							var textToCopy:String = overRow.data.url;
+							/* if(textToCopy.indexOf("http://")!=0 && textToCopy.indexOf("mailto:")){
+								textToCopy = "http://"+URLUtil.getServerName(Application.application.url)+textToCopy;
+							} */
+							System.setClipboard(textToCopy);
+							this.dispatchEvent(new URLEvent(URLEvent.URL_SELECT,textToCopy));
+						}
+					break;
+					default:
+						
+					break;
+				}
+			}
+			private var overRow:IListItemRenderer;
+			private function itemOverChanged(event:ListEvent):void{
+				overRow = event.itemRenderer;
+			}
+			private function itemClicked(event:ListEvent):void{
+				this.dispatchEvent(new URLEvent(URLEvent.URL_SELECT,event.itemRenderer.data.url));
+			}
+		]]>
+	</mx:Script>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Label text="Sources:"/>
+		<mx:ComboBox id="sources" dataProvider="{DataModelLocator.getInstance().lists}" labelField="name"/>	
+	</mx:HBox>
+	<mx:List id="list" width="100%" dataProvider="{sources.selectedItem.list}">
+		<mx:itemRenderer>
+			<mx:Component>
+				<view:ItemDisplay />
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:List>
+</mx:VBox>

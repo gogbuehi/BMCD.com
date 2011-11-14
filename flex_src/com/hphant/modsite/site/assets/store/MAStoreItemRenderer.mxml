@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExpandableItemRenderer xmlns="com.hphant.renderers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+     headerRenderer="{com.hphant.modsite.site.assets.store.MAStoreItemHeader}"
+     bodyRenderer="{com.hphant.modsite.site.assets.store.MAStoreItemBody}"
+     footerRenderer="{com.hphant.modsite.site.assets.store.MAStoreItemFooter}"
+     hrX="807">
+</ExpandableItemRenderer>
+ 

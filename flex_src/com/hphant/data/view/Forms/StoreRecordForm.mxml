@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet label="Product Information" xmlns="com.hphant.components.containers.*" implements="com.hphant.remoting.IResponder"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:components="com.hphant.components.*" 
+	xmlns:text="com.hphant.components.text.*" xmlns:buttons="com.hphant.components.buttons.*" dataChange="{handleData()}"
+    creationComplete="{init()}"
+	>
+	<mx:VBox width="100%" height="100%">
+	<text:SelfLabelTextInput label="Title:" width="100%" id="title" text="{StoreRecord(data).title}" change="{changeListener(event)}"/>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="ID:" width="200" id="productId" text="{StoreRecord(data).productId}" change="{changeListener(event)}"/>
+		<text:SelfLabelTextInput label="Item Number:" width="200" id="productNumber" text="{StoreRecord(data).productNumber}" change="{changeListener(event)}"/>
+		<mx:ComboBox width="200" id="brand" dataProvider="{brands}" selectedIndex="{selectedBrand}" change="{changeListener(event)}"/>
+	</mx:HBox>	
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="Price:" width="200" id="price" text="{StoreRecord(data).price}" change="{changeListener(event)}"/>
+		<text:SelfLabelTextInput label="Size:" width="200" id="size" text="{StoreRecord(data).size}" change="{changeListener(event)}"/>	
+		<text:SelfLabelTextInput label="Color:" width="200" id="color" text="{StoreRecord(data).color}" change="{changeListener(event)}"/>
+	</mx:HBox>	
+	<mx:RadioButtonGroup id="mfca" selectedValue="{StoreRecord(data).mfca}" change="{changeListener(event)}"/>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+			<mx:Label text="M/F/C/A:"/>
+			<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:RadioButton label="M" tabEnabled="true" labelPlacement="top" value="M" group="{mfca}"/>
+			<mx:RadioButton label="F" tabEnabled="true" labelPlacement="top" value="F" group="{mfca}"/>
+			<mx:RadioButton label="C" tabEnabled="true" labelPlacement="top" value="C" group="{mfca}"/>
+			<mx:RadioButton label="A" tabEnabled="true" labelPlacement="top" value="A" group="{mfca}"/>
+			</mx:HBox>
+		</mx:HBox>
+		<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+			<mx:CheckBox id="sale" label="   Sale:" labelPlacement="left" selected="{StoreRecord(data).sale=='yes'}" change="{changeListener(event)}"/>
+			<mx:CheckBox id="show" label="Visible:" labelPlacement="left" selected="{Boolean(StoreRecord(data).visible)}" change="{changeListener(event)}"/>
+		</mx:VBox>
+		<buttons:PalletButton id="thumbButton" label="Thubmnail" palletPosition="none" palletLabel="Select Thumbnail" pallet="{this.thumb}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="imagesButton" label="Images" palletPosition="none" palletLabel="Select Images" pallet="{this.images}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="categoriesButton" label="Categories" palletPosition="none" palletLabel="Categories" pallet="{this.categories}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="seoButton" label="SEO Tools" palletPosition="bottom" pallet="{this.seo}">
+		</buttons:PalletButton>
+		
+	</mx:HBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+		<mx:Label text="Short Description"/>
+		<components:ExtendedRichTextEditor id="shortDescription" colorEnabled="false" htmlText="{StoreRecord(data).shortDescription}" width="100%" height="75" displayTools="false" change="{changeListener(event)}"/>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+		<mx:Label text="Long Description"/>
+		<components:ExtendedRichTextEditor id="longDescription" colorEnabled="false" htmlText="{StoreRecord(data).longDescription}" width="100%" height="225" displayTools="false" change="{changeListener(event)}"/>
+	</mx:VBox>
+	</mx:VBox>
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:Button label="Save" enabled="{changed}" click="{saveRecord()}"/>
+		<mx:Button label="New" click="{newRecord()}"/>
+		<mx:Button label="Duplicate" enabled="{Boolean(data)}" click="{duplicateRecord()}"/>
+		<mx:Button label="Remove" enabled="{Boolean(data)}" click="{removeRecord()}"/>
+	</mx:HBox>
+	<mx:Binding source="StoreRecord(data).thumb" destination="thumb.source" />
+	<mx:Binding source="StoreRecord(data).images.split(',')" destination="images.images" />
+	<mx:Binding source="StoreRecord(data).category" destination="categories.words" />
+	<mx:Binding source="StoreRecord(data).pageDescription" destination="seo.description" />
+	<mx:Binding source="StoreRecord(data).pageKeywords" destination="seo.keywords" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.view.DataSEOPallet;
+			import mx.formatters.NumberFormatter;
+			import com.hphant.modsite.site.assets.store.data.Price;
+			import com.hphant.components.containers.WordListCreator;
+			import com.hphant.components.events.AlertCloseEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.components.AlertPallet;
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.remoting.IResponder;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.components.containers.ImagesSelector;
+			import com.hphant.data.control.event.StoreEvent;
+			import com.hphant.data.model.StoreRecord;
+			import com.hphant.components.containers.ThumbnailSelector;
+			
+			
+			[Bindable('dataChange')]
+			private function get selectedBrand():int{
+				return ( data && StoreRecord(data).brand ) ? brands.getItemIndex(StoreRecord(data).brand) : 0;
+			}
+			
+			public function handleFault(event:GeneralEvent, fault:Fault):void{
+				AlertPallet.show(fault.message,"Error "+fault.errorID,
+								AlertPallet.OK,AlertPallet.OK);
+			}
+			public function handleResult(event:GeneralEvent, result:Object):void{
+				var action:String = event.type==StoreEvent.UPDATE ? "y Saved" : event.type==StoreEvent.REMOVE ? "y Removed" : "";
+				AlertPallet.show("Product "+StoreRecord(data).productNumber+" was successfull"+action+".","Success",
+								AlertPallet.OK,AlertPallet.OK);
+				var e:StoreEvent = new StoreEvent(StoreEvent.GET_ALL);
+				e.dispatch();
+			}
+			private function changeListener(event:Event):void{
+				 changed = true;
+			}
+			[Bindable]
+			private var changed:Boolean = false;
+			[Bindable]
+			private var thumb:ThumbnailSelector = new ThumbnailSelector();
+			[Bindable]
+			private var images:ImagesSelector = new ImagesSelector();
+			[Bindable]
+			private var seo:DataSEOPallet = new DataSEOPallet();
+			[Bindable]
+			private var categories:WordListCreator = new WordListCreator();
+			
+			private function init():void{
+				images.imageSizes = [new Rectangle(0,0,460,350)];
+				images.addEventListener(Event.CHANGE,changeListener);
+				categories.addEventListener(Event.CHANGE,changeListener);
+				thumb.addEventListener(Event.CHANGE,changeListener);
+				seo.addEventListener(Event.CHANGE,changeListener);
+			}
+			public override function reset():void{
+				super.reset();
+				PalletManager.closePallet(images);
+				PalletManager.closePallet(thumb);
+				PalletManager.closePallet(categories);
+				PalletManager.closePallet(seo);
+				this.data = null;
+			}
+			[Bindable]
+			public var brands:ArrayCollection = new ArrayCollection();
+			
+			private function saveRecord():void{
+				if(data){
+					var pf:NumberFormatter = new NumberFormatter();
+					pf.useThousandsSeparator = false;
+					pf.useNegativeSign = false;
+					pf.precision = 2;
+					
+					
+					StoreRecord(data).thumb = thumb.source ? thumb.source : 'noImage';
+					StoreRecord(data).images = images.images.join(",");
+					StoreRecord(data).longDescription = longDescription.htmlText;
+					StoreRecord(data).shortDescription = shortDescription.htmlText;
+					StoreRecord(data).brand = brand.selectedIndex ? String(brand.selectedItem) : "";
+					StoreRecord(data).visible = show.selected ? 1 : 0;
+					StoreRecord(data).color = color.text;
+					StoreRecord(data).mfca = String(mfca.selectedValue);
+					StoreRecord(data).price = pf.format(price.text);
+					StoreRecord(data).category = categories.words;
+					StoreRecord(data).productId = productId.text;
+					StoreRecord(data).productNumber = productNumber.text;
+					StoreRecord(data).sale = (sale.selected) ? 'yes' : '';
+					StoreRecord(data).title = title.text;
+					StoreRecord(data).size = size.text;
+					StoreRecord(data).pageDescription = seo.description;
+					StoreRecord(data).pageKeywords = seo.keywords;
+					var event:StoreEvent = new StoreEvent(isNew ? StoreEvent.ADD_NEW : StoreEvent.UPDATE);
+					event.data = data;
+					event.responder = this;
+					isNew = false;
+					event.dispatch();
+				}
+			}
+			private var isNew:Boolean = false;
+			private function newRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createNewRecord();
+				}
+			}
+			private function removeRecord():void{
+				AlertPallet.show("Are you sure you want to remove the Item?","Remove Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,removeExistingRecord);
+			}
+			private function duplicateRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item based off of the current information?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createDuplicateRecord();
+				}
+			}
+			
+			private function createDuplicateRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					var nItem:StoreRecord = new StoreRecord();
+					
+					var pf:NumberFormatter = new NumberFormatter();
+					pf.useThousandsSeparator = false;
+					pf.useNegativeSign = false;
+					pf.precision = 2;
+					
+					nItem.thumb = thumb.source ? thumb.source : 'noImage';
+					nItem.images = images.images.join(",");
+					nItem.longDescription = longDescription.htmlText;
+					nItem.shortDescription = shortDescription.htmlText;
+					nItem.brand = brand.selectedIndex ? String(brand.selectedItem) : "";
+					nItem.visible = show.selected ? 1 : 0;
+					nItem.color = color.text;
+					nItem.mfca = String(mfca.selectedValue);
+					nItem.price = pf.format(price.text);
+					nItem.category = categories.words;
+					nItem.productId = productId.text;
+					nItem.productNumber = productNumber.text;
+					nItem.sale = (sale.selected) ? 'yes' : '';
+					nItem.title = title.text;
+					nItem.size = size.text;
+					nItem.pageDescription = seo.description;
+					nItem.pageKeywords = seo.keywords;
+					nItem.id = 0;
+					data = nItem;
+					changed = true;
+					
+					isNew = true;
+				}
+			}
+			
+			private function createNewRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					data = new StoreRecord();
+					isNew = true;
+				}
+			}
+			private function removeExistingRecord(event:AlertCloseEvent=null):void{
+				if(event.detail == AlertPallet.YES){
+					if(!isNew){
+						var e:StoreEvent = new StoreEvent(StoreEvent.REMOVE);
+						e.data = data;
+						e.responder = this;
+						e.dispatch();
+					}
+					data = null;
+					longDescription.htmlText = "";
+					shortDescription.htmlText = "";
+				}
+			}
+			private function handleData():void{
+				isNew=false;
+				changed = false;
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

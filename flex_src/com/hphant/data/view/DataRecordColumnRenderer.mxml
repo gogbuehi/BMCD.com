@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{this.displayText()}" width="100%" doubleClickEnabled="true" doubleClick="{doubleClickListener();}">
+	<mx:Text id="display_txt" width="100%" minHeight="25" creationComplete="{this.displayText()}"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.events.AlertCloseEvent;
+			import com.hphant.components.TimeSelector;
+			import mx.controls.Spacer;
+			import mx.controls.Label;
+			import mx.controls.NumericStepper;
+			import mx.controls.ComboBox;
+			import mx.controls.DateChooser;
+			import com.hphant.components.ExtendedRichTextEditor;
+			import mx.controls.RadioButtonGroup;
+			import mx.controls.RadioButton;
+			import mx.containers.HBox;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.components.FLVPlaybackFlexComp;
+			import mx.controls.Image;
+			import com.hphant.utils.Logger;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.components.ImageList;
+			import mx.controls.CheckBox;
+			import mx.core.UIComponent;
+			import mx.controls.TextArea;
+			import com.hphant.components.CellEditorPallet;
+			import com.hphant.components.AlertPallet;
+			import mx.events.CloseEvent;
+			private function doubleClickListener():void{
+				log("Double Clicked");
+				//if(this.dataEvent){
+					switch(propertyType){
+						case "date":
+							ec = new DateChooser();
+							DateChooser(ec).selectedDate = new Date(this.displayText());
+						break;
+						case "time":
+							ec = new TimeSelector();
+							TimeSelector(ec).time = this.displayText();
+						break;
+						case "boolean":
+							ec = new CheckBox();
+							CheckBox(ec).label = propertyName;
+							CheckBox(ec).labelPlacement = "right"
+							CheckBox(ec).selected = (propertyName && data) ? Boolean(data[propertyName]) : Boolean(data);
+						break;
+						case "images":
+							ec = new ImageList();
+							ImageList(ec).sourceProperty = "cropLocation";
+							ImageList(ec).images = this.displayText().split(",");
+						break;
+						case "videos":
+							ec = new ImageList();
+							ImageList(ec).sourceProperty = "location";
+							ImageList(ec).images = this.displayText().split(",");
+						break;
+						case "image":
+							ec = new Image();
+							Image(ec).minHeight = 20;
+							Image(ec).minWidth = 20;
+							Image(ec).source = this.displayText();
+							ec.addEventListener(DragEvent.DRAG_DROP,imageDrop);
+							DragManager.acceptDragDrop(ec);
+						break;
+						case "video":
+							ec = UIComponent(new FLVPlaybackFlexComp());
+							FLVPlaybackFlexComp(ec).source = this.displayText();
+							ec.addEventListener(DragEvent.DRAG_DROP,videoDrop);
+							DragManager.acceptDragDrop(ec);
+						break;
+						case "html":
+							ec = new ExtendedRichTextEditor();
+							ExtendedRichTextEditor(ec).htmlText = this.displayText();
+						break;
+						case "options":
+							ec = new HBox();
+							rbGroup = new RadioButtonGroup();
+							for each(var option:String in this.options){
+								var rb:RadioButton = new RadioButton();
+								rb.labelPlacement = "top";
+								rb.label = option;
+								rb.value = option;
+								rb.group = rbGroup;
+								HBox(ec).addChild(rb);
+							}
+							rbGroup.selectedValue = this.displayText();
+						break;
+						default:
+							ec = new TextArea();
+							TextArea(ec).text = this.displayText();
+						break;
+					}
+					editor = CellEditorPallet.show(ec,this);
+					editor.addEventListener(AlertCloseEvent.ALERT_CLOSE,editEndListener);
+				//}
+			}
+			private function videoDrop(event:DragEvent):void{
+				try{
+					FLVPlaybackFlexComp(ec).source = event.dragSource.dataForFormat(event.dragSource.formats[0]).location;
+				} catch(e:Error){
+					log(e);
+				}
+			}
+			private function imageDrop(event:DragEvent):void{
+				try{
+					Image(ec).source = event.dragSource.dataForFormat(event.dragSource.formats[0]).cropLocation;
+				} catch(e:Error){
+					log(e);	
+				}
+			}
+			private var rbGroup:RadioButtonGroup;
+			private var editor:CellEditorPallet;
+			private var ec:UIComponent;
+			private function editEndListener(event:AlertCloseEvent):void{
+				editor.removeEventListener(AlertCloseEvent.ALERT_CLOSE,editEndListener);
+				switch(event.detail){
+					case AlertPallet.CANCEL:
+						
+					break;
+					case AlertPallet.OK:
+						if(data && propertyName){
+							switch(propertyType){
+								case "date":
+									var d:Date = DateChooser(ec).selectedDate
+									data[propertyName] = d.month+"/"+d.date"/"+d.fullYear;
+								break;
+								case "time":
+									ec = new TimeSelector();
+									data[propertyName] = TimeSelector(ec).time;
+								break;
+								case "boolean":
+									data[propertyName] = CheckBox(ec).selected;
+								break;
+								case "images":
+								case "videos":
+									data[propertyName] = ImageList(ec).images.join(",");
+								break;
+								case "image":
+									data[propertyName] = Image(ec).source;
+								break;
+								case "video":
+									data[propertyName] = FLVPlaybackFlexComp(ec).source;
+								break;
+								case "html":
+									data[propertyName] = ExtendedRichTextEditor(ec).htmlText;
+								break;
+								case "options":
+									data[propertyName] = rbGroup.selectedValue;
+								break;
+								default:
+									data[propertyName] = TextArea(ec).text;
+								break;
+							}
+						}
+						if(data && eventClass){
+							dataEvent = GeneralEvent(new eventClass(eventClass.UPDATE));
+							dataEvent.data = data;
+							dataEvent.dispatch(); 
+						} else {
+							log((!data ? "Has no data to dispatch. " : "")+(!dataEvent ? "Has no GeneralEvent to dispatch." : ""));
+						}
+					break;
+					default:
+						
+					break;
+				}
+				rbGroup = null;
+				ec = null;
+				editor = null;
+				displayText();
+			}
+			[Bindable]
+			public var options:Array;
+			[Bindable]
+			public var propertyType:String;
+			[Bindable]
+			public var editable:Boolean = true;
+			[Bindable]
+			public var propertyName:String;
+			[Bindable]
+			public var _displayText:String;
+			[Bindable]
+			public var dataEvent:GeneralEvent;
+			[Bindable]
+			public var eventClass:Class;
+			
+			private function displayText():String{
+				_displayText =  (propertyName && data) ? String(data[propertyName]) : String(data);
+				if(this.display_txt){
+					if(this.propertyType == "html"){
+						this.display_txt.htmlText = _displayText;
+					} else {
+						this.display_txt.text = _displayText;
+					}
+				}
+				return _displayText;
+			}
+			
+			protected function log(message:Object,level:uint=0):void{
+				Logger.log("["+this.className+"] "+message,level);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

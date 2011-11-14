@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" label="Image Preview" xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center">
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+		<mx:Image source="{data}" autoLoad="true" />
+	</mx:Canvas>
+</Pallet>

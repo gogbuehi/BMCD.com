@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	     xmlns:inventory="com.hphant.modsite.site.assets.inventory.*"
+	     currentState="closed"
+	     backgroundAlpha="0"
+	     dataChange="{applyNewData()}"
+	     verticalScrollPolicy="off" horizontalScrollPolicy="off" updateComplete="{this.setSizes()}" 
+	     xmlns:calendar="com.hphant.modsite.site.assets.calendar.*">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.utils.SWFResizer;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			
+			[Bindable]
+			public var hRuleStyleName:String;
+			
+			[Bindable]
+			private var fheight:Number;
+			[Bindable]
+			private var bheight:Number;
+			private function setSizes():void{
+				fheight = 500;
+				bheight = 500;
+			}
+			private function applyNewData():void{
+				if(this.currentState=="opened"){
+				 	this.header.data = data;
+				}
+				if(this.currentState=="expanded"){
+					this.body.data = data;
+					this.footer.data = data;
+					this.header.data = data;
+				} 
+			}
+			private function drawHR1EndCircles():void{
+				if(this.hr1.width>20){
+					this.hr1.graphics.beginFill(this.hr1.getStyle('strokeColor'),1);
+					this.hr1.graphics.drawCircle(0,0,5);
+					this.hr1.graphics.drawCircle(this.hr1.width,0,5);
+					this.hr1.graphics.endFill();
+				}
+			}
+			private function drawHR2EndCircles():void{
+				if(this.hr2.width>20){
+					this.hr2.graphics.beginFill(this.hr2.getStyle('strokeColor'),1);
+					this.hr2.graphics.drawCircle(0,0,5);
+					this.hr2.graphics.drawCircle(this.hr2.width,0,5);
+					this.hr2.graphics.endFill();
+				}
+			}
+			private function drawVR1EndCircles():void{
+				if(this.vr1.height>20){
+					this.vr1.graphics.beginFill(this.vr1.getStyle('strokeColor'),1);
+					this.vr1.graphics.drawCircle(0,0,5);
+					this.vr1.graphics.drawCircle(0,this.vr1.height,5);
+					this.vr1.graphics.endFill();
+				}
+			}
+			[Bindable]
+			public var suplimental:XMLList;
+			
+		]]>
+	</mx:Script>
+	<mx:Script source="../interfaces/AssetIncludes.as"/>
+	<mx:Metadata>
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Box verticalAlign="middle" clipContent="false" height="200" verticalScrollPolicy="off" horizontalScrollPolicy="off" x="{this.header.detailsBtn.x - 10}">
+		<mx:VRule id="vr1" width="1" visible="true" height="0" styleName="itemRule" updateComplete="{drawVR1EndCircles()}"/>
+	</mx:Box>
+	
+	<mx:VBox width="100%" verticalScrollPolicy="off" backgroundAlpha="0" horizontalScrollPolicy="off" verticalGap="0" horizontalAlign="center">
+		<calendar:MAEventItemHeader id="header" height="0" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}" 
+			colapseClick="{this.body.imageShow.stop();this.dispatchEvent(new MAListItemEvent(MAListItemEvent.COLAPSE_CLICK))}" 
+			expandClick="{this.body.imageShow.play();this.dispatchEvent(new MAListItemEvent(MAListItemEvent.EXPAND_CLICK))}"/>
+		<mx:HRule id="hr1" width="0" visible="true" height="1" styleName="itemRule" updateComplete="{drawHR1EndCircles()}"></mx:HRule>
+		<calendar:MAEventItemBody id="body" height="0"  sendEmail="{this.dispatchEvent(new MAFormEvent(event.type,event.formData))}" />
+		<mx:HRule id="hr2" width="0" visible="true" height="1" styleName="itemRule" updateComplete="{drawHR2EndCircles()}"/>
+		<calendar:MAEventItemFooter  id="footer" height="0" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}" />
+	</mx:VBox>
+	
+	<mx:XMLList id="headerXML"/>
+	<mx:XMLList id="footerXML"/>
+	<mx:XMLList id="bodyXML"/>
+	<mx:states>
+		<mx:State name="closed">
+		</mx:State>
+		<mx:State name="opened" basedOn="closed">
+			<mx:SetProperty target="{header}" name="height"/>
+		</mx:State>
+		<mx:State name="expanded" basedOn="opened">
+			<mx:SetProperty target="{body}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="closed" toState="opened">
+			<mx:Sequence>
+				<mx:Resize target="{header}"/>
+				<mx:Resize target="{vr1}" heightTo="{this.height}"/>
+				<mx:SetPropertyAction target="{header}" name="data" value="{data}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="closed">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{header}" name="data" value="{null}"/>
+				<mx:Resize target="{header}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="expanded">
+			<mx:Sequence effectEnd="{SWFResizer.resizeFunction()}">
+				<mx:Resize target="{vr1}" heightTo="0"/>
+				<mx:SetPropertyAction target="{header}" name="currentState" value="expanded"/>
+				<mx:Resize target="{body}"/>
+				<mx:SetPropertyAction target="{body}" name="data" value="{data}"/>
+				<mx:SetPropertyAction target="{footer}" name="data" value="{data}"/>
+				<mx:SetPropertyAction target="{footer}" name="currentState" value="opened"/>
+				<mx:Resize targets="{[hr1,hr2]}" widthTo="{this.width}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="opened">
+			<mx:Sequence  effectEnd="{SWFResizer.resizeFunction()}">
+				<mx:SetPropertyAction target="{footer}" name="currentState" value="closed"/>
+				<mx:SetPropertyAction target="{body}" name="data" value="{null}"/>
+				<mx:SetPropertyAction target="{footer}" name="data" value="{null}"/>
+				<mx:SetPropertyAction target="{header}" name="currentState" value="colapsed"/>
+				<mx:Resize target="{body}" />
+				<mx:Resize targets="{[hr1,hr2]}" widthTo="0"/>
+				<mx:Resize target="{vr1}" heightTo="200"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="closed">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{footer}" name="currentState" value="closed"/>
+				<mx:SetPropertyAction target="{body}" name="data" value="{null}"/>
+				<mx:SetPropertyAction target="{footer}" name="data" value="{null}"/>
+				<mx:SetPropertyAction target="{header}" name="data" value="{null}"/>
+				<mx:SetPropertyAction target="{header}" name="currentState" value="colapsed"/>
+				<mx:Resize targets="{[header,body,footer]}" heightTo="0"/>
+				<mx:Resize targets="{[hr1,hr2]}" widthTo="0"/>
+				<mx:Resize target="{vr1}" heightTo="0"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+</mx:Canvas>

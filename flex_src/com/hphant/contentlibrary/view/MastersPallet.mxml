@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" 
+		xmlns:mx="http://www.adobe.com/2006/mxml"
+		xmlns:buttons="com.hphant.components.buttons.*" implements="com.hphant.remoting.IResponder"
+	    label="Masters" initialize="{defineListeners()}" xmlns:view="com.hphant.contentlibrary.view.*">
+	<mx:DataGrid styleName="adminGrid" id="grid" rowHeight="50" rowCount="10" doubleClickEnabled="true" itemDoubleClick="{setEditMaster(event)}" change="{setSelectedMaster()}" dataChange="{gridDataChanged()}" width="100%" dataProvider="{ContentModelLocator.getInstance().masters}" allowMultipleSelection="false" allowDragSelection="false">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Thumb" width="50">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Image source="{data.thumbnailLocation}" width="100%" height="100%" scaleContent="true"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Description" width="300">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Text htmlText="{data.shortDescription}" width="100%" height="100%"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button id="removeButton" label="Delete Selected" enabled="false" click="{removeSelectedAlert(event)}"/>
+		<buttons:PalletButton id="editButton" pallet="{editImageCropper}" 
+			click="{setEditMaster()}" label="Edit Master" enabled="false" palletPosition="none" palletLabel="Edit Master">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="cropsButton" label="Existing Crops" palletLabel="Existing Crops" enabled="false" palletPosition="none" click="{this.getMasterCrops()}">
+			<buttons:pallet>
+				<Pallet id="cropsPallet">
+					<mx:DataGrid styleName="adminGrid" doubleClickEnabled="true" dragEnabled="true" itemDoubleClick="{setCropAndMaster(event)}" id="cropsGrid" rowHeight="50" rowCount="5" allowMultipleSelection="false" allowDragSelection="false" change="{setSelectedCrop()}">
+						<mx:columns>
+							<mx:DataGridColumn headerText="Preview" width="50">
+								<mx:itemRenderer>
+									<mx:Component>
+										<mx:Image source="{data.cropLocation}" width="100%" height="100%" scaleContent="true"/>
+									</mx:Component>
+								</mx:itemRenderer>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn headerText="Description" width="300">
+								<mx:itemRenderer>
+									<mx:Component>
+										<mx:Text htmlText="{data.shortDescription}" width="100%" height="100%"/>
+									</mx:Component>
+								</mx:itemRenderer>
+							</mx:DataGridColumn>
+							<mx:DataGridColumn headerText="Width" width="75" dataField="dimensionWidth"/>
+							<mx:DataGridColumn headerText="Height" width="75" dataField="dimensionHeight"/>
+						</mx:columns>
+					</mx:DataGrid>
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+						<mx:Button enabled="{cropsGrid.selectedItem}" id="removeCropButton" label="Delete Selected" click="{removeSelectedAlert(event)}"/>
+						<buttons:PalletButton enabled="{cropsGrid.selectedItem}" id="cropViewerButton" label="View" palletPosition="none" palletLabel="Crop View">
+							<buttons:pallet>
+								<Pallet id="cropViewer">
+									<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+									<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+										<mx:Image source="{cropViewer.data.cropLocation}" autoLoad="true" />
+									</mx:Canvas>
+									</mx:HBox>
+								</Pallet>
+							</buttons:pallet>
+						</buttons:PalletButton>
+						<buttons:PalletButton enabled="{cropsGrid.selectedItem}" label="Edit Crop" pallet="{editCropPallet}" 
+							click="{setCropAndMaster()}" palletLabel="Edit Crop" palletPosition="none">
+						</buttons:PalletButton>
+						<buttons:PalletButton label="New Crop" pallet="{newCropPallet}"
+							click="{setCropMaster()}" palletLabel="New Crop" palletPosition="none">
+						</buttons:PalletButton>
+					</mx:HBox>
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton id="viewerButton" label="Preview" palletPosition="none" palletLabel="Preview Master">
+			<buttons:pallet>
+				<Pallet id="viewer">
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+					<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+						<mx:Image source="{viewer.data.thumbnailLocation}" autoLoad="true" />
+					</mx:Canvas>
+					<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+						<mx:Image source="{viewer.data.masterLocation}" autoLoad="true" />
+					</mx:Canvas>
+					</mx:HBox>
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton id="newButton" pallet="{newImageCropper}" click="{setNewMaster()}" 
+			label="New" palletPosition="none" palletLabel="New Master">
+		</buttons:PalletButton>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.constants.ImageConstants;
+			import com.hphant.contentlibrary.control.Constants;
+			import com.hphant.remoting.GeneralEvent;
+			import mx.events.CloseEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import com.hphant.components.events.PalletEvent;
+			import com.hphant.components.AlertPallet;
+			import com.hphant.contentlibrary.process.EditCropProcess;
+			import mx.collections.ICollectionView;
+			import com.hphant.contentlibrary.process.NewCropProcess;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.model.Crop;
+			import com.hphant.contentlibrary.model.Master;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.process.NewMasterProcess;
+			import com.hphant.contentlibrary.process.EditMasterProcess;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import com.hphant.contentlibrary.view.ImageViewPallet;
+			import com.hphant.contentlibrary.view.ImageEditPallet;
+			import com.hphant.contentlibrary.view.NewImagePallet;
+		
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			[Bindable]
+			private var newMasterProcess:NewMasterProcess = new NewMasterProcess();
+			[Bindable]
+			private var editMasterProcess:EditMasterProcess = new EditMasterProcess();
+			[Bindable]
+			private var newCropProcess:NewCropProcess = new NewCropProcess();
+			[Bindable]
+			private var editCropProcess:EditCropProcess = new EditCropProcess();
+			
+			
+			[Bindable]
+			private var editImageCropper:NewImagePallet;
+			[Bindable]
+			private var newImageCropper:NewImagePallet;
+			[Bindable]
+			private var editCropPallet:NewImagePallet;
+			[Bindable]
+			private var newCropPallet:NewImagePallet;
+			
+			private function createNewImagePallets():void{
+				if(!this.editImageCropper){
+					this.editImageCropper = new NewImagePallet();
+					this.editImageCropper.process = this.editMasterProcess;
+				}
+				if(!this.newImageCropper){
+					this.newImageCropper = new NewImagePallet();
+					this.newImageCropper.process = this.newMasterProcess;
+				}
+				if(!this.editCropPallet){
+					this.editCropPallet = new NewImagePallet();
+					this.editCropPallet.process = this.editCropProcess;
+				}
+				if(!this.newCropPallet){
+					this.newCropProcess.cropSizes = ImageConstants.CROP_SIZES;
+					this.newCropPallet = new NewImagePallet();
+					this.newCropPallet.cropSizes = ImageConstants.CROP_SIZES;
+					this.newCropPallet.process = this.newCropProcess;
+				}
+			}
+			
+			
+			
+			private var getAllMasters:ImageEvent;
+			private function nameLabel(item:Object, column:DataGridColumn):String{
+				var split:Array = String(item[column.dataField]).split("/");
+				return String(split[split.length-1]);
+			}
+			private function setEditMaster(event:Event=null):void{
+				log(event);
+				editImageCropper.data = this.grid.selectedItem;
+				editImageCropper.html = Master(this.grid.selectedItem).shortDescription;
+				if(event){
+					PalletManager.openPallet(editImageCropper);
+				}
+			}
+			private function setCropMaster():void{
+				newCropPallet.data = this.grid.selectedItem;
+				newCropPallet.html = Master(this.grid.selectedItem).shortDescription;
+			}
+			private function setCropAndMaster(event:Event=null):void{
+				editCropPallet.data = {master:this.grid.selectedItem,crop:this.cropsGrid.selectedItem};
+				editCropPallet.html = Crop(this.cropsGrid.selectedItem).shortDescription;
+				if(event){
+					PalletManager.openPallet(editCropPallet);
+				}
+			}
+			private function getMasterCrops():void{
+				var cropList:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+				cropList.responder = this;
+				cropList.dispatch();
+			}
+			private function removeSelectedMaster(event:CloseEvent):void{
+				if(event.detail==AlertPallet.YES){
+					log("Removing "+this.grid.selectedItem);
+					if(this.grid.selectedItem){
+						var removeMaster:ImageEvent = new ImageEvent(ImageEvent.REMOVE_MASTER_IMAGE);
+						removeMaster.data = this.grid.selectedItem;
+						removeMaster.responder = this;
+						removeMaster.dispatch();
+					}
+				}
+			}
+			private function removeSelectedAlert(event:Event):void{
+				var alert:AlertPallet = new AlertPallet();
+				alert.label = "Confirm Removal";
+				if(event.currentTarget==this.removeButton){
+					AlertPallet.show("Are you sure that you want to remove the selected master?",
+									 "Confirm Removal",
+									 AlertPallet.YES|AlertPallet.NO,
+									 AlertPallet.NO,
+									 removeSelectedMaster);
+				} else if(event.currentTarget==this.removeCropButton){
+					AlertPallet.show("Are you sure that you want to remove the selected crop?",
+									 "Confirm Removal",
+									 AlertPallet.YES|AlertPallet.NO,
+									 AlertPallet.NO,
+									 removeSelectedCrop);
+				
+				}
+			}
+			private function removeSelectedCrop(event:CloseEvent):void{
+				if(event.detail==AlertPallet.YES){
+					log("Removing "+this.cropsGrid.selectedItem);
+					if(this.cropsGrid.selectedItem){
+						var removeCrop:CropEvent = new CropEvent(CropEvent.REMOVE_CROP);
+						removeCrop.data = this.cropsGrid.selectedItem;
+						removeCrop.responder = this;
+						removeCrop.dispatch();
+					}
+				}
+			}
+			private function loadPreview():void{
+				if(this.grid.selectedItem){
+					log("loading preview of "+this.grid.selectedItem.masterLocation);
+					this.viewer.data = this.grid.selectedItem;
+				}
+			}
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet==this){
+					PalletManager.closePallet(cropsButton.pallet);
+					PalletManager.closePallet(editButton.pallet);
+					PalletManager.closePallet(viewerButton.pallet);
+					PalletManager.closePallet(newButton.pallet);
+					this.resetButtuns();
+				}
+			}
+			private function defineListeners():void{
+				createNewImagePallets();
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,palletClosed);
+				ContentModelLocator.getInstance().addEventListener("mastersChanged",masterListUpdated);
+				ContentModelLocator.getInstance().addEventListener("cropsChanged",cropListUpdated);
+				ContentModelLocator.getInstance().addEventListener("videosChanged",videoListUpdated);
+				
+				newMasterProcess.addEventListener(Event.COMPLETE,updateMasterList);
+				newCropProcess.addEventListener(Event.COMPLETE,updateCropList);
+				editCropProcess.addEventListener(Event.COMPLETE,updateCropList);
+			}
+			private function masterListUpdated(event:Event):void{
+				//this.getMasterCrops();
+			}
+			private function cropListUpdated(event:Event):void{
+				this.updateCropsGrid();
+			}
+			private function videoListUpdated(event:Event):void{
+				
+			}
+			private function updateMasterList(event:Event=null):void{
+				getAllMasters = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+				getAllMasters.dispatch();
+			}
+			private function updateCropList(event:Event=null):void{
+				var allCrops:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+				allCrops.dispatch();
+			}
+			private function setSelectedCrop():void{
+				this.cropViewer.data = this.cropsGrid.selectedItem;
+				setCropAndMaster();
+			}
+			private function setNewMaster():void{
+				this.newImageCropper.reset();
+				this.newImageCropper.setView(true,false,false,false,false,false,false);
+			}
+			private function setSelectedMaster():void{
+					loadPreview();
+					this.removeButton.enabled = true;
+					this.editButton.enabled = true;
+					this.cropsButton.enabled = true;
+					getMasterCrops();
+			}
+			private function resetButtuns():void{
+				this.removeButton.enabled = false;
+				this.editButton.enabled = false;
+				this.cropsButton.enabled = false;
+			}
+			private function gridDataChanged():void{
+				if(grid.selectedIndex==-1){
+					resetButtuns();
+				}
+			}
+			private function updateCropsGrid():void{
+				if(this.grid.selectedItem){
+					var c:ArrayCollection = ContentModelLocator.getInstance().getCropsOfMaster(Master(this.grid.selectedItem));
+					this.cropsGrid.dataProvider = c;
+				}
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				switch(event.type){
+					case ImageEvent.GET_ALL_MASTERS:
+						//this.data = result;
+						log("Masters List set to = "+result);
+					break;
+					case ImageEvent.UPDATE_MASTER_IMAGE:
+					case ImageEvent.REMOVE_MASTER_IMAGE:
+						updateMasterList();
+					break;
+					case CropEvent.GET_SUGGESTED_CROPS:
+					case CropEvent.GET_ALL_CROPS:
+					case CropEvent.REMOVE_CROP:
+						log("Crops List set to = "+result);
+						updateCropsGrid();
+					break;
+					case CropEvent.UPDATE_CROP:
+						getMasterCrops();
+					break;
+					default:
+						log("Service Result type = "+event.type);
+					break;
+				}
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

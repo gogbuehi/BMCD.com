@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:UIComponent xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml"  initialize="this.init()">
+	<mx:Metadata>
+		[Event(name="complete", type="mx.events.VideoEvent")]
+		[Event(name="metadataReceived", type="mx.events.MetadataEvent")]
+		
+		[Bindable]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import fl.video.INCManager;
+			import mx.core.IUIComponent;
+			import fl.video.VideoEvent;
+			import fl.video.MetadataEvent;
+			import mx.events.VideoEvent;
+			import mx.events.MetadataEvent;
+		private var player:FLVPlayer = new FLVPlayer();
+			
+		private function init():void
+		{
+			this.addChild(player);
+			this.player.addEventListener(fl.video.VideoEvent.COMPLETE,videoCompleteHanlder);
+			this.player.addEventListener(fl.video.MetadataEvent.METADATA_RECEIVED, metadataReceivedHandler); 
+		}
+		
+		private function videoCompleteHanlder(eIn:fl.video.VideoEvent):void
+		{
+			var eOut:mx.events.VideoEvent = new mx.events.VideoEvent(mx.events.VideoEvent.COMPLETE,eIn.bubbles,eIn.cancelable,eIn.state,eIn.playheadTime);
+			dispatchEvent(eOut);
+		}
+		
+		private function metadataReceivedHandler(eIn:fl.video.MetadataEvent):void
+		{
+			var eOut:mx.events.MetadataEvent = new mx.events.MetadataEvent(mx.events.MetadataEvent.METADATA_RECEIVED,eIn.bubbles,eIn.cancelable,eIn.info);
+			dispatchEvent(eOut);
+		}
+		
+		public function addASCuePoint(timeOrCuePoint:*, name:String = null, parameters:Object = null):Object{
+			return this.player.addASCuePoint(timeOrCuePoint,name,parameters);
+		}
+		public function bringVideoPlayerToFront(index:uint):void{
+			this.player.bringVideoPlayerToFront(index);
+		}
+		public function closeVideoPlayer(index:uint):void{
+			this.player.closeVideoPlayer(index);
+		}
+		public function enterFullScreenDisplayState():void{
+			this.player.enterFullScreenDisplayState();
+		}
+		public function findCuePoint(timeNameOrCuePoint:*, type:String):Object{
+			return this.player.findCuePoint(timeNameOrCuePoint,type);
+		}
+		public function findNearestCuePoint(timeNameOrCuePoint:*, type:String):Object{
+			return this.player.findNearestCuePoint(timeNameOrCuePoint,type);
+		}
+		public function findNextCuePointWithName(cuePoint:Object):Object{
+			return this.player.findNextCuePointWithName(cuePoint);
+		}
+		public function getVideoPlayer(index:Number):fl.video.VideoPlayer{
+			return this.player.getVideoPlayer(index);
+		}
+		public function isFLVCuePointEnabled(timeNameOrCuePoint:*):Boolean{
+			return this.player.isFLVCuePointEnabled(timeNameOrCuePoint);
+		}
+		public function load(source:String, totalTime:Number, isLive:Boolean = false):void{
+			this.player.load(source,totalTime,isLive);
+		}
+		public function pause():void{
+			this.player.pause();
+		}
+		public function play():void{
+			this.player.play();
+		}
+		public function playWhenEnoughDownloaded():void{
+			this.player.playWhenEnoughDownloaded();
+		}
+		public function removeASCuePoint(timeNameOrCuePoint:*):Object{
+			return this.player.removeASCuePoint(timeNameOrCuePoint);
+		}
+		public function seek(time:Number):void{
+			this.player.seek(time);
+		}
+		public function seekPercent(percent:Number):void{
+			this.player.seekPercent(percent);
+		}
+		public function seekSeconds(time:Number):void{
+			this.player.seekSeconds(time);
+		}
+		public function seekToNavCuePoint(timeNameOrCuePoint:*):void{
+			this.player.seekToNavCuePoint(timeNameOrCuePoint);
+		}
+		public function seekToNextNavCuePoint(time:Number):void{
+			this.player.seekToNextNavCuePoint(time);
+		}
+		public function seekToPrevNavCuePoint(time:Number):void{
+			this.player.seekToPrevNavCuePoint(time);
+		}
+		public function setFLVCuePointEnabled(enabled:Boolean, timeNameOrCuePoint:*):Number{
+			return this.player.setFLVCuePointEnabled(enabled,timeNameOrCuePoint);
+		}
+		public function setScale(scaleX:Number, scaleY:Number):void{
+			this.player.setScale(scaleX,scaleY);
+		}
+		public function setSize(width:Number, height:Number):void{
+			this.player.setSize(width,height);
+		}
+		public function stop():void{
+			this.player.stop();
+		}
+		
+		
+		
+		public override function get height():Number{return this.player.height;}
+		public override function set height(value:Number):void{
+			this.player.height = value;
+		}
+		
+		public override function get width():Number{return this.player.width;}
+		public override function set width(value:Number):void{
+			this.player.width = value;
+		}
+		
+		public override function get accessibilityProperties():AccessibilityProperties{return this.player.accessibilityProperties;}
+		public override function set accessibilityProperties(value:AccessibilityProperties):void{
+			this.player.accessibilityProperties = value;
+		}
+		
+		public function get activeVideoPlayerIndex():uint{return this.player.activeVideoPlayerIndex;}
+		public function set activeVideoPlayerIndex(value:uint):void{
+			this.player.activeVideoPlayerIndex = value;
+		}
+		
+		public function get align():String{return this.player.align;}
+		public function set align(value:String):void{
+			this.player.align = value;
+		}
+		
+		public function get autoPlay():Boolean{return this.player.autoPlay;}
+		public function set autoPlay(value:Boolean):void{
+			this.player.autoPlay = value;
+		}
+		
+		public function get autoRewind():Boolean{return this.player.autoRewind;}
+		public function set autoRewind(value:Boolean):void{
+			this.player.autoRewind = value;
+		}
+		
+		public function get backButton():Sprite{return this.player.backButton;}
+		public function set backButton(value:Sprite):void{
+			this.player.backButton = value;
+		}
+		
+		public function get bitrate():Number{return this.player.bitrate;}
+		public function set bitrate(value:Number):void{
+			this.player.bitrate = value;
+		}
+		
+		public function get buffering():Boolean{return this.player.buffering;}
+		
+		public function get bufferingBar():Sprite{return this.player.bufferingBar;}
+		public function set bufferingBar(value:Sprite):void{
+			this.player.bufferingBar = value;
+		}
+		
+		public function get bufferingBarHidesAndDisablesOthers():Boolean{return this.player.bufferingBarHidesAndDisablesOthers;}
+		public function set bufferingBarHidesAndDisablesOthers(value:Boolean):void{
+			this.player.bufferingBarHidesAndDisablesOthers = value;
+		}
+		
+		public function get bufferTime():Number{return this.player.bufferTime;}
+		public function set bufferTime(value:Number):void{
+			this.player.bufferTime = value;
+		}
+		
+		public function get bytesLoaded():uint{return this.player.bytesLoaded;}
+		
+		public function get bytesTotal():uint{return this.player.bytesTotal;}
+		
+		public function set cuePoints(value:Array):void{
+			this.player.cuePoints = value;
+		}
+		
+		public function get forwardButton():Sprite{return this.player.forwardButton;}
+		public function set forwardButton(value:Sprite):void{
+			this.player.forwardButton = value;
+		}
+		
+		public function get fullScreenBackgroundColor():uint{return this.player.fullScreenBackgroundColor;}
+		public function set fullScreenBackgroundColor(value:uint):void{
+			this.player.fullScreenBackgroundColor = value;
+		}
+		
+		public function get fullScreenButton():Sprite{return this.player.fullScreenButton;}
+		public function set fullScreenButton(value:Sprite):void{
+			this.player.fullScreenButton = value;
+		}
+		
+		public function get fullScreenSkinDelay():uint{return this.player.fullScreenSkinDelay;}
+		public function set fullScreenSkinDelay(value:uint):void{
+			this.player.fullScreenSkinDelay = value;
+		}
+		
+		public function get fullScreenTakeOver():Boolean{return this.player.fullScreenTakeOver;}
+		public function set fullScreenTakeOver(value:Boolean):void{
+			this.player.fullScreenTakeOver = value;
+		}
+		
+		public function get idleTimeout():Number{return this.player.idleTimeout;}
+		public function set idleTimeout(value:Number):void{
+			this.player.idleTimeout = value;
+		}
+		
+		public function get isLive():Boolean{return this.player.isLive;}
+		public function set isLive(value:Boolean):void{
+			this.player.isLive = value;
+		}
+		
+		public function get isRTMP():Boolean{return this.player.isRTMP;}
+		
+		public function get metadata():Object{return this.player.metadata;}
+		
+		public function get metadataLoaded():Object{return this.player.metadataLoaded;}
+		
+		public function get muteButton():Sprite{return this.player.muteButton;}
+		public function set muteButton(value:Sprite):void{
+			this.player.muteButton = value;
+		}
+		
+		public function get ncMgr():INCManager{return this.player.ncMgr;}
+		
+		public function get pauseButton():Sprite{return this.player.pauseButton;}
+		public function set pauseButton(value:Sprite):void{
+			this.player.pauseButton = value;
+		}
+		
+		public function get paused():Boolean{return this.player.paused;}
+		
+		public function get playButton():Sprite{return this.player.playButton;}
+		public function set playButton(value:Sprite):void{
+			this.player.playButton = value;
+		}
+		
+		public function get playheadPercentage():Number{return this.player.playheadPercentage;}
+		public function set playheadPercentage(value:Number):void{
+			this.player.playheadPercentage = value;
+		}
+		
+		public function get playheadTime():Number{return this.player.playheadTime;}
+		public function set playheadTime(value:Number):void{
+			this.player.playheadTime = value;
+		}
+		
+		public function get playheadUpdateInterval():Number{return this.player.playheadUpdateInterval;}
+		public function set playheadUpdateInterval(value:Number):void{
+			this.player.playheadUpdateInterval = value;
+		}
+		
+		public function get playing():Boolean{return this.player.playing;}
+		
+		public function get playPauseButton():Sprite{return this.player.playPauseButton;}
+		public function set playPauseButton(value:Sprite):void{
+			this.player.playPauseButton = value;
+		}
+		
+		public function get preferredHeight():Number{return this.player.preferredHeight;}
+		
+		public function get preferredWidth():Number{return this.player.preferredWidth;}
+		
+		public function set preview(value:String):void{
+			this.player.preview = value;
+		}
+		
+		public function get progressInterval():Number{return this.player.progressInterval;}
+		public function set progressInterval(value:Number):void{
+			this.player.progressInterval = value;
+		}
+		
+		public function get registrationHeight():Number{return this.player.registrationHeight;}
+		public function set registrationHeight(value:Number):void{
+			this.player.registrationHeight = value;
+		}
+		
+		public function get registrationWidth():Number{return this.player.registrationWidth;}
+		public function set registrationWidth(value:Number):void{
+			this.player.registrationWidth = value;
+		}
+		
+		public function get registrationX():Number{return this.player.registrationX;}
+		public function set registrationX(value:Number):void{
+			this.player.registrationX = value;
+		}
+		
+		public function get registrationY():Number{return this.player.registrationY;}
+		public function set registrationY(value:Number):void{
+			this.player.registrationY = value;
+		}
+		
+		public function get scaleMode():String{return this.player.scaleMode;}
+		public function set scaleMode(value:String):void{
+			this.player.scaleMode = value;
+		}
+		
+		public override function get scaleX():Number{return this.player.scaleX;}
+		public override function set scaleX(value:Number):void{
+			this.player.scaleX = value;
+		}
+		
+		public override function get scaleY():Number{return this.player.scaleY;}
+		public override function set scaleY(value:Number):void{
+			this.player.scaleY = value;
+		}
+		
+		public function get scrubbing():Boolean{return this.player.scrubbing;}
+		
+		public function get seekBar():Sprite{return this.player.seekBar;}
+		public function set seekBar(value:Sprite):void{
+			this.player.seekBar = value;
+		}
+		
+		public function get seekBarInterval():Number{return this.player.seekBarInterval;}
+		public function set seekBarInterval(value:Number):void{
+			this.player.seekBarInterval = value;
+		}
+		
+		public function get seekBarScrubTolerance():Number{return this.player.seekBarScrubTolerance;}
+		public function set seekBarScrubTolerance(value:Number):void{
+			this.player.seekBarScrubTolerance = value;
+		}
+		
+		public function get seekToPrevOffset():Number{return this.player.seekToPrevOffset;}
+		public function set seekToPrevOffset(value:Number):void{
+			this.player.seekToPrevOffset = value;
+		}
+		
+		public function get skin():String{return this.player.skin;}
+		public function set skin(value:String):void{
+			this.player.skin = value;
+		}
+		
+		public function get skinAutoHide():Boolean{return this.player.skinAutoHide;}
+		public function set skinAutoHide(value:Boolean):void{
+			this.player.skinAutoHide = value;
+		}
+		
+		public function get skinBackgroundAlpha():Number{return this.player.skinBackgroundAlpha;}
+		public function set skinBackgroundAlpha(value:Number):void{
+			this.player.skinBackgroundAlpha = value;
+		}
+		
+		public function get skinBackgroundColor():uint{return this.player.skinBackgroundColor;}
+		public function set skinBackgroundColor(value:uint):void{
+			this.player.skinBackgroundColor = value;
+		}
+		
+		public function get skinFadeTime():int{return this.player.skinFadeTime;}
+		public function set skinFadeTime(value:int):void{
+			this.player.skinFadeTime = value;
+		}
+		
+		public function get skinScaleMaximum():Number{return this.player.skinScaleMaximum;}
+		public function set skinScaleMaximum(value:Number):void{
+			this.player.skinScaleMaximum = value;
+		}
+		
+		public override function get soundTransform():SoundTransform{return this.player.soundTransform;}
+		public override function set soundTransform(value:SoundTransform):void{
+			this.player.soundTransform = value;
+		}
+		
+		public function get source():String{return this.player.source;}
+		public function set source(value:String):void{
+			_source = value;
+			if(_source && _source != "")
+				this.player.source = _source;
+		}
+		private var _source:String;
+		
+		public function get state():String{return this.player.state;}
+		
+		public function get stateResponsive():Boolean{return this.player.stateResponsive;}
+		
+		public function get stopButton():Sprite{return this.player.stopButton;}
+		public function set stopButton(value:Sprite):void{
+			this.player.stopButton = value;
+		}
+		
+		public function get stopped():Boolean{return this.player.stopped;}
+		
+		public function get totalTime():Number{return this.player.totalTime;}
+		public function set totalTime(value:Number):void{
+			this.player.totalTime = value;
+		}
+		
+		public function get visibleVideoPlayerIndex():uint{return this.player.visibleVideoPlayerIndex;}
+		public function set visibleVideoPlayerIndex(value:uint):void{
+			this.player.visibleVideoPlayerIndex = value;
+		}
+		
+		public function get volume():Number{return this.player.volume;}
+		public function set volume(value:Number):void{
+			this.player.volume = value;
+		}
+		
+		public function get volumeBar():Sprite{return this.player.volumeBar;}
+		public function set volumeBar(value:Sprite):void{
+			this.player.volumeBar = value;
+		}
+		
+		public function get volumeBarInterval():Number{return this.player.volumeBarInterval;}
+		public function set volumeBarInterval(value:Number):void{
+			this.player.volumeBarInterval = value;
+		}
+		
+		public function get volumeBarScrubTolerance():Number{return this.player.volumeBarScrubTolerance;}
+		public function set volumeBarScrubTolerance(value:Number):void{
+			this.player.volumeBarScrubTolerance = value;
+		}
+		
+		]]>
+	</mx:Script>
+</mx:UIComponent>

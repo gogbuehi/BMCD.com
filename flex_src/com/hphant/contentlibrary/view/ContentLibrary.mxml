@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ctrl="com.hphant.contentlibrary.control.*"
+	xmlns:img="com.hphant.contentlibrary.view.images.*"
+	xmlns:video="com.hphant.contentlibrary.view.video.*"
+	width="1000" 
+	includeInLayout="false"
+	creationComplete="onCreationComplete()"
+	currentState="default"
+	>
+	<!--
+	height="800"
+	horizontalScrollPolicy="off"
+	-->
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.control.event.ContentLibraryEvent;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.contentlibrary.control.event.MAVideoAdminEvent;
+			import com.hphant.contentlibrary.control.event.MAImageAdminEvent;
+			import mx.core.Application;
+   			
+			
+			private function onCreationComplete():void {
+				//	register event listeners for MAImageAdminEvent & MAVideoAdminEvent
+				
+				//	images
+				Application.application.addEventListener( MAImageAdminEvent.CHANGE_PHOTO, handlerNavigation, false, 99 );// high priority
+				Application.application.addEventListener( MAImageAdminEvent.ADD_PHOTO, handlerNavigation, false, 98 );// high priority
+				Application.application.addEventListener( MAImageAdminEvent.EDIT_PHOTO, handlerNavigation, false, 97 );// high priority
+				
+				//	videos
+				//	TODO:
+				//	Finalize.
+				//	Register listener for one more event -  NEW_VIDEO ??
+				Application.application.addEventListener( MAVideoAdminEvent.CHANGE_VIDEO, handlerVideoEvent, false, 80 );// high priority
+				
+				//	General events
+				Application.application.addEventListener( ContentLibraryEvent.IMAGE_CANCELED, handlerImageCanceled, false, 70 );
+				Application.application.addEventListener( ContentLibraryEvent.IMAGE_SELECTED, handlerImageSelected, false, 71 );
+				
+			}
+
+			
+			/**
+			 * 	Selects which further view to be activated depending on particular event type.  
+			 */
+			private function handlerNavigation( event:Event ):void {
+				
+				switch (event.type) {
+				    case MAImageAdminEvent.EDIT_PHOTO:
+				    
+						//	getting suggested crops
+						trace();
+						trace("GET suggested crops: started.");
+						var evt : CropEvent = new CropEvent( CropEvent.GET_SUGGESTED_CROPS );
+						//evt.responder = viewSuggestedImages;
+						evt.dispatch();
+				    	
+				    	//	go to "Suggested Images" view
+						this.currentState = "stateSuggestedImages";
+						
+				        break;
+				        
+				    case MAImageAdminEvent.ADD_PHOTO:
+				    	//	[Add A Master Tab]
+				    	
+						this.currentState = "stateAddMasterImage";
+				        
+				        break;
+				        
+				    case MAImageAdminEvent.CHANGE_PHOTO:
+				    	//	User Brought to Masters View -> Select Crop View
+
+				    	/*
+						//	getting all Masters
+						trace();
+						trace("GET all master images: started.");
+						var e : ImageEvent = new ImageEvent( ImageEvent.GET_ALL_MASTERS );
+						e.responder = viewMasters1;
+						e.dispatch();
+						*/
+					
+						this.currentState = "stateMastersView";
+				    
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				
+		        trace("["+this+"].currentState = "+this.currentState);
+
+			}
+			
+			private function activateViewSuggestedImages( event:Event ):void 
+			{
+			//	event.target.tabs.selectedChild = event.target.viewSuggestedImages;
+			}
+			
+			private function activateViewAddMaster( event:Event ):void 
+			{
+				/*
+				trace( this + ":" );
+				trace( "EVENT: " + event );
+				trace( "EVENT.target: " + event.target );
+				*/
+			//	event.target.tabs.selectedChild = event.target.viewAddMaster;
+			}
+			
+			private function activateViewMasters( event:Event ):void 
+			{
+			//	event.target.tabs.selectedChild = event.target.viewMasters1;
+			}
+
+			private function handlerVideoEvent( event:Event ):void {
+				//	TODO:
+				//	Create views selecwtion / navigation.
+				
+				this.currentState = "video";
+			}
+			
+			
+			private function handlerImageCanceled( event:Event ):void 
+			{
+				trace( this+" - EVENT: "+event);
+				hideContentLibrary();
+			}
+			
+			private function handlerImageSelected( event:Event ):void 
+			{
+				trace( this+" - EVENT: "+event);
+				hideContentLibrary();
+			}
+			
+			private function hideContentLibrary():void 
+			{
+				this.visible = false;
+				this.validateNow();
+			}
+		]]>
+	</mx:Script>
+
+
+	<ctrl:ContentServices/>
+	<ctrl:ContentClientController/>
+	<!--
+		<img:ContentLibraryImages width="100%" height="100%" label="Images"/>
+		<video:ContentLibraryVideo width="100%" height="100%" label="Video"/>
+	
+		-->
+
+
+</mx:Canvas>

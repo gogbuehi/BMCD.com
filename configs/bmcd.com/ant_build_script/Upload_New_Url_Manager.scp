@@ -1,0 +1,10 @@
+TRACE Screen
+LOG Screen
+USER bmcdftp
+PASS bmcdlambo910999
+CONNECT 70.32.120.158
+LCD F:/web/bmcd/web/js
+CD httpdocs/js
+DEL url_manager.js
+PUT url_manager.js
+CLOSE

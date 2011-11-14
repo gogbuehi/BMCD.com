@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" 
+	implements="com.hphant.modsite.site.modules.interfaces.IModuleLibrary"
+	layout="absolute" xmlns:system="flash.system.*" xmlns:modules="com.hphant.modsite.site.modules.*">
+	<modules:ModuleLibrary id="library"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.ModuleClassInfo;
+			import com.hphant.modsite.system.interfaces.ICSSLoader;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.system.interfaces.IURIManager;
+			public function get uriManager():IURIManager{return this.library.uriManager;}
+			public function set uriManager(value:IURIManager):void{this.library.uriManager = value;}
+			public function set css(cssLoader:ICSSLoader):void{this.library.css = cssLoader;}
+			[ArrayElementType("com.hphant.modsite.site.modules.ModuleClassInfo")]
+			public function get classes():Array{return this.library.classes}
+			public function getModuleInstancesOf(classname:String):Array{return this.library.getModuleInstancesOf(classname);}
+			public function createInstanceOf(classname:String):IModule{return this.library.createInstanceOf(classname);}
+			public function getClassInfoByName(className:String):ModuleClassInfo{return this.library.getClassInfoByName(className);}
+			public function get versionMajor():uint{return this.library.versionMajor;}
+			public function get versionMinor():uint{return this.library.versionMinor;}
+			public function get versionRevision():uint{return this.library.versionRevision;}
+			public function getSupplementalData(id:String):String{
+				return this.library.getSupplementalData(id);
+			}
+			public function setSupplementalData(id:String,data:String):void{
+				this.library.setSupplementalData(id,data);
+			}
+		]]>
+	</mx:Script>
+</mx:Module>

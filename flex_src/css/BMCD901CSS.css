@@ -1,0 +1,900 @@
+/* CSS file */
+Application{
+}
+
+.siteFrame{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #D8DDE1;
+	borderColor: #D8DDE1;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+.verticleLinks{
+	themeColor: #000000;
+	text-align:left;
+}
+.verticleLinkBar{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	borderThickness:0;
+	backgroundAlpha: .75;
+	color: #000000;
+	backgroundColor: #7C868E;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	borderColor: #7C868E;
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+	separatorColor: #BBC2C8;
+}
+.headerSubMenu{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	borderColor: #3E7145;
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 0;
+	padding-top: 65;
+	separatorColor: #BBC2C8;
+}
+.siteBody{
+	verticalGap: 8;
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+.siteMap{
+	leading:-8;
+}
+.headerMenuButton{
+	paddingLeft:4;
+	paddingRight:4;
+}
+.headerMask{
+	cornerRadius: 14;	
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #000000;
+	borderThickness:0;
+}
+.headerTitle{
+	color: #000000;
+	font-size: 33;
+	font-weight: bold;
+	font-family: "SiteFont";
+}
+.headerSubTitle{
+	color: #000000;
+	font-size: 20;
+	font-style:italic;
+	text-align:center;
+	leading:-5;
+	font-family: "SiteFont";
+}
+.headerAddress{
+	color: #000000;
+	font-size: 15;
+	text-align:right;
+	leading:-2;
+	font-family: "SiteFont";
+}
+.headerPhone{
+	color: #000000;
+	font-size: 20;
+	text-align:right;
+	font-weight:normal;
+	font-family: "SiteFontSemi";
+}
+.imageOverlayText{
+	font-size:12;
+	text-align:center;
+	backgroundColor: #FFFFFF;
+	backgroundAlpha: .3;
+	borderThickness: 0;
+	color: #000000;
+	font-family: "SiteFont";
+}
+.videoOverlayText{
+	font-size:12;
+	text-align:justify;
+	backgroundColor: #FFFFFF;
+	backgroundAlpha: .3;
+	borderThickness: 0;
+	color: #000000;
+	font-family: "SiteFont";
+}
+.oddItem{
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	color: #FFFFFF;
+	font-family: "SiteFont";
+}
+.evenItem{
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	color: #3E7145;
+	font-family: "SiteFont";
+}
+
+.inventoryHeader{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	color: #FFFFFF;
+	font-family: "SiteFont";
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+.storeHeader{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	color: #FFFFFF;
+	font-family: "SiteFont";
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+.calendarHeader{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	color: #FFFFFF;
+	font-family: "SiteFont";
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+
+.inventoryFilters{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	color: #3E7145;
+	font-family: "SiteFont";
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+.storeFilters{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	color: #3E7145;
+	font-family: "SiteFont";
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+.itemRule{
+	strokeColor: #D8DDE1;
+	strokeWidth: 5;
+}
+.suggestedTitle{
+	font-size: 18;
+	font-weight: bold;
+	font-family: "SiteFontExtra";
+	text-align: center;
+}
+
+.suggestedText{
+	font-size: 16;
+	text-align: left;
+}
+.oddItemInventory{
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	strokeColor: #7C868E;
+	color: #FFFFFF;
+	font-family: "SiteFont";
+}
+.evenItemInventory{
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	strokeColor: #BBC2C8;
+	color: #3E7145;
+	font-family: "SiteFont";
+}
+.createdBy{
+	color: #000000;
+	font-family: "SiteFont";
+	font-size:11;
+	text-align:right;
+}
+.oddItemButton{
+	alternatingItemColors: #FFFFFF,#FFFFFF;
+	backgroundColor:  #FFFFFF;
+	fillColors: #BBC2C8, #FFFFFF;
+	color: #3E7145;	
+}
+.evenItemButton{
+	alternatingItemColors: #3E7145,#3E7145;
+	backgroundColor:  #3E7145;
+	fillColors: #7C868E, #7C868E;
+	color: #FFFFFF;	
+}
+.dataGridHeader{
+	color: #000000;
+	font-size:18;
+	text-align:center;
+	font-weight: bold;
+	font-family: "SiteFontExtra";	
+}
+.dealerMessage{
+	color: #FFFFFF;
+	font-size:20;
+	text-align:left;
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 15;
+	padding-top: 15;
+}
+.emailFormPod{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+	font-family: "SiteFont";
+    horizontalAlign:'center';
+}
+.emailForm{
+	padding-left: 20;
+	padding-right: 20;
+	padding-bottom: 20;
+	padding-top: 5;
+}
+.emailFormButtonContainer{
+	horizontalGap:20;
+	padding-top:7;
+}
+.emailFormLabel{
+	font-size: 18;
+	color: #FFFFFF;
+}
+.menuTreePopup{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 5;
+	padding-top: 5;
+}
+.loginForm{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 5;
+	padding-top: 5;
+	color: #000000;
+	font-size: 16;
+	font-family: "SiteFont";
+    horizontalAlign:'center';
+}
+.formLabel{
+	font-size: 18;
+	color: #000000;
+}
+.formSectionLabel{
+	font-size: 20;
+	font-weight: bold;
+	font-family: "SiteFontExtra";	
+	color: #000000;
+}
+.emailFormButton{
+	font-size: 18;
+	color: #000000;
+}
+.emailFormInput{
+	font-size: 18;
+	color: #000000;
+}
+.title{
+	font-size: 22;
+	font-weight: bold;
+	font-family: "SiteFontExtra";	
+}
+.subTitle{
+	font-size: 18;
+	font-weight: bold;
+	font-family: "SiteFontExtra";	
+}
+.cartTitle{
+	font-weight: bold;
+}
+.longDescription{
+	text-align:justify;
+	font-size: 14;
+}
+.specs{
+	font-size: 16;	
+}
+.imageVideoText{
+	font-size: 12;
+	color: #FFFFFF;
+	font-family: "SiteFont";
+	text-align: left;
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+	borderStyle: 'solid';
+	cornerRadius: 15;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+	borderThickness: 0;
+}
+.articleTitle{
+	font-size: 26;
+	color: #000000;
+	font-weight:bold;
+	font-family: "SiteFont";
+}
+.articleText{
+	font-size: 14;
+	color: #000000;
+	font-family: "SiteFont";
+	text-align:justify;
+}
+.personnelTitle{
+	font-size: 20;
+	color: #000000;
+	font-weight:bold;
+	font-family: "SiteFont";
+}
+.personnelText{
+	font-size: 14;
+	color: #000000;
+	font-family: "SiteFont";
+	text-align:justify;
+}
+
+
+.showcaseTextArea{
+	cornerRadius: 15;
+	text-align:justify;
+	color: #FFFFFF;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+}
+.showcaseText{
+	font-size: 14;
+	text-align:justify;
+	font-family: "SiteFont";
+}
+
+
+.textHolder{
+	padding-top: 15;
+	padding-bottom: 15;
+}
+
+.highlightsTitle{
+	font-size: 18;
+	font-weight:bold;
+}
+.highlightsTable{
+	color: #FFFFFF;
+	font-size: 14;
+	font-family: "SiteFont";
+}
+.modelTitle{
+	font-size: 32;
+	font-weight:bold;
+	font-family: "SiteFontExtra";
+	color: #FFFFFF;
+}
+.modelSubtitle{
+	font-size: 22;
+	font-weight:bold;
+	leading:-5;
+	color: #FFFFFF;
+}
+.modelSelectLabel{
+	color: #FFFFFF;
+	font-size: 16;
+	font-weight:bold;
+	font-family: "SiteFont";
+}
+.popUpTitle{
+	font-size: 22;
+	font-weight:bold;
+	color: #FFFFFF;
+}
+.modelText{
+	cornerRadius: 15;
+	color: #FFFFFF;
+	text-align:justify;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 15;
+	padding-top: 15;
+	font-size: 16;
+	font-family: "SiteFont";
+}
+.modelHighlights{
+	cornerRadius: 15;
+	color: #FFFFFF;
+	text-align:justify;
+	borderStyle: 'solid';
+	backgroundAlpha: 1;
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+	font-size: 16;
+	font-family: "SiteFont";
+}
+.inventoryGroupHeader{
+	cornerRadius: 15;
+	text-align: left;
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	font-size: 18;
+	font-weight:bold;
+	font-family: "SiteFont";
+	
+}
+
+.siteReferance{
+	cornerRadius: 15;
+	padding-left:15;
+    padding-right:15;
+    padding-top:15;
+    padding-bottom:15;
+    
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+}
+
+.smallPrint{
+	text-align: left;
+	font-size: 10;
+	font-weight:normal;
+	font-family: "SiteFont";
+}
+
+ToolTip{
+	font-family: "SiteFont";
+	color: #FFFFFF;
+	font-size: 14;
+	backgroundColor: #6A916C;	
+}
+Button{
+	embedFonts:true;
+	themeColor:#3E7145;
+	color: #000000;
+	font-size: 14;
+	font-weight:bold;
+	font-family: "SiteFont";
+}
+MAStoreCart{
+	themeColor:#3E7145;
+	color: #000000;
+	font-size: 16;
+	embedFonts:true;
+	font-family: "SiteFont";
+}
+.emailAccordion{
+	embedFonts:true;
+	color: #000000;
+	font-size: 22;
+	text-align:center;
+	font-weight:bold;
+	font-family: "SiteFont";
+	paddingTop:5;
+	paddingBottom:5;
+}
+ComboBox{
+	backgroundAlpha:0;
+	themeColor:#3E7145;
+	font-size: 14;
+	color: #000000;
+	font-family: "SiteFont";
+}
+TileList{
+	text-align:left;
+}
+ListBase{
+	themeColor:#3E7145;
+	backgroundColor:#C0C0C0;
+}
+NumericStepper{
+	themeColor:#3E7145;
+	font-size: 14;
+	color: #000000;
+	font-family: "SiteFont";
+}
+CheckBox{
+	color: #000000;
+	font-size: 16;
+	themeColor:#3E7145;
+	font-family: "SiteFont";
+}
+DataGrid{
+	color: #000000;
+	font-size: 16;
+	themeColor:#3E7145;
+	font-family: "SiteFont";
+}
+MATextArea{
+	color: #000000;
+	leading: 3;
+	text-align:justify;
+	font-family: "SiteFont";
+}
+
+EmailFormPopUp{
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	backgroundColor: #3E7145;
+	borderColor: #3E7145;
+	borderStyle: 'solid';
+	cornerRadius: 15;
+	borderThickness: 0;
+	horizontalAlign:"center";
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAVideoDisplay{
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	backgroundColor: #000000;
+	borderColor: #000000;
+	borderStyle: 'solid';
+	cornerRadius: 15;
+	borderThickness: 0;
+}
+MASuggestedItems{
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	borderStyle: 'solid';
+	borderThickness: 0;
+	cornerRadius: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAImage{
+    dropShadowEnabled: true; 
+    shadowDirection:"right";
+	backgroundColor: #000000;
+	backgroundAlpha:1;
+	noImageBackgroundColor: #F2F2F2;
+	borderColor: #000000;
+	borderStyle: 'solid';
+	borderThickness: 0;
+	cornerRadius: 15;
+	noImage:Embed(source="../assets/no_image_logo.swf");
+}
+.storeSaleImage{
+    dropShadowEnabled: false; 
+    shadowDirection:"right";
+	backgroundColor: #000000;
+	backgroundAlpha:0;
+	noImageBackgroundColor: #F2F2F2;
+	borderColor: #000000;
+	borderStyle: 'solid';
+	borderThickness: 0;
+	cornerRadius: 0;
+	noImage:Embed(source="../assets/no_image_logo.swf");
+}
+
+ModCanvas{
+    disabledOverlayAlpha:0;
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	borderThickness:0;
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	padding-left: 15;
+	padding-right: 15;
+	padding-bottom: 10;
+	padding-top: 10;
+	font-family: "SiteFont";
+}
+ModInventory{
+	cornerRadius: 0;
+	borderStyle: 'none';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+ModStore{
+	cornerRadius: 0;
+	borderStyle: 'none';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+ModEventsCalendar{
+	cornerRadius: 0;
+	borderStyle: 'none';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+MAInventoryItemRenderer{
+	cornerRadius: 15;
+	borderThickness:0;
+	borderStyle: 'solid';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+MAInventoryItemBody{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAInventoryItemFooter{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+ModBMCD901Header{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	borderThickness:0;
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	cornerRadius: 15;
+}
+MAHeaderMenu{
+	horizontalGap:1;	
+}
+ModMultiImageH{
+	restricted:5;
+	color:#000000;	
+}
+.modMultiImageH{
+	horizontalGap:12;	
+}
+.imageShow{
+	horizontalGap:10;	
+}
+MAStoreCart{
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	borderStyle: 'solid';
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	cornerRadius: 15;
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+	color:#000000;
+	font-family: "SiteFont";
+}
+MACartMiniDisplay{
+	color: #000000;
+	cornerRadius: 15;
+    dropShadowEnabled: true; 
+    shadowDirection:'right';
+	borderStyle: 'solid';
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+	text-align:center;
+}
+MAStoreFilter{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #BBC2C8;
+	borderColor: #BBC2C8;
+	padding-left: 5;
+	padding-right: 5;
+	padding-bottom: 5;
+	padding-top: 5;
+}
+MAStoreSelector{
+	cornerRadius: 15;
+	borderStyle: 'solid';
+	backgroundColor: #7C868E;
+	borderColor: #7C868E;
+	cornerRadius: 15;
+}
+MAStoreItemRenderer{
+	cornerRadius: 15;
+	borderThickness:0;
+	borderStyle: 'solid';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+MAStoreItemBody{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAStoreItemFooter{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAEventCalendarItemRenderer{
+	cornerRadius: 15;
+	borderThickness:0;
+	borderStyle: 'solid';
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+	padding-top: 0;
+}
+MAEventItemBody{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MAEventItemFooter{
+	horizontalGap:10;
+	horizontalAlign:'center';
+	padding-left: 10;
+	padding-right: 10;
+	padding-bottom: 10;
+	padding-top: 10;
+}
+MiniCalendar{
+	days: "S","M","T","W","T","F","S";
+	dateFormat: "m"," ","d",","," ","y";
+	months: "January","February","March","April","May","June","July","August","September","October","November","December";
+	monthFontFamily: "SiteFont";
+	dayFontFamily: "SiteFont";
+	dateFontFamily: "SiteFont";
+	eventFontFamily: "SiteFont";
+	dateLabelAlign: "C";
+	dateWidth: 50;
+	dateHeight: 20;
+	datePadding: 1;
+	transitionDelay: .05;
+	transitionTime: 1;
+	weekStart: 0;
+	monthFontSize: 16;
+	dayFontSize: 14;
+	eventFontSize: 12;
+	dateFontSize: 12;
+	monthColor:#000000;
+	dayColor:#000000;
+	eventColor:#3E7145;
+	dateColor:#000000;
+	dateBackgroundColor: #FFFFFF;
+	dateHighlightColor: #3E7145;
+}
+.adminGridHeader{
+	
+}
+.adminGrid{
+	headerStyleName:"adminGridHeader";
+	
+}
+.topBarStyle{
+	font-weight:bold;
+	text-align:center;
+	horizontalGap:0;
+	backgroundAlpha:1;
+	backgroundColor:#3E7145;
+	borderStyle:"solid";
+	borderThickness:0;
+    cornerRadius: 4;
+}
+Pallet{
+    dropShadowEnabled: true;
+    borderStyle: "solid";
+    borderThickness: 1;
+    borderColor: #3E7145;
+    backgroundColor: #7C868E;
+    shadowDirection: "right";
+    backgroundAlpha: 1;
+    cornerRadius: 4;	
+	color:#000000;
+	disabledColor: #3a3a3a;
+	font-family: "SiteFont";
+	font-size: 16;
+}
+AlertPallet{
+	titleStyleName:"windowStyles";
+	buttonStyleName:"alertButtonStyle";
+	color:#FFFFFF;	
+}
+CellEditorPallet{
+	titleStyleName:"windowStyles";
+	buttonStyleName:"alertButtonStyle";
+	color:#000000;	
+}
+BaseTextArea{
+	padding-left:2;
+	padding-right:2;	
+	backgroundColor:#C0C0C0;
+}
+SelfLabelTextInput{
+	backgroundColor:#C0C0C0;
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:system="com.hphant.modsite.system.*">
+	<mx:ButtonBar itemClick="{this.buttonSelected(event)}">
+		<mx:dataProvider>
+			<mx:Array>
+				<mx:String>Add</mx:String>
+				<mx:String>XML</mx:String>
+				<mx:String>XML=null</mx:String>
+				<mx:String>Remove</mx:String>
+			</mx:Array>
+		</mx:dataProvider>
+	</mx:ButtonBar>
+	<mx:Label text="States"/>
+	<mx:ButtonBar id="statesBar" itemClick="{this.stateSelected(event)}" labelField="name">
+	</mx:ButtonBar>
+	<mx:HBox id="siteFrame" horizontalAlign="center" autoLayout="true" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="siteFrame">
+	<mx:VBox id="body" styleName="siteBody" autoLayout="true" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off">
+	
+	</mx:VBox>
+	</mx:HBox>
+	<mx:String id="cssSWF">css/901.swf</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.events.ItemClickEvent;
+			[Bindable]
+			public var mod:UIComponent;
+			private var _modFactory:IFactory = new ClassFactory();
+			[Bindable]
+			[Inspectable]
+			public function get modFactory():Object{
+				return this._modFactory;
+			}
+			public function set modFactory(value:Object):void{
+				if(value is Class){
+					this._modFactory = new ClassFactory(Class(value));
+				}
+				if(value is IFactory){
+					this._modFactory = IFactory(value);
+				}
+			}
+			private function buttonSelected(event:ItemClickEvent):void{
+				switch(event.item){
+					case "XML":
+						IModule(this.mod).xml = XMLList(html);	
+					break;
+					case "XML=null":
+						IModule(this.mod).xml = null;	
+					break;
+					case "Add":
+						this.mod = UIComponent(this.modFactory.newInstance());
+						IModule(this.mod).uriManager = this.uriManager;
+						statesBar.dataProvider=this.mod.states;
+						this.body.addChild(this.mod);
+					break;
+					case "Remove":
+						IModule(this.mod).xml = null;
+						this.body.removeAllChildren();
+						this.mod = null;
+					break;
+					default:
+					break;
+				}
+			}
+			private function stateSelected(event:ItemClickEvent):void{
+				this.mod.currentState = event.item.name;
+			}
+		]]>
+	</mx:Script>
+	<mx:XML id="html"/>
+	<system:CSSLoader id="cssLoader" url="{cssSWF}" complete="{this.cssLoaded(event)}"/>
+	<system:URIManager id="uriManager" 
+		requestComplete="{log('Request Complete: '+event.uri)}" 
+		requestError="{log('Request Error: '+event.uri)}" 
+		requestMade="{log('Request Made: '+event.uri)}" 
+		sendComplete="{log('Send Complete: '+event.error)}" 
+		sendError="{log('Send Error: '+event.error)}" 
+		uriChanged="{log('URI Changed: '+event.uri)}"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			private function log(message:Object):void{
+				Logger.log(String(message));
+			}
+			
+			private function cssLoaded(e:Event=null):void{
+				XML.prettyIndent = 0;
+				XML.prettyPrinting = false;
+				XML.ignoreComments = true;
+				XML.ignoreWhitespace = true;
+				XML.ignoreProcessingInstructions = true;
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

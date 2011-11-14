@@ -1,0 +1,1002 @@
+550 /httpdocs/models/page: No such file or directory
+PWD
+257 "/httpdocs/models" is the current directory
+MKD /httpdocs/models/page
+257 "/httpdocs/models/page" - Directory successfully created
+CWD page
+250 CWD command successful
+PWD
+257 "/httpdocs/models/page" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,86).
+connecting data channel to 70.32.120.158:162,86(41558)
+data channel connected to 70.32.120.158:162,86(41558)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.002 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CWD bmcd
+550 bmcd: No such file or directory
+XCWD bmcd
+550 bmcd: No such file or directory
+CWD /httpdocs/models/page/bmcd
+550 /httpdocs/models/page/bmcd: No such file or directory
+XCWD /httpdocs/models/page/bmcd
+550 /httpdocs/models/page/bmcd: No such file or directory
+PWD
+257 "/httpdocs/models/page" is the current directory
+MKD /httpdocs/models/page/bmcd
+257 "/httpdocs/models/page/bmcd" - Directory successfully created
+CWD bmcd
+250 CWD command successful
+PWD
+257 "/httpdocs/models/page/bmcd" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,87).
+connecting data channel to 70.32.120.158:162,87(41559)
+data channel connected to 70.32.120.158:162,87(41559)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.002 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CWD modules
+550 modules: No such file or directory
+XCWD modules
+550 modules: No such file or directory
+CWD /httpdocs/models/page/bmcd/modules
+550 /httpdocs/models/page/bmcd/modules: No such file or directory
+XCWD /httpdocs/models/page/bmcd/modules
+550 /httpdocs/models/page/bmcd/modules: No such file or directory
+PWD
+257 "/httpdocs/models/page/bmcd" is the current directory
+MKD /httpdocs/models/page/bmcd/modules
+257 "/httpdocs/models/page/bmcd/modules" - Directory successfully created
+CWD modules
+250 CWD command successful
+PWD
+257 "/httpdocs/models/page/bmcd/modules" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,88).
+connecting data channel to 70.32.120.158:162,88(41560)
+data channel connected to 70.32.120.158:162,88(41560)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.002 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+CWD services
+550 services: No such file or directory
+XCWD services
+550 services: No such file or directory
+CWD /httpdocs/services
+550 /httpdocs/services: No such file or directory
+XCWD /httpdocs/services
+550 /httpdocs/services: No such file or directory
+PWD
+257 "/httpdocs" is the current directory
+MKD /httpdocs/services
+257 "/httpdocs/services" - Directory successfully created
+CWD services
+250 CWD command successful
+PWD
+257 "/httpdocs/services" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,89).
+connecting data channel to 70.32.120.158:162,89(41561)
+data channel connected to 70.32.120.158:162,89(41561)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.003 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CWD file_services
+550 file_services: No such file or directory
+XCWD file_services
+550 file_services: No such file or directory
+CWD /httpdocs/services/file_services
+550 /httpdocs/services/file_services: No such file or directory
+XCWD /httpdocs/services/file_services
+550 /httpdocs/services/file_services: No such file or directory
+PWD
+257 "/httpdocs/services" is the current directory
+MKD /httpdocs/services/file_services
+257 "/httpdocs/services/file_services" - Directory successfully created
+CWD file_services
+250 CWD command successful
+PWD
+257 "/httpdocs/services/file_services" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,91).
+connecting data channel to 70.32.120.158:162,91(41563)
+data channel connected to 70.32.120.158:162,91(41563)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.007 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CDUP
+250 CDUP command successful
+CWD sql_services
+550 sql_services: No such file or directory
+XCWD sql_services
+550 sql_services: No such file or directory
+CWD /httpdocs/services/sql_services
+550 /httpdocs/services/sql_services: No such file or directory
+XCWD /httpdocs/services/sql_services
+550 /httpdocs/services/sql_services: No such file or directory
+PWD
+257 "/httpdocs/services" is the current directory
+MKD /httpdocs/services/sql_services
+257 "/httpdocs/services/sql_services" - Directory successfully created
+CWD sql_services
+250 CWD command successful
+PWD
+257 "/httpdocs/services/sql_services" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,92).
+connecting data channel to 70.32.120.158:162,92(41564)
+data channel connected to 70.32.120.158:162,92(41564)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.002 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+CWD debug
+550 debug: No such file or directory
+XCWD debug
+550 debug: No such file or directory
+CWD /httpdocs/debug
+550 /httpdocs/debug: No such file or directory
+XCWD /httpdocs/debug
+550 /httpdocs/debug: No such file or directory
+PWD
+257 "/httpdocs" is the current directory
+MKD /httpdocs/debug
+257 "/httpdocs/debug" - Directory successfully created
+CWD debug
+250 CWD command successful
+PWD
+257 "/httpdocs/debug" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,93).
+connecting data channel to 70.32.120.158:162,93(41565)
+data channel connected to 70.32.120.158:162,93(41565)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in 0.007 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CDUP
+250 CDUP command successful
+CWD page_handlers
+550 page_handlers: No such file or directory
+XCWD page_handlers
+550 page_handlers: No such file or directory
+CWD /httpdocs/page_handlers
+550 /httpdocs/page_handlers: No such file or directory
+XCWD /httpdocs/page_handlers
+550 /httpdocs/page_handlers: No such file or directory
+PWD
+257 "/httpdocs" is the current directory
+MKD /httpdocs/page_handlers
+257 "/httpdocs/page_handlers" - Directory successfully created
+CWD page_handlers
+250 CWD command successful
+PWD
+257 "/httpdocs/page_handlers" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,94).
+connecting data channel to 70.32.120.158:162,94(41566)
+data channel connected to 70.32.120.158:162,94(41566)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in < 0.001 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+CDUP
+250 CDUP command successful
+CWD config
+550 config: No such file or directory
+XCWD config
+550 config: No such file or directory
+CWD /httpdocs/config
+550 /httpdocs/config: No such file or directory
+XCWD /httpdocs/config
+550 /httpdocs/config: No such file or directory
+PWD
+257 "/httpdocs" is the current directory
+MKD /httpdocs/config
+257 "/httpdocs/config" - Directory successfully created
+CWD config
+250 CWD command successful
+PWD
+257 "/httpdocs/config" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,95).
+connecting data channel to 70.32.120.158:162,95(41567)
+data channel connected to 70.32.120.158:162,95(41567)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 0 bytes in < 0.001 seconds, 0.000 bps ( 0.000 Bps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+Starting request
+CDUP
+250 CDUP command successful
+CWD dom
+250 CWD command successful
+CWD document_builder
+250 CWD command successful
+CWD module
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,96).
+connecting data channel to 70.32.120.158:162,96(41568)
+data channel connected to 70.32.120.158:162,96(41568)
+STOR article.php
+150 Opening ASCII mode data connection for article.php
+226 Transfer complete
+transferred 1129 bytes in 0.263 seconds, 34.382 kbps ( 4297.755 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,98).
+connecting data channel to 70.32.120.158:162,98(41570)
+data channel connected to 70.32.120.158:162,98(41570)
+STOR floor.php
+150 Opening ASCII mode data connection for floor.php
+226 Transfer complete
+transferred 910 bytes in 0.243 seconds, 29.939 kbps ( 3742.329 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,99).
+connecting data channel to 70.32.120.158:162,99(41571)
+data channel connected to 70.32.120.158:162,99(41571)
+STOR module.php
+150 Opening ASCII mode data connection for module.php
+226 Transfer complete
+transferred 596 bytes in 0.244 seconds, 19.530 kbps ( 2441.215 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,101).
+connecting data channel to 70.32.120.158:162,101(41573)
+data channel connected to 70.32.120.158:162,101(41573)
+STOR document_builder.php
+150 Opening ASCII mode data connection for document_builder.php
+226 Transfer complete
+transferred 911 bytes in 0.230 seconds, 31.623 kbps ( 3952.814 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,102).
+connecting data channel to 70.32.120.158:162,102(41574)
+data channel connected to 70.32.120.158:162,102(41574)
+STOR pngUpload.php
+150 Opening ASCII mode data connection for pngUpload.php
+226 Transfer complete
+transferred 513 bytes in 0.227 seconds, 18.114 kbps ( 2264.276 Bps), transfer succeeded.
+CWD handlers
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,103).
+connecting data channel to 70.32.120.158:162,103(41575)
+data channel connected to 70.32.120.158:162,103(41575)
+STOR upload_handler.php
+150 Opening ASCII mode data connection for upload_handler.php
+226 Transfer complete
+transferred 1104 bytes in 0.235 seconds, 37.527 kbps ( 4690.856 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,104).
+connecting data channel to 70.32.120.158:162,104(41576)
+data channel connected to 70.32.120.158:162,104(41576)
+STOR email_handler.php
+150 Opening ASCII mode data connection for email_handler.php
+226 Transfer complete
+transferred 16485 bytes in 0.228 seconds, 579.593 kbps ( 72.449 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD utils
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,105).
+connecting data channel to 70.32.120.158:162,105(41577)
+data channel connected to 70.32.120.158:162,105(41577)
+STOR url_manager.php
+150 Opening ASCII mode data connection for url_manager.php
+226 Transfer complete
+transferred 5195 bytes in 0.230 seconds, 180.328 kbps ( 22.541 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,106).
+connecting data channel to 70.32.120.158:162,106(41578)
+data channel connected to 70.32.120.158:162,106(41578)
+STOR sql_utils.php
+150 Opening ASCII mode data connection for sql_utils.php
+226 Transfer complete
+transferred 1395 bytes in 0.230 seconds, 48.423 kbps ( 6052.883 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD tests
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,107).
+connecting data channel to 70.32.120.158:162,107(41579)
+data channel connected to 70.32.120.158:162,107(41579)
+STOR page_test.php
+150 Opening ASCII mode data connection for page_test.php
+226 Transfer complete
+transferred 2139 bytes in 0.230 seconds, 74.249 kbps ( 9281.083 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,108).
+connecting data channel to 70.32.120.158:162,108(41580)
+data channel connected to 70.32.120.158:162,108(41580)
+STOR header_node_test.php
+150 Opening ASCII mode data connection for header_node_test.php
+226 Transfer complete
+transferred 1568 bytes in 0.236 seconds, 53.079 kbps ( 6634.844 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,109).
+connecting data channel to 70.32.120.158:162,109(41581)
+data channel connected to 70.32.120.158:162,109(41581)
+STOR external_data_services_test.php
+150 Opening ASCII mode data connection for external_data_services_test.php
+226 Transfer complete
+transferred 10518 bytes in 0.230 seconds, 365.099 kbps ( 45.637 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,110).
+connecting data channel to 70.32.120.158:162,110(41582)
+data channel connected to 70.32.120.158:162,110(41582)
+STOR page_services_test.php
+150 Opening ASCII mode data connection for page_services_test.php
+226 Transfer complete
+transferred 1976 bytes in 0.230 seconds, 68.591 kbps ( 8573.829 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,111).
+connecting data channel to 70.32.120.158:162,111(41583)
+data channel connected to 70.32.120.158:162,111(41583)
+STOR class_testing.php
+150 Opening ASCII mode data connection for class_testing.php
+226 Transfer complete
+transferred 423 bytes in 0.226 seconds, 15.001 kbps ( 1875.117 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,112).
+connecting data channel to 70.32.120.158:162,112(41584)
+data channel connected to 70.32.120.158:162,112(41584)
+STOR upload_test.php
+150 Opening ASCII mode data connection for upload_test.php
+226 Transfer complete
+transferred 3734 bytes in 0.229 seconds, 130.166 kbps ( 16.271 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,113).
+connecting data channel to 70.32.120.158:162,113(41585)
+data channel connected to 70.32.120.158:162,113(41585)
+STOR header_node_test_901.php
+150 Opening ASCII mode data connection for header_node_test_901.php
+226 Transfer complete
+transferred 3700 bytes in 0.230 seconds, 128.434 kbps ( 16.054 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,114).
+connecting data channel to 70.32.120.158:162,114(41586)
+data channel connected to 70.32.120.158:162,114(41586)
+STOR version.php
+150 Opening ASCII mode data connection for version.php
+226 Transfer complete
+transferred 24 bytes in 0.233 seconds, 822.628 bps ( 102.828 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,116).
+connecting data channel to 70.32.120.158:162,116(41588)
+data channel connected to 70.32.120.158:162,116(41588)
+STOR header_node_test_999.php
+150 Opening ASCII mode data connection for header_node_test_999.php
+226 Transfer complete
+transferred 3110 bytes in 0.223 seconds, 111.742 kbps ( 13.968 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD models
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,117).
+connecting data channel to 70.32.120.158:162,117(41589)
+data channel connected to 70.32.120.158:162,117(41589)
+STOR file_tree.php
+150 Opening ASCII mode data connection for file_tree.php
+226 Transfer complete
+transferred 3079 bytes in 0.283 seconds, 86.976 kbps ( 10.872 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,118).
+connecting data channel to 70.32.120.158:162,118(41590)
+data channel connected to 70.32.120.158:162,118(41590)
+STOR db_model.php
+150 Opening ASCII mode data connection for db_model.php
+226 Transfer complete
+transferred 3289 bytes in 0.234 seconds, 112.265 kbps ( 14.033 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,119).
+connecting data channel to 70.32.120.158:162,119(41591)
+data channel connected to 70.32.120.158:162,119(41591)
+STOR filter.php
+150 Opening ASCII mode data connection for filter.php
+226 Transfer complete
+transferred 2723 bytes in 0.226 seconds, 96.566 kbps ( 12.071 kBps), transfer succeeded.
+CWD page
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,120).
+connecting data channel to 70.32.120.158:162,120(41592)
+data channel connected to 70.32.120.158:162,120(41592)
+STOR text_node.php
+150 Opening ASCII mode data connection for text_node.php
+226 Transfer complete
+transferred 887 bytes in 0.238 seconds, 29.780 kbps ( 3722.493 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,121).
+connecting data channel to 70.32.120.158:162,121(41593)
+data channel connected to 70.32.120.158:162,121(41593)
+STOR module_node.php
+150 Opening ASCII mode data connection for module_node.php
+226 Transfer complete
+transferred 4986 bytes in 0.227 seconds, 176.057 kbps ( 22.007 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,122).
+connecting data channel to 70.32.120.158:162,122(41594)
+data channel connected to 70.32.120.158:162,122(41594)
+STOR table_node.php
+150 Opening ASCII mode data connection for table_node.php
+226 Transfer complete
+transferred 941 bytes in 0.233 seconds, 32.254 kbps ( 4031.733 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,123).
+connecting data channel to 70.32.120.158:162,123(41595)
+data channel connected to 70.32.120.158:162,123(41595)
+STOR store.php
+150 Opening ASCII mode data connection for store.php
+226 Transfer complete
+transferred 10943 bytes in 0.227 seconds, 386.401 kbps ( 48.300 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,124).
+connecting data channel to 70.32.120.158:162,124(41596)
+data channel connected to 70.32.120.158:162,124(41596)
+STOR content_attribute.php
+150 Opening ASCII mode data connection for content_attribute.php
+226 Transfer complete
+transferred 2367 bytes in 0.223 seconds, 85.046 kbps ( 10.631 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,125).
+connecting data channel to 70.32.120.158:162,125(41597)
+data channel connected to 70.32.120.158:162,125(41597)
+STOR inventory.php
+150 Opening ASCII mode data connection for inventory.php
+226 Transfer complete
+transferred 10360 bytes in 0.229 seconds, 361.145 kbps ( 45.143 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,126).
+connecting data channel to 70.32.120.158:162,126(41598)
+data channel connected to 70.32.120.158:162,126(41598)
+STOR bmcd_page.php
+150 Opening ASCII mode data connection for bmcd_page.php
+226 Transfer complete
+transferred 2748 bytes in 0.228 seconds, 96.616 kbps ( 12.077 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,128).
+connecting data channel to 70.32.120.158:162,128(41600)
+data channel connected to 70.32.120.158:162,128(41600)
+STOR link_node.php
+150 Opening ASCII mode data connection for link_node.php
+226 Transfer complete
+transferred 800 bytes in 0.227 seconds, 28.248 kbps ( 3531.034 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,129).
+connecting data channel to 70.32.120.158:162,129(41601)
+data channel connected to 70.32.120.158:162,129(41601)
+STOR data_manager.php
+150 Opening ASCII mode data connection for data_manager.php
+226 Transfer complete
+transferred 6959 bytes in 0.233 seconds, 238.528 kbps ( 29.816 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,130).
+connecting data channel to 70.32.120.158:162,130(41602)
+data channel connected to 70.32.120.158:162,130(41602)
+STOR menu.php
+150 Opening ASCII mode data connection for menu.php
+226 Transfer complete
+transferred 2367 bytes in 0.240 seconds, 78.823 kbps ( 9852.881 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,132).
+connecting data channel to 70.32.120.158:162,132(41604)
+data channel connected to 70.32.120.158:162,132(41604)
+STOR style_node.php
+150 Opening ASCII mode data connection for style_node.php
+226 Transfer complete
+transferred 1441 bytes in 0.276 seconds, 41.713 kbps ( 5214.078 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,133).
+connecting data channel to 70.32.120.158:162,133(41605)
+data channel connected to 70.32.120.158:162,133(41605)
+STOR calendar.php
+150 Opening ASCII mode data connection for calendar.php
+226 Transfer complete
+transferred 8823 bytes in 0.236 seconds, 298.670 kbps ( 37.334 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,135).
+connecting data channel to 70.32.120.158:162,135(41607)
+data channel connected to 70.32.120.158:162,135(41607)
+STOR script_node.php
+150 Opening ASCII mode data connection for script_node.php
+226 Transfer complete
+transferred 1335 bytes in 0.231 seconds, 46.145 kbps ( 5768.102 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,136).
+connecting data channel to 70.32.120.158:162,136(41608)
+data channel connected to 70.32.120.158:162,136(41608)
+STOR page.php
+150 Opening ASCII mode data connection for page.php
+226 Transfer complete
+transferred 5875 bytes in 0.249 seconds, 188.737 kbps ( 23.592 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,137).
+connecting data channel to 70.32.120.158:162,137(41609)
+data channel connected to 70.32.120.158:162,137(41609)
+STOR calendar_filter.php
+150 Opening ASCII mode data connection for calendar_filter.php
+226 Transfer complete
+transferred 1821 bytes in 0.246 seconds, 59.197 kbps ( 7399.618 Bps), transfer succeeded.
+CWD bmcd
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,138).
+connecting data channel to 70.32.120.158:162,138(41610)
+data channel connected to 70.32.120.158:162,138(41610)
+STOR bmcd_901_page.php
+150 Opening ASCII mode data connection for bmcd_901_page.php
+226 Transfer complete
+transferred 9743 bytes in 0.230 seconds, 338.198 kbps ( 42.275 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,139).
+connecting data channel to 70.32.120.158:162,139(41611)
+data channel connected to 70.32.120.158:162,139(41611)
+STOR bmcd_999_page.php
+150 Opening ASCII mode data connection for bmcd_999_page.php
+226 Transfer complete
+transferred 8876 bytes in 0.233 seconds, 304.235 kbps ( 38.029 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,140).
+connecting data channel to 70.32.120.158:162,140(41612)
+data channel connected to 70.32.120.158:162,140(41612)
+STOR header_node.php
+150 Opening ASCII mode data connection for header_node.php
+226 Transfer complete
+transferred 4377 bytes in 0.226 seconds, 155.222 kbps ( 19.403 kBps), transfer succeeded.
+CWD modules
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,141).
+connecting data channel to 70.32.120.158:162,141(41613)
+data channel connected to 70.32.120.158:162,141(41613)
+STOR article_text_right_module.php
+150 Opening ASCII mode data connection for article_text_right_module.php
+226 Transfer complete
+transferred 247 bytes in 0.240 seconds, 8225.303 bps ( 1028.163 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,142).
+connecting data channel to 70.32.120.158:162,142(41614)
+data channel connected to 70.32.120.158:162,142(41614)
+STOR model_lineup.php
+150 Opening ASCII mode data connection for model_lineup.php
+226 Transfer complete
+transferred 48 bytes in 0.223 seconds, 1724.631 bps ( 215.579 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,143).
+connecting data channel to 70.32.120.158:162,143(41615)
+data channel connected to 70.32.120.158:162,143(41615)
+STOR media_highlights_module.php
+150 Opening ASCII mode data connection for media_highlights_module.php
+226 Transfer complete
+transferred 3614 bytes in 0.229 seconds, 125.982 kbps ( 15.748 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,144).
+connecting data channel to 70.32.120.158:162,144(41616)
+data channel connected to 70.32.120.158:162,144(41616)
+STOR media_list_module.php
+150 Opening ASCII mode data connection for media_list_module.php
+226 Transfer complete
+transferred 1627 bytes in 0.233 seconds, 55.767 kbps ( 6970.913 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,145).
+connecting data channel to 70.32.120.158:162,145(41617)
+data channel connected to 70.32.120.158:162,145(41617)
+STOR model_lineup_data_manager.php
+150 Opening ASCII mode data connection for model_lineup_data_manager.php
+226 Transfer complete
+transferred 14620 bytes in 0.225 seconds, 520.726 kbps ( 65.091 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,146).
+connecting data channel to 70.32.120.158:162,146(41618)
+data channel connected to 70.32.120.158:162,146(41618)
+STOR model_info_module.php
+150 Opening ASCII mode data connection for model_info_module.php
+226 Transfer complete
+transferred 9693 bytes in 0.224 seconds, 346.747 kbps ( 43.343 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,147).
+connecting data channel to 70.32.120.158:162,147(41619)
+data channel connected to 70.32.120.158:162,147(41619)
+STOR content_node.php
+150 Opening ASCII mode data connection for content_node.php
+226 Transfer complete
+transferred 11169 bytes in 0.226 seconds, 396.088 kbps ( 49.511 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,148).
+connecting data channel to 70.32.120.158:162,148(41620)
+data channel connected to 70.32.120.158:162,148(41620)
+STOR floor.php
+150 Opening ASCII mode data connection for floor.php
+226 Transfer complete
+transferred 988 bytes in 0.226 seconds, 35.038 kbps ( 4379.706 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,149).
+connecting data channel to 70.32.120.158:162,149(41621)
+data channel connected to 70.32.120.158:162,149(41621)
+STOR menu_item.php
+150 Opening ASCII mode data connection for menu_item.php
+226 Transfer complete
+transferred 2010 bytes in 0.236 seconds, 68.041 kbps ( 8505.125 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,150).
+connecting data channel to 70.32.120.158:162,150(41622)
+data channel connected to 70.32.120.158:162,150(41622)
+STOR module.php
+150 Opening ASCII mode data connection for module.php
+226 Transfer complete
+transferred 510 bytes in 0.223 seconds, 18.324 kbps ( 2290.527 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,151).
+connecting data channel to 70.32.120.158:162,151(41623)
+data channel connected to 70.32.120.158:162,151(41623)
+STOR image_node.php
+150 Opening ASCII mode data connection for image_node.php
+226 Transfer complete
+transferred 518 bytes in 0.234 seconds, 17.681 kbps ( 2210.133 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CDUP
+250 CDUP command successful
+CWD services
+250 CWD command successful
+CWD file_services
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,152).
+connecting data channel to 70.32.120.158:162,152(41624)
+data channel connected to 70.32.120.158:162,152(41624)
+STOR external_data_services.php
+150 Opening ASCII mode data connection for external_data_services.php
+226 Transfer complete
+transferred 2072 bytes in 0.227 seconds, 73.163 kbps ( 9145.379 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,153).
+connecting data channel to 70.32.120.158:162,153(41625)
+data channel connected to 70.32.120.158:162,153(41625)
+STOR caching_services.php
+150 Opening ASCII mode data connection for caching_services.php
+226 Transfer complete
+transferred 617 bytes in 0.240 seconds, 20.547 kbps ( 2568.325 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD sql_services
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,154).
+connecting data channel to 70.32.120.158:162,154(41626)
+data channel connected to 70.32.120.158:162,154(41626)
+STOR page_services.php
+150 Opening ASCII mode data connection for page_services.php
+226 Transfer complete
+transferred 1526 bytes in 0.225 seconds, 54.352 kbps ( 6794.017 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,155).
+connecting data channel to 70.32.120.158:162,155(41627)
+data channel connected to 70.32.120.158:162,155(41627)
+STOR content_attribute_services.php
+150 Opening ASCII mode data connection for content_attribute_services.php
+226 Transfer complete
+transferred 829 bytes in 0.232 seconds, 28.534 kbps ( 3566.790 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,157).
+connecting data channel to 70.32.120.158:162,157(41629)
+data channel connected to 70.32.120.158:162,157(41629)
+STOR user_services.php
+150 Opening ASCII mode data connection for user_services.php
+226 Transfer complete
+transferred 1119 bytes in 0.221 seconds, 40.561 kbps ( 5070.160 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,159).
+connecting data channel to 70.32.120.158:162,159(41631)
+data channel connected to 70.32.120.158:162,159(41631)
+STOR content_node_services.php
+150 Opening ASCII mode data connection for content_node_services.php
+226 Transfer complete
+transferred 778 bytes in 0.229 seconds, 27.121 kbps ( 3390.093 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,168).
+connecting data channel to 70.32.120.158:162,168(41640)
+data channel connected to 70.32.120.158:162,168(41640)
+STOR session_services.php
+150 Opening ASCII mode data connection for session_services.php
+226 Transfer complete
+transferred 831 bytes in 0.221 seconds, 30.122 kbps ( 3765.238 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,170).
+connecting data channel to 70.32.120.158:162,170(41642)
+data channel connected to 70.32.120.158:162,170(41642)
+STOR module_services.php
+150 Opening ASCII mode data connection for module_services.php
+226 Transfer complete
+transferred 476 bytes in 0.226 seconds, 16.880 kbps ( 2110.061 Bps), transfer succeeded.
+CDUP
+250 CDUP command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,171).
+connecting data channel to 70.32.120.158:162,171(41643)
+data channel connected to 70.32.120.158:162,171(41643)
+STOR file_services.php
+150 Opening ASCII mode data connection for file_services.php
+226 Transfer complete
+transferred 7543 bytes in 0.232 seconds, 259.631 kbps ( 32.454 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,172).
+connecting data channel to 70.32.120.158:162,172(41644)
+data channel connected to 70.32.120.158:162,172(41644)
+STOR sql_services.php
+150 Opening ASCII mode data connection for sql_services.php
+226 Transfer complete
+transferred 9169 bytes in 0.223 seconds, 329.440 kbps ( 41.180 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD debug
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,175).
+connecting data channel to 70.32.120.158:162,175(41647)
+data channel connected to 70.32.120.158:162,175(41647)
+STOR log.php
+150 Opening ASCII mode data connection for log.php
+226 Transfer complete
+transferred 2424 bytes in 0.230 seconds, 84.142 kbps ( 10.518 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD page_handlers
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,176).
+connecting data channel to 70.32.120.158:162,176(41648)
+data channel connected to 70.32.120.158:162,176(41648)
+STOR not_found.php
+150 Opening ASCII mode data connection for not_found.php
+226 Transfer complete
+transferred 1793 bytes in 0.220 seconds, 65.281 kbps ( 8160.145 Bps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,178).
+connecting data channel to 70.32.120.158:162,178(41650)
+data channel connected to 70.32.120.158:162,178(41650)
+STOR default.php
+150 Opening ASCII mode data connection for default.php
+226 Transfer complete
+transferred 10416 bytes in 0.232 seconds, 358.520 kbps ( 44.815 kBps), transfer succeeded.
+CDUP
+250 CDUP command successful
+CWD config
+250 CWD command successful
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,179).
+connecting data channel to 70.32.120.158:162,179(41651)
+data channel connected to 70.32.120.158:162,179(41651)
+STOR php.ini
+150 Opening ASCII mode data connection for php.ini
+226 Transfer complete
+transferred 44756 bytes in 0.227 seconds, 1580.350 kbps ( 197.544 kBps), transfer succeeded.
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,181).
+connecting data channel to 70.32.120.158:162,181(41653)
+data channel connected to 70.32.120.158:162,181(41653)
+STOR globals.php
+150 Opening ASCII mode data connection for globals.php
+226 Transfer complete
+transferred 2728 bytes in 0.227 seconds, 96.327 kbps ( 12.041 kBps), transfer succeeded.
+Transfer request completed with status: Finished
+CWD /httpdocs/
+250 CWD command successful
+
+Processing Line 16 [RPUT js]
+No destination folder. The current directoy '/httpdocs/' is used.
+PWD
+257 "/httpdocs" is the current directory
+TYPE A
+200 Type set to A
+PASV
+227 Entering Passive Mode (70,32,120,158,162,182).
+connecting data channel to 70.32.120.158:162,182(41654)
+data channel connected to 70.32.120.158:162,182(41654)
+LIST
+150 Opening ASCII mode data connection for file list
+transferred 1257 bytes in 0.007 seconds, 1471.057 kbps ( 183.882 kBps), transfer succeeded.
+226-Transfer complete
+226 Quotas off
+Starting request
+TYPE I
+200 Type set to I
+Failed to open file F:\web\bmcd\web\includes\config\js
+Starting request
+User cancelled
+Transfer request completed with status: Paused
+Transfer log was saved at C:\Users\Goodwin\AppData\Roaming\Ipswitch\WS_FTP\Logs\TransferReq2-00002.log
+Failure in command [RPUT js]
+QUIT
+Failed Sending Command.  The connection is probably dead.
+Connection closed.  Ready for next connection.
+
+------ Finished running the script ------

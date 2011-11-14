@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:video="com.hphant.contentlibrary.view.video.*"
+	width="100%"
+	paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+	horizontalAlign="center"
+	>
+
+	<mx:Metadata>
+		[Event(name="finishEvent", type="com.adobe.cairngorm.control.CairngormEvent")] 
+		[Event(name="cancelEvent", type="com.adobe.cairngorm.control.CairngormEvent")] 
+	</mx:Metadata>
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import com.adobe.cairngorm.control.CairngormEvent;
+			
+	        
+			private function fireFinishEvent():void 
+			{
+				Alert.show("Pretending saving something...", "Info");
+			}
+			
+			private function fireCancelEvent():void {
+ 				var event : CairngormEvent = new CairngormEvent("cancelEvent");
+				//event.data = ;
+				dispatchEvent( event );
+			}
+			
+		]]>
+	</mx:Script>
+	
+	
+	<mx:HBox width="100%">
+		<mx:Label text="Video FTP Transfer" fontWeight="bold" fontSize="19"/>
+		<mx:Label text="(Step 2 of 2)" fontWeight="bold" fontSize="19"/>
+	</mx:HBox>
+	
+	<!--	
+	-->
+	
+	<mx:HBox width="100%">
+	
+		<mx:VBox width="50%" horizontalAlign="left">
+			<mx:TextInput text="Short Text Description (Prepopulated from Master)"/>
+			<mx:HBox width="100%" horizontalAlign="center">
+				<mx:VBox height="100%" width="50%">
+					<mx:Label text="Scale" fontWeight="bold"/>
+					<mx:HSlider/>
+				</mx:VBox>
+				<mx:VBox height="100%" width="50%">
+					<mx:Label text="Rotate" fontWeight="bold"/>
+					<mx:HSlider/>
+				</mx:VBox>
+			</mx:HBox>
+		</mx:VBox>
+		
+		<mx:VBox width="50%" height="100%" horizontalAlign="left" verticalAlign="middle">
+			<mx:HBox id="blockControls" width="100%" horizontalAlign="center">
+			
+				<mx:Button id="btnCancel" label="Cancel" width="110"
+					click="fireCancelEvent()"
+					/>
+				<mx:Button id="btnSave" label="Save" width="110" 
+					click="fireFinishEvent()"
+					/>
+				
+			</mx:HBox>
+			
+			<mx:Label id="lblScale" text="Scale and Align your Thumbnail" fontWeight="bold" fontSize="14" width="100%" textAlign="center"/>
+			
+		</mx:VBox>
+		
+	</mx:HBox>
+
+	<mx:Spacer height="30"/>
+	<video:VideoPlayerThumbnailSelectionArea />	
+	
+</mx:VBox>

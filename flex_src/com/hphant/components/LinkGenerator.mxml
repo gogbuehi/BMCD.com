@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*">
+	<mx:HBox id="input" verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+		<mx:ComboBox id="dataSources" dataProvider="{LinkGeneratorManager.getInstance().services}" labelField="label"/>
+		<text:SelfLabelTextInput label="{LinkGeneratorService(dataSources.selectedItem).idLabel}" id="item_id" width="200" />
+		<mx:Button enabled="{Boolean(dataSources.selectedItem)}" label="Get Link" click="{generate(event)}"/>
+	</mx:HBox>
+	<text:SelfLabelTextInput id="link" editable="false" enabled="true" text="{LinkGeneratorService(dataSources.selectedItem).lastGenerated}" width="{input.width}" label="Generated Link:"/>
+	<mx:Metadata>
+		[Exclude(name="dataSources", kind="property")]
+		[Exclude(name="item_id", kind="property")]
+		[Exclude(name="link", kind="property")]
+		[Exclude(name="input", kind="property")]
+		[Event(name="URLEvent", type="com.hphant.events.URLEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.events.URLEvent;
+			import com.hphant.managers.LinkGeneratorManager;
+			import com.hphant.services.LinkGeneratorService;
+			private function generate(event:MouseEvent):void{
+				link.text = "";
+				LinkGeneratorManager.getInstance().addEventListener(ErrorEvent.ERROR,responseHandler);
+				LinkGeneratorManager.getInstance().addEventListener(Event.COMPLETE,responseHandler);
+				LinkGeneratorService(dataSources.selectedItem).generate(item_id.text);
+			}
+			private function responseHandler(event:Event):void{
+				LinkGeneratorManager.getInstance().removeEventListener(ErrorEvent.ERROR,responseHandler);
+				LinkGeneratorManager.getInstance().removeEventListener(Event.COMPLETE,responseHandler);
+				this.data = LinkGeneratorManager.getInstance().lastGenerated;
+				this.dispatchEvent(new URLEvent(URLEvent.URL_SELECT,this.data));
+			}
+			public function reset():void{
+				item_id.text = "";
+				link.text = "";
+				dataSources.selectedIndex = 0;
+				for each(var service:LinkGeneratorService in LinkGeneratorManager.getInstance().services){
+					service.lastGenerated = "";
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

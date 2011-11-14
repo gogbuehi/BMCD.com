@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="{init()}" xmlns:ui="flash.ui.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Image id="thumb" width="180" source="{thumbSource}" height="135"/>
+		<mx:TileList id="thumbList" rowCount="3" columnWidth="60" columnCount="10" rowHeight="45"
+			direction="horizontal" 
+		    dragEnabled="false"
+		    allowDragSelection="false"
+		    allowMultipleSelection="false"
+		    change="{imageChanged()}"
+			dataProvider="{availableImages}">
+			<mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" source="{data.cropLocation}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+				</mx:Component>
+			</mx:itemRenderer>
+		</mx:TileList>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.PalletManager;
+			import com.hphant.contentlibrary.view.NewImageCropPallet;
+			/* public override function reset():void{
+				super.reset();
+				selectedCrop = null;
+				this.thumbSource = "";
+				this._origionalSource = "";
+				if(this.thumbList){
+					this.thumbList.selectedIndex = -1;
+				}
+				thumbSource = "";
+			} */
+			[Bindable('sourceChange')]
+			public function set source(value:String):void{
+				thumbSource = value;
+				if(!_origionalSource){
+					_origionalSource = thumbSource;
+				}
+				this.dispatchEvent(new Event('sourceChange'));
+			}
+			public function get source():String{
+				return this.thumbSource;
+			}
+			
+			import com.hphant.contentlibrary.model.Crop;
+			import mx.events.FlexEvent;
+			private function imageChanged():void{
+				selectedCrop = Crop(thumbList.selectedItem)
+				source = selectedCrop.cropLocation;
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			
+			private var _origionalSource:String;
+			[Bindable]
+			public var selectedCrop:Crop;
+			
+			
+			[Bindable]
+			private var thumbSource:String;
+			
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			private var availableImages:ArrayCollection;
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public var imageSizes:Array;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var cmNewImage:ContextMenuItem = new ContextMenuItem("New Image");
+			
+			private function defineListeners():void{
+				this._cmArray.push(this.cmNewImage);
+				this.cmNewImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				
+				ContentModelLocator.getInstance().addEventListener("cropsChanged",getAvailableThumbs);
+			}
+			private function init():void{
+				defineListeners();
+				this.imageSizes = [new Rectangle(0,0,180,135)];
+				var event:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+				event.dispatch();
+			}
+			private function getAvailableThumbs(event:Event = null):void{
+				this.availableImages = ContentModelLocator.getInstance().getCropsOfDimension(180,135);
+			}
+			
+			private var newImagePallet:NewImageCropPallet;
+			
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmNewImage:
+						if(!this.newImagePallet){
+							this.newImagePallet = new NewImageCropPallet();
+						} else {
+							this.newImagePallet.reset();
+						}
+						this.newImagePallet.cropSizes = this.imageSizes;
+						PalletManager.openPallet(this.newImagePallet);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			public override function reset():void{
+				if(this.thumbList){
+					this.thumbList.selectedIndex = -1;
+				}
+				super.reset();
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

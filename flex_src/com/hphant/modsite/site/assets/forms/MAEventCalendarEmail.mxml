@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas updateComplete="{drawMask();}" borderThickness="0" clipContent="true" styleName="emailFormPod" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:forms="com.hphant.modsite.site.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:Accordion headerStyleName="emailAccordion" height="100%" buttonMode="true" useHandCursor="true" backgroundAlpha="0" borderStyle="none" id="accordian" width="100%" mask="{accordianMask}">
+		<mx:VBox label="Email a Friend" width="100%" height="100%" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailFriendForm id="freind" sendEmail="{sendEmailData(event)}" />
+		</mx:VBox>
+		<mx:VBox label="Ask a Question" width="100%" height="100%" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailQuestionFormNew id="question" sendEmail="{sendEmailData(event)}" />
+		</mx:VBox>
+	</mx:Accordion>
+	<mx:UIComponent id="accordianMask"/>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.FormData;
+			import com.hphant.modsite.data.calendar.BMCDEventItemData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.data.forms.EmailDealerFormData;
+			import com.hphant.modsite.data.forms.EmailFriendFormData;
+			import com.hphant.modsite.data.forms.CalendarEmailDealerFormData;
+			import com.hphant.modsite.data.forms.CalendarEmailFriendFormData;
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml){
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function drawMask():void{
+				var rc:Number = this.getStyle('cornerRadius');
+				var gr:Graphics = this.accordianMask.graphics;
+				gr.clear();
+				gr.beginFill(0x000000);
+				gr.drawRoundRect(0,0,this.width,this.height,rc*2,rc*2)
+				gr.endFill();
+			}
+			private function sendEmailData(event:MAFormEvent):void{
+				var fd:FormData;
+				
+				if(event.formData is EmailFriendFormData){
+					var cf:CalendarEmailFriendFormData = new CalendarEmailFriendFormData();
+					cf.friendsEmail = EmailFriendFormData(event.formData).friendsEmail;
+					cf.friendsFirstName = EmailFriendFormData(event.formData).friendsFirstName;
+					cf.yourEmail = EmailFriendFormData(event.formData).yourEmail;
+					cf.yourName = EmailFriendFormData(event.formData).yourName;
+					cf.comment = EmailFriendFormData(event.formData).comment;
+					cf.eventData = BMCDEventItemData(data).row.toXMLString();
+					cf.description = String(BMCDEventItemData(data).description.data);
+					cf.title = String(BMCDEventItemData(data).title.data);
+					cf.blurb = String(BMCDEventItemData(data).blurb.data);
+					cf.end = String(BMCDEventItemData(data).end.data);
+					cf.linkToEvent = EmailFriendFormData(event.formData).homepageLink+String(BMCDEventItemData(data).url.data.@href);
+					cf.map = String(BMCDEventItemData(data).map.data);
+					cf.start = String(BMCDEventItemData(data).start.data);
+					cf.date = String(BMCDEventItemData(data).date.data);
+					cf.image = String(BMCDEventItemData(data).images.data[0].@src);
+					cf.address = String(BMCDEventItemData(data).street.data)+", "+String(BMCDEventItemData(data).city.data)+", "+String(BMCDEventItemData(data).state.data)+" "+String(BMCDEventItemData(data).zip.data);
+					fd = cf;
+				} else if(event.formData is EmailDealerFormData){
+					var cd:CalendarEmailDealerFormData = new CalendarEmailDealerFormData();
+					cd.comment = EmailDealerFormData(event.formData).comment;
+					cd.email = EmailDealerFormData(event.formData).email;
+					cd.firstName = EmailDealerFormData(event.formData).firstName;
+					cd.lastName = EmailDealerFormData(event.formData).lastName;
+					cd.phoneNumber = EmailDealerFormData(event.formData).phoneNumber;
+					cd.eventData = BMCDEventItemData(data).row.toXMLString();
+					cd.id = String(BMCDEventItemData(data).id.data);
+					cd.title = String(BMCDEventItemData(data).title.data);
+					cd.linkToEvent = EmailDealerFormData(event.formData).homepageLink+String(BMCDEventItemData(data).url.data.@href);
+					fd = cd;
+				} else {
+					EmailFormData(event.formData).vehicleData = BMCDEventItemData(data).row.toXMLString();
+					fd = EmailFormData(event.formData);
+				}
+				event.currentTarget.currentState = "sent";
+				this.dispatchEvent(new MAFormEvent(event.type,fd));
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

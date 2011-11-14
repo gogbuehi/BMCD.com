@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns="com.hphant.components.containers.*" implements="com.hphant.contentlibrary.view.ICropPallet"
+	xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{loadStep()}" removedFromStage="{palletClosed(event)}"
+	xmlns:imageCropper="com.hphant.components.imageCropper.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:managers="com.hphant.managers.*" xmlns:view="com.hphant.contentlibrary.view.*" xmlns:text="com.hphant.components.text.*" xmlns:components="com.hphant.components.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" id="hBox">
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button id="selectButton" fillColors="{selectColors}" label="{selectLabe}" click="{this.selectStep()}" width="100%" enabled="{this.selectEnabled}"/>
+		<mx:ComboBox id="_cropSize" fillColors="{cropSizeColors}" close="{cpv.sizeDone=true;setSizeColor()}"  labelFunction="{cropSizeLabel}" dataProvider="{cropSizes}" width="100%" enabled="{this.cropSizeEnabled}" dataChange="{setCropSize()}" change="{setCropSize()}"/>
+		<buttons:PalletButton fillColors="{descriptionColors}"  enabled="{this.descriptionEnabled}" 
+			width="100%" id="descriptionButton" creationComplete="{defineListeners()}" 
+			palletPosition="right" label="{descriptionLabel}" palletLabel="{this.label+' '+descriptionLabel}" >
+			<buttons:pallet>
+				<Pallet>
+				<text:SelfLabelTextInput id="titleText" width="100%" label="Title:" enabled="true" text="{title}"/>
+				<text:SelfLabelTextInput id="altText" width="100%" label="Alternate Text:" enabled="true" text="{alternate}"/>
+				<mx:HRule width="100%" />
+				<mx:Label text="Main Text:" />
+				<components:ExtendedRichTextEditor id="descriptionText" htmlText="{html}" />
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<mx:Button id="thumbButton" fillColors="{thumbColors}"  click="{this.thumbStep()}" label="{thumbLabel}" enabled="{this.thumbEnabled}" width="100%"/>
+		<mx:Button id="cropButton" fillColors="{cropColors}"  click="{this.cropStep()}" label="{cropLabel}" enabled="{this.cropEnabled}" width="100%"/>
+		<mx:Button id="saveButton" fillColors="{saveColors}"  click="{this.saveStep()}" label="{saveLabel}" enabled="{this.saveEnabled}" width="100%"/>
+		<text:SelfLabelTextInput label="Name:" id="nameText" width="100%" visible="false"/>
+	</mx:VBox>
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" id="cropperHolder"/>
+	</mx:HBox>
+	<mx:Binding destination="imageCrop.enabled" source="imageEnabled"/>
+	<mx:Binding destination="html" source="descriptionText.htmlText"/>
+	<mx:Binding destination="title" source="titleText.text"/>
+	<mx:Binding destination="alternate" source="altText.text"/>
+	<mx:Metadata>
+		[Exclude(name="cropperHolder",kind="property")]
+		[Exclude(name="hBox",kind="property")]
+		[Style(name="unsetColor",type="uint",format="Color")]
+		[Style(name="setColor",type="uint",format="Color")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.model.Crop;
+			import com.hphant.contentlibrary.process.IImageProcess;
+			import com.hphant.components.imageCropper.ICropper;
+			import com.hphant.components.imageCropper.VideoCropper;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			[Inspectable]
+			[Bindable]
+			public var selectLabe:String = "Select";
+			[Inspectable]
+			[Bindable]
+			public var thumbLabel:String = "Create Thumbnail";
+			[Inspectable]
+			[Bindable]
+			public var cropLabel:String = "Crop Image";
+			[Inspectable]
+			[Bindable]
+			public var saveLabel:String = "Save";
+			[Inspectable]
+			[Bindable]
+			public var descriptionLabel:String = "Description";
+			
+			
+			[Inspectable]
+			[Bindable]
+			public function get imageCrop():ICropper{
+				return this._imageCrop;
+			}
+			public function set imageCrop(value:ICropper):void{
+				_imageCrop = value;
+				_cropperChanged = true;
+				this.invalidateDisplayList();
+			}
+			private var _cropperChanged:Boolean = false;
+			private var _imageCrop:ICropper;
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				if(_cropperChanged){
+					if(this.cropperHolder){
+						cropperHolder.removeAllChildren();
+						if(_imageCrop)
+							cropperHolder.addChild(DisplayObject(_imageCrop));
+					}
+					_cropperChanged = false;
+				}
+				if(this.stylesChanged){
+					this._setColor = this.getStyle("setColor");
+					this._unsetColor = this.getStyle("unsetColor");
+				}
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+			}
+			private var _icAdded:Boolean = false;
+			protected override function createChildren():void{
+				super.createChildren();
+				if(!_icAdded){
+					_icAdded = true;
+					if(_imageCrop)
+						cropperHolder.addChild(DisplayObject(_imageCrop));
+				}
+			}
+			
+			private function palletClosed(event:Event):void{
+				
+					PalletManager.closePallet(descriptionButton.pallet);
+				
+			}
+			private function defineListeners():void{
+			}
+			[Bindable]
+			[Inspectable]
+			public function get cropSizes():Array{return _cropSizes;}
+			public function set cropSizes(value:Array):void{
+				_cropSizes = value;
+				cpv.sizeDone = (_cropSizes && _cropSizes.length>0);
+				setSizeColor();
+			}
+			private function setSizeColor():void{
+				var disabledColors:Array = [0xFFFFFF,0xFFFFFF];
+				var setColors:Array = [this._setColor,this._setColor];
+				var unsetColors:Array = [this._unsetColor,this._unsetColor];
+				this.cropSizeColors = (cpv.size) ? (cpv.sizeDone) ? setColors : unsetColors : disabledColors;
+			}
+			public function get cropSize():ComboBox{
+				return this._cropSize;
+			}
+			
+			public var _cropSizes:Array;
+			private function setCropSize():void{
+				if(cropSize && cropSize.selectedItem){
+					imageCrop.setCropSize(cropSize.selectedItem.width,cropSize.selectedItem.height);
+				} else if (cropSizes && cropSizes.length>0) {
+					imageCrop.setCropSize(cropSizes[0].width,cropSizes[0].height);
+				}
+				cpv.sizeDone = true;
+				var disabledColors:Array = [0xFFFFFF,0xFFFFFF];
+				var setColors:Array = [this._setColor,this._setColor];
+				var unsetColors:Array = [this._unsetColor,this._unsetColor];
+				this.cropSizeColors = (cpv.size) ? (cpv.sizeDone) ? setColors : unsetColors : disabledColors;
+			}
+			private function cropSizeLabel(item:Object):String{
+				return item.width+" X "+item.height;
+			}
+			
+			[Bindable]
+			[Inspectable]
+			public function get process():IImageProcess{
+				return this._process;
+			}
+			private var _process:IImageProcess;
+			public function set process(value:IImageProcess):void{
+				if(this._process){
+					this.removeEventListener("selectStep",this._process.selectStep);
+					this.removeEventListener("cropStep",this._process.cropStep);
+					this.removeEventListener("thumbStep",this._process.thumbStep);
+					this.removeEventListener("loadStep",this._process.loadStep);
+					this.removeEventListener("saveStep",this._process.saveStep);
+					this.removeEventListener("resetStep",this._process.resetStep);
+				}
+				this._process = value;
+				if(this._process){
+					this._process.pallet = this;
+					this.addEventListener("selectStep",this._process.selectStep);
+					this.addEventListener("cropStep",this._process.cropStep);
+					this.addEventListener("thumbStep",this._process.thumbStep);
+					this.addEventListener("loadStep",this._process.loadStep);
+					this.addEventListener("saveStep",this._process.saveStep);
+					this.addEventListener("resetStep",this._process.resetStep);
+				}
+			}
+			
+			public function selectStep():void{
+				this.dispatchEvent(new Event("selectStep"));
+			}
+			
+			public function cropStep():void{
+				this.dispatchEvent(new Event("cropStep"));
+			}
+			
+			public function thumbStep():void{
+				this.dispatchEvent(new Event("thumbStep"));
+			}
+			
+			public function saveStep():void{
+				this.dispatchEvent(new Event("saveStep"));
+			}
+			public function loadStep():void{
+				this.dispatchEvent(new Event("loadStep"));
+			}
+			public function reset():void{
+				try{
+					this.dispatchEvent(new Event("resetStep"));
+					html = "";
+					alternate = "";
+					title = "";
+					imageCrop.loadPhoto("");
+					var fillColors:Array = [0xFFFFFF,0xFFFFFF];
+					this.selectColors = fillColors;
+					this.descriptionColors = fillColors;
+					this.cropSizeColors = fillColors;
+					this.cropColors = fillColors;
+					this.thumbColors = fillColors;
+					this.saveColors = fillColors;
+				} catch(e:Error){
+					
+				}
+			}
+			public function getView():CropPalletView{
+				return cpv;
+			}
+			private var cpv:CropPalletView = new CropPalletView();
+			public function setView(viewObject:CropPalletView):void{
+				cpv = viewObject;
+				var disabledColors:Array = [0xFFFFFF,0xFFFFFF];
+				var setColors:Array = [this._setColor,this._setColor];
+				var unsetColors:Array = [this._unsetColor,this._unsetColor];
+				this.selectEnabled = cpv.select;
+				this.descriptionEnabled = cpv.description;
+				this.cropSizeEnabled = cpv.size;
+				this.cropEnabled = cpv.crop;
+				this.thumbEnabled = cpv.thumb;
+				this.saveEnabled = cpv.save;
+				this.imageEnabled = cpv.image;	
+				this.selectColors = (cpv.select) ? (cpv.selectDone) ? setColors : unsetColors : disabledColors;
+				this.descriptionColors = (cpv.description) ? (cpv.descriptionDone) ? setColors : unsetColors : disabledColors;
+				this.cropSizeColors = (cpv.size) ? (cpv.sizeDone) ? setColors : unsetColors : disabledColors;
+				this.cropColors = (cpv.crop) ? (cpv.cropDone) ? setColors : unsetColors : disabledColors;
+				this.thumbColors = (cpv.thumb) ? (cpv.thumbDone) ? setColors : unsetColors : disabledColors;
+				this.saveColors = (cpv.save) ? (cpv.saveDone) ? setColors : unsetColors : disabledColors;
+			}
+			[Bindable]
+			private var selectColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var descriptionColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var cropSizeColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var cropColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var thumbColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var saveColors:Array = [0xFFFFFF,0xFFFFFF];
+			[Bindable]
+			private var selectEnabled:Boolean = false;
+			[Bindable]
+			private var descriptionEnabled:Boolean = false;
+			[Bindable]
+			private var cropSizeEnabled:Boolean = false;
+			[Bindable]
+			private var cropEnabled:Boolean = false;
+			[Bindable]
+			private var thumbEnabled:Boolean = false;
+			[Bindable]
+			private var saveEnabled:Boolean = false;
+			[Bindable]
+			private var imageEnabled:Boolean = false;
+			[Bindable]
+			public function get html():String{return _html;}
+			public function set html(value:String):void{
+				_html = value;
+				setDescriptionProps();
+			}
+			
+			[Bindable]
+			public function get title():String{return _title;}
+			public function set title(value:String):void{
+				_title = value;
+				setDescriptionProps();
+			}
+			
+			[Bindable]
+			public function get alternate():String{return _alt;}
+			public function set alternate(value:String):void{
+				_alt = value;
+				setDescriptionProps();
+			}
+			private function setDescriptionProps():void{
+				this.cpv.descriptionDone = (Boolean(_html)&&Boolean(_title)&&Boolean(_alt));
+				var disabledColors:Array = [0xFFFFFF,0xFFFFFF];
+				var setColors:Array = [this._setColor,this._setColor];
+				var unsetColors:Array = [this._unsetColor,this._unsetColor];
+				this.descriptionColors = (cpv.description) ? (cpv.descriptionDone) ? setColors : unsetColors : disabledColors;
+				
+			}
+			
+			private var _title:String = "";
+			private var _alt:String = "";
+			private var _html:String = "";
+			
+			public override function styleChanged(styleProp:String):void{
+				super.styleChanged(styleProp);
+				if(styleProp == "setColor" || styleProp == "unsetColor"){
+					stylesChanged = true;
+					 invalidateDisplayList();
+				}
+			}
+			private var stylesChanged:Boolean = false; 
+			private var _setColor:uint = 0x00FF00;
+			private var _unsetColor:uint = 0XFF0000;
+			private static var classConstructed:Boolean = classConstruct();
+			private static function classConstruct():Boolean{
+				if (!StyleManager.getStyleDeclaration("EditMediaPallet"))
+	            {
+	                // If there is no CSS definition for EditMediaPallet, 
+	                // then create one and set the default value.
+	                var myStyles:CSSStyleDeclaration = new CSSStyleDeclaration();
+	                myStyles.defaultFactory = function():void
+	                {
+	                    this.setColor = 0x00FF00;
+	                    this.unsetColor = 0XFF0000;
+	                }
+	                StyleManager.setStyleDeclaration("EditMediaPallet", myStyles, true);
+	
+	            }
+	            return true;
+
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

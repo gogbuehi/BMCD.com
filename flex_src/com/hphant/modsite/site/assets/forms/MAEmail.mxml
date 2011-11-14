@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas updateComplete="{drawMask();}" borderThickness="0" clipContent="true" styleName="emailForm" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:forms="com.hphant.modsite.site.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Accordion buttonMode="true" useHandCursor="true" backgroundAlpha="0" borderStyle="none" id="accordian" width="100%">
+		<mx:VBox label="Email Dealer" width="100%" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailDealerForm id="dealer" />
+		</mx:VBox>
+		<mx:VBox label="Email Freind" width="100%" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailFriendForm id="freind" />
+		</mx:VBox>
+	</mx:Accordion>
+	<mx:UIComponent id="accordianMask"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml){
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function drawMask():void{
+				var rc:Number = this.getStyle('cornerRadius');
+				var gr:Graphics = this.accordianMask.graphics;
+				gr.clear();
+				gr.beginFill(0x000000);
+				gr.drawRoundRect(0,0,this.width,this.height,rc*2,rc*2)
+				gr.endFill();
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

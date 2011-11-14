@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox implements="com.hphant.modsite.site.assets.interfaces.IMAsset" xmlns:mx="http://www.adobe.com/2006/mxml" id="content" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:states>
+		<mx:State name="showState">
+			<mx:SetProperty target="{content}" name="height"/>
+		</mx:State>
+		<mx:State name="hideState">
+			<mx:SetProperty target="{content}" name="height" value="{this.hideStateHeight}"/>
+		</mx:State>
+	</mx:states>
+	<mx:HBox id="titleBackground" horizontalAlign="center" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" click="this.cellClicked()">
+		<mx:Label id="title"/>
+	</mx:HBox>
+	<mx:VBox id="content"  verticalScrollPolicy="off" horizontalScrollPolicy="off" height="0" width="100%">
+		
+	</mx:VBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ItemClickEvent;
+			[Bindable]
+			private var hideStateHeight:Number = this.getStyle("cornerRadius");
+			
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					var css:Object = this._css.getStyle("MAAsset");
+					this.setStyle("corenerRadius",c.cornerRadius);
+					this.hideStateHeight = c.cornerRadius;
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml){
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			
+			public override function addChild(child:DisplayObject):DisplayObject{
+				return this.content.addDhild(child);
+			}
+			public override function addChildAt(child:DisplayObject, index:int):DisplayObject{
+				return this.content.addChildAt(child,index);
+			}
+			public override function removeChild(child:DisplayObject):DisplayObject{
+				return this.content.removeChild(child);
+			}
+			public override function removeChildAt(index:int):DisplayObject{
+				return this.content.removeChildAt(index);
+			}
+			public override function removeAllChildren():void{
+				this.content.removeAllChildren();
+			}
+			public override function get numChildren():int{
+				return this.content.numChildren;
+			}
+			
+			private function cellClicked():void{
+				this.dispatchEvent(new ItemClickEvent(ItemClickEvent.ITEM_CLICK));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

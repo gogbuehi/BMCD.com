@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<containers:Pallet xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0" label="Main Controlls" closeEnabled="false"
+	initialize="{defineListeners()}" creationComplete="{addEditPagePallet()}"
+    implements="com.hphant.remoting.IResponder"
+	xmlns:controlls="com.hphant.modsite.admin.controlls.*" 
+	xmlns:view="com.hphant.contentlibrary.view.*" 
+	xmlns:control="com.hphant.contentlibrary.control.*" 
+	xmlns:containers="com.hphant.components.containers.*" 
+	xmlns:buttons="com.hphant.components.buttons.*" xmlns:view1="com.hphant.data.view.*">
+	<buttons:PalletButton id="contentLibraryButton" label="Content Library" width="100%" palletClass="{com.hphant.contentlibrary.view.ContentPallet}"/>
+	<buttons:PalletButton id="dynamicDataButton" label="Dynamic Data" width="100%">
+   		<buttons:pallet>
+   			<view1:DynamicDataPallet />
+   		</buttons:pallet>
+   </buttons:PalletButton>
+	<!--<mx:Button label="Edit Page" width="100%" id="pageEdit" enabled="false" click="{pageEditClicked(event)}"/>-->
+	<buttons:PalletButton id="moduleTypesButton" label="Module Types" palletPosition="none" width="100%" enabled="false" palletLabel="Module Types">
+		<buttons:pallet>
+			<containers:Pallet height="400">
+				<controlls:ModuleList height="100%" id="moduleList" width="100%" data="{moduleListData}"/>
+			</containers:Pallet>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<buttons:PalletButton label="Exit Edit Module" width="100%" visible="false" height="0" id="moduleEdit" enabled="false" palletLabel="Edit Module">
+		<buttons:pallet>
+			<controlls:ModuleEditPallet creationComplete="{defineDeleteListener()}" id="moduleEditPallet" closeLabel="Exit" module="{this.module}" moduleContent="{this.moduleContent}"/>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	
+	<!--<buttons:PalletButton label="Link Generator" width="100%" visible="true" enabled="true" palletLabel="Link Generator" pallet="{linkPallet}">
+	</buttons:PalletButton>
+	-->
+	<!--<buttons:PalletButton label="Menu Links" width="100%" visible="true" palletLabel="Menu Links" pallet="{menuPallet}">	
+	</buttons:PalletButton>-->
+	<!--<buttons:PalletButton label="Exit Edit Data" width="100%" id="dataEdit" enabled="false" pallet="{dataEditPallet}">
+	</buttons:PalletButton>-->
+	<containers:bottomBar>
+		<mx:Canvas width="100%" height="0"/>
+	</containers:bottomBar>
+	<!--<mx:Button label="Delete Module" width="100%" id="moduleRemove" enabled="false" click="{moduleRemoveClicked(event)}"/>
+   -->
+	<mx:Metadata>
+		[Event(name="logout",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="pageEditClick",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="moduleRemoveClick",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="moduleEditClick",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="moduleAddClick",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="moduleChangeClick",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+		[Event(name="moduleTypeChange",type="com.hphant.modsite.admin.events.AdminControllEvent")]
+	</mx:Metadata>
+	<mx:Binding destination="pageEdit.enabled" source="editEnabled" /> 
+	<mx:Binding destination="pageEdit.head" source="head" />
+	<mx:Binding destination="pageEdit.pageEditMode" source="pageEditMode" />
+	<mx:Binding destination="moduleEdit.opened" source="moduleOpened" />
+	<mx:Binding destination="moduleTypesButton.enabled" source="typesEnabled" />
+	<mx:Binding destination="moduleTypesButton.opened" source="typesOpened" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.MenuTree;
+			import com.hphant.components.LinkGenerator;
+			import com.hphant.modsite.admin.model.HeadXML;
+			import mx.events.ResizeEvent;
+			import com.hphant.modsite.admin.controlls.PageEditPallet;
+			import com.hphant.data.view.BoutiquePallet;
+			import com.hphant.data.view.ModelInfoPallet;
+			import com.hphant.data.view.CalendarPallet;
+			import com.hphant.data.view.InventoryPallet;
+			import com.hphant.remoting.GeneralEvent;
+			import mx.events.FlexEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.modsite.site.modules.ModuleClassInfo;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.admin.model.ModuleContent;
+			import com.hphant.modsite.admin.controlls.ModuleEditPallet;
+			import com.hphant.contentlibrary.view.ContentPallet;
+			import mx.rpc.Fault;
+			import com.hphant.utils.Logger;
+
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.control.event.ContentLibraryEvent;
+			import mx.core.Application;
+			import com.hphant.modsite.admin.events.AdminControllEvent;
+			
+			[Bindable]
+			public var moduleListData:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var pageEdit:PageEditPallet = new PageEditPallet();/* 
+			[Bindable]
+			public var linkPallet:LinkGenerator = new LinkGenerator();
+			[Bindable]
+			public var menuPallet:MenuTreePallet = new MenuTreePallet(); */
+			private function addEditPagePallet():void{
+				PalletManager.openPallet(this.pageEdit);
+				this.pageEdit.addEventListener("editClicked",this.pageEditClicked);
+				this.pageEdit.addEventListener("exitClicked",this.pageEditClicked);
+				this.pageEdit.addEventListener("logoutClicked",this.logoutClicked);
+				this.pageEdit.addEventListener("accountClicked",this.accountClicked);
+				this.pageEdit.addEventListener(ResizeEvent.RESIZE,this.repositionPageEditPallet);
+				repositionPageEditPallet(null);
+				PalletManager.getInstance().warehouse.addEventListener(ResizeEvent.RESIZE,repositionPageEditPallet);
+			}
+			private function defineDeleteListener():void{
+				this.moduleEditPallet.addEventListener("deleteClick",this.moduleRemoveClicked);
+			}
+			private function removeEditPagePallet():void{
+				PalletManager.closePallet(this.pageEdit);
+				this.pageEdit.removeEventListener("editClicked",this.pageEditClicked);
+				this.pageEdit.removeEventListener("exitClicked",this.pageEditClicked);
+				this.pageEdit.removeEventListener("logoutClicked",this.logoutClicked);
+				this.pageEdit.removeEventListener("accountClicked",this.accountClicked);
+				this.pageEdit.removeEventListener(ResizeEvent.RESIZE,this.repositionPageEditPallet);
+				PalletManager.getInstance().warehouse.removeEventListener(ResizeEvent.RESIZE,repositionPageEditPallet);
+			}
+			
+			private function pageEditClicked(event:Event):void{
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.PAGE_EDIT_CLICK));
+			}
+			private function logoutClicked(event:Event):void{
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.LOGOUT));
+			}
+			private function accountClicked(event:Event):void{
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.ACCOUNT_CLICK));
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void 
+			{
+				log("Results received for "+(event) ? event.type: event);
+				log("\t"+result);
+			}
+			
+			public function handleFault(event:GeneralEvent, fault:Fault)	: void 
+			{
+				log("Results fault for "+(event) ? event.type : event,2);
+				log("\t"+fault.message,2);
+			}
+			public function dispatchCLEvent(type:String):void{
+				var event:ContentLibraryEvent = new ContentLibraryEvent(type);
+				event.responder = this;
+				event.dispatch();
+			}
+			public function dispatchCropEvent(type:String):void{
+				var event:CropEvent = new CropEvent(type);
+				event.responder = this;
+				event.dispatch();
+			}
+			public function dispatchImageEvent(type:String):void{
+				var event:ImageEvent = new ImageEvent(type);
+				event.responder = this;
+				event.dispatch();
+			}
+			private function moduleListFilter(item:ModuleClassInfo):Boolean{
+				return item.icon!=null;
+			}
+			private function moduleRemoveClicked(event:Event):void{
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_REMOVE_CLICK));
+				//this.currentState = "editPage";
+			}
+			private function moduleAddClicked(event:MouseEvent):void{
+				
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_ADD_CLICK));
+			}
+			/* private function moduleEditClicked(event:MouseEvent):void{
+				
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_EDIT_CLICK));
+			} */
+			private function contentButtonClicked(event:MouseEvent):void{
+				/* this.contentLibrary.visible = !this.contentLibrary.visible;
+				this.contentLibrary.enabled = !this.contentLibrary.enabled; */
+			}
+			private function moduleChangeClicked(event:MouseEvent):void{
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_CHANGE_CLICK));
+			}
+			private function moduleTypeChanged(event:MouseEvent):void{
+				
+				this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_TYPE_CHANGE));
+			}
+			
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet==this){
+					PalletManager.closePallet(contentLibraryButton.pallet);
+				} else if(event.pallet==this.moduleEdit.pallet){
+					this.dispatchEvent(new AdminControllEvent(AdminControllEvent.MODULE_EDIT_CLICK));
+				}
+			}
+			private function defineListeners():void{
+				
+				//this.addEventListener(ResizeEvent.RESIZE,repositionMenuLinkPallet);
+				//this.menuPallet.addEventListener(ResizeEvent.RESIZE,repositionMenuLinkPallet);
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,palletClosed);
+				this.moduleListData.filterFunction =  moduleListFilter;
+				this.moduleListData.refresh();
+				//linkPallet.addService();
+			}
+			private function repositionPageEditPallet(event:ResizeEvent):void{
+				this.pageEdit.y = 0;
+				this.pageEdit.x = PalletManager.getInstance().warehouse.width - this.pageEdit.width;
+			}
+			/* private function repositionMenuLinkPallet(event:ResizeEvent):void{
+				this.menuPallet.y = this.y+ this.height;
+				this.menuPallet.x = 0;
+			} */
+			
+			[Bindable]
+			public var head:HeadXML;
+			
+			[Bindable(event="moduleContentChanged")]
+			public function set moduleContent(value:ModuleContent):void{
+				this._moduleContent = value;
+				if(value && value.dataIDs && value.dataIDs.length>0){
+					dataEnabled = true;
+					PalletManager.closePallet(dataEditPallet);
+					/* switch(value.dataClass[0]){
+						case "Inventory":
+							if(!this._inventoryPallet){
+								this._inventoryPallet = new InventoryPallet();
+							}
+							this.dataEditPallet = this._inventoryPallet;
+						break;
+						case "Calendar":
+							if(!this._calendarPallet){
+								this._calendarPallet = new CalendarPallet();
+							}
+							this.dataEditPallet = this._calendarPallet;
+						break;
+						case "ModelInfo":
+							if(!this._modelInfoPallet){
+								this._modelInfoPallet = new ModelInfoPallet();
+							}
+							this.dataEditPallet = this._modelInfoPallet;
+						break;
+						case "Store":
+							if(!this._storePallet){
+								this._storePallet = new BoutiquePallet();
+							}
+							this.dataEditPallet = this._storePallet;
+						break;
+						default:
+							
+						break;
+					} */
+				}
+				
+				this.dispatchEvent(new Event("moduleContentChanged"));
+			}
+			public function get moduleContent():ModuleContent{
+				return this._moduleContent;
+			}
+			private var _moduleContent:ModuleContent;
+			[Bindable]
+			public var module:IModule;
+			
+			[Bindable]
+			private var dataEnabled:Boolean = false;
+			[Bindable]
+			private var dataEditPallet:Pallet;
+			[Bindable]
+			private var _inventoryPallet:InventoryPallet;
+			[Bindable]
+			private var _calendarPallet:CalendarPallet;
+			[Bindable]
+			private var _modelInfoPallet:ModelInfoPallet;
+			[Bindable]
+			private var _storePallet:BoutiquePallet;
+			
+			[Bindable]
+			private var editEnabled:Boolean = false;
+			[Bindable]
+			private var pageEditMode:Boolean = false;
+			[Bindable]
+			private var moduleOpened:Boolean = false;
+			[Bindable]
+			private var typesOpened:Boolean = false;
+			[Bindable]
+			private var typesEnabled:Boolean = false;
+			
+			public function setEditSite():void{
+				editEnabled = true;
+				pageEditMode = false;
+				moduleOpened = false;
+				typesEnabled = false;
+				typesOpened = false;
+			}
+			public function setEditPage():void{
+				editEnabled = true;
+				pageEditMode = true;
+				moduleOpened = false;
+				typesEnabled = true;
+				typesOpened = false;
+			}
+			public function setEditModule():void{
+				editEnabled = false;
+				pageEditMode = true;
+				moduleOpened = true;
+				typesEnabled = false;
+				typesOpened = false;
+			}
+			public function setEditData():void{
+				editEnabled = false;
+				pageEditMode = true;
+				moduleOpened = false;
+				typesEnabled = false;
+				typesOpened = false;
+			}
+		]]>
+	</mx:Script>
+</containers:Pallet>

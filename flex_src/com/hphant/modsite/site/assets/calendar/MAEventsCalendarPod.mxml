@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Accordion xmlns:mx="http://www.adobe.com/2006/mxml" width="984" 
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="0"
+		   resizeToContent="true"
+		   borderStyle="none">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.assets.calendar.events.CalendarMonthEvent;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			include "../interfaces/AssetIncludes.as";
+			private var selectedEvent:MACalendarEventPod;
+			private var monthList:XMLList;
+			private var addingIndex:uint = 0;
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml && this._css){
+					this.monthList = this._xml.(attribute("class")=="MAEventsCalendarPod").li.(attribute("class").toLowerCase()=="month");
+					this.addingIndex = 0;
+					this.addMonths();
+					this.applyMonthXML();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function applyMonthXML():void{
+				var e:MACalendarMonthCanvas = MACalendarMonthCanvas(this.getChildAt(this.addingIndex));
+				e.css = this._css;
+				e.xml = XMLList(this.monthList[this.addingIndex]);
+			}
+			private function addMonths():void{
+				
+				var nc:uint = this.numChildren;
+				for(var i:uint=0;i<this.monthList.length();i++){
+					if(i<nc){
+						//var e:MACalendarMonthCanvas = MACalendarMonthCanvas(this.getChildAt(i));
+						//e.xml = this.monthList[i];
+					} else {
+						this.addMonth();
+						//break;
+					}
+					if(this.monthList[i].@selected=="selected"){
+						this.selectedIndex = i;
+					}
+				}
+				if(nc>this.monthList.length()){
+					for(var j:uint=nc-1;j>=this.monthList.length();j--){
+						this.removeChildAt(j);
+					}
+				}
+			}
+			private function addMonth():void{
+				var e:MACalendarMonthCanvas = new MACalendarMonthCanvas();
+				
+				//e.css = this.css;
+				//e.xml = xml;
+				e.addEventListener(CalendarMonthEvent.MONTH_CREATED,this.monthCreated);
+				if(this.monthList[this.addingIndex].@selected=="selected"){
+				//	this.selectedIndex = this.addingIndex;
+				}
+				this.addChild(e);
+				
+			}
+			private function monthCreated(e:CalendarMonthEvent):void{
+				this.addingIndex++;
+				if(this.addingIndex<this.monthList.length()){
+					//this.addMonth(XMLList(this.monthList[this.addingIndex]));
+					this.applyMonthXML();
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</mx:Accordion>

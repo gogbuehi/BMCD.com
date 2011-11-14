@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox verticalScrollPolicy="off" height="30" horizontalScrollPolicy="off" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Canvas width="30" height="30" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundColor="#000000" >
+		<mx:Image source="{imageSource}" width="30" height="30" scaleContent="true" maintainAspectRatio="true" />
+		<mx:mask>
+			<mx:Canvas width="30" height="30" cornerRadius="3" borderStyle="solid" backgroundAlpha="1" />
+		</mx:mask>
+	</mx:Canvas>
+	<mx:Text width="100%" text="{itemName}" height="30" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.model.*;
+			private function dataHasChanged():void{
+				if(data is InventoryRecord){
+					imageSource = InventoryRecord(data).photoURL;
+					itemName = InventoryRecord(data).stockNumber+": "+InventoryRecord(data).make+" "+InventoryRecord(data).model;
+					url = InventoryRecord(data).url;
+				} else if(data is ModelRecord){
+					imageSource = ModelRecord(data).images.split(",")[0];
+					itemName = ModelRecord(data).make+" "+ModelRecord(data).model+" "+ModelRecord(data).submodel;
+					url = ModelRecord(data).url;
+				} else if(data is StoreRecord){
+					imageSource = StoreRecord(data).thumb;
+					itemName = StoreRecord(data).brand+" "+StoreRecord(data).title;
+					url = StoreRecord(data).url;
+				} else if(data is CalendarRecord){
+					imageSource = CalendarRecord(data).thumb;
+					itemName = CalendarRecord(data).title;
+					url = CalendarRecord(data).url;
+				} else {
+					imageSource = "";
+					itemName = "";
+					url = "";
+				}
+			}
+			[Bindable]
+			private var imageSource:String = "";
+			[Bindable]
+			private var itemName:String = "";
+			[Bindable]
+			public var url:String = "";
+		]]>
+	</mx:Script>
+</mx:HBox>

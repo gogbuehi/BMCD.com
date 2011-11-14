@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas rollOver="{this.rollOverFnction(event)}" rollOut="{this.rollOutFunction(event)}" xmlns:mx="http://www.adobe.com/2006/mxml" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	<mx:Image id="foreground" source="@Embed(source='foreground.swf')" >
+	</mx:Image>
+	<mx:Image source="{this.source}"  />
+	<mx:Object id="source"/>
+	<mx:Script>
+		<![CDATA[
+			private function rollOverFnction(event:MouseEvent):void{
+				var glow:GlowFilter = new GlowFilter(0xFFFFFF,.5);
+				this.filters = [glow];
+			}
+			private function rollOutFunction(event:MouseEvent):void{
+				this.filters = [];
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

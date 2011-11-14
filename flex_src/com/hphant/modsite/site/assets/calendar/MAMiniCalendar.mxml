@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	autoLayout="true" 
+	verticalScrollPolicy="off" 
+	horizontalScrollPolicy="off" 
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset">
+	<mx:Metadata>
+		[Event(name="loaded",type="com.dhmpire.Events.CalendarEvent")]
+		[Event(name="daySelect",type="com.dhmpire.Events.CalendarEvent")]
+		[Event(name="monthNext",type="com.dhmpire.Events.CalendarEvent")]
+		[Event(name="monthPrevious",type="com.dhmpire.Events.CalendarEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.dhmpire.Events.CalendarEvent;
+			import com.dhmpire.MiniCalendar;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			private var miniCal:MiniCalendar;
+			[Embed(source="embeds/arrowLeft.swf")]
+	        [Bindable]
+	        private var ArrowLeft:Class;
+	        [Embed(source="embeds/arrowRight.swf")]
+	        [Bindable]
+	        private var ArrowRight:Class;
+	        private var leftArrow:Sprite;
+	        private var rightArrow:Sprite;
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					if(!this.miniCal){
+						this.leftArrow = new ArrowLeft() as Sprite;
+						this.rightArrow = new ArrowRight() as Sprite;
+						this.miniCal = new MiniCalendar(this,{left:leftArrow,right:rightArrow});
+						this.miniCal.addEventListener(CalendarEvent.LOADED,this.dispatchCalendarEvent);
+						this.miniCal.addEventListener(CalendarEvent.DAY_SELECT,this.dispatchCalendarEvent);
+						this.miniCal.addEventListener(CalendarEvent.MONTH_NEXT,this.dispatchCalendarEvent);
+						this.miniCal.addEventListener(CalendarEvent.MONTH_PREVIOUS,this.dispatchCalendarEvent);
+					}
+					this.miniCal.xml = XML(this._xml);
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function dispatchCalendarEvent(e:CalendarEvent):void{
+				// Logger.log(e.toString());
+				this.dispatchEvent(new CalendarEvent(e.type,e.year,e.month,e.day,e.data));
+			}
+			
+			protected override function measure():void{
+				if(this.miniCal){
+					this.measuredHeight = this.miniCal.sprite.height;
+					this.measuredWidth = this.miniCal.sprite.width;
+				}
+				this.measuredMinHeight = this.measuredHeight;
+				this.measuredMinWidth = this.measuredWidth;
+			}
+			public override function get width():Number{
+				if(this.miniCal){
+					return this.miniCal.sprite.width;
+				} else {
+					return 0;
+				}
+			}
+			public override function get height():Number{
+				if(this.miniCal){
+					return this.miniCal.sprite.height;
+				} else {
+					return 0;
+				}
+			}
+			public function toMonth(year:Number,month:Number):void{
+				this.miniCal.toMonth(year,month);
+			} 
+		]]>
+	</mx:Script>
+</mx:Canvas>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	>
+	<!--
+	creationComplete="{this.value = 'v1.4 Test Image One Short Desc.'}"
+	-->
+	
+	<mx:Metadata>
+		[Event(name="valueChanged", type="com.adobe.cairngorm.control.CairngormEvent")] 
+	</mx:Metadata>
+   
+	<mx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEvent;
+			import mx.controls.Alert;
+
+
+			[Bindable]
+			public var valueMaxLength : int = 50;
+			
+			[Bindable]
+			private var _originalText:String = "";
+			
+		
+			public function set value(val:String):void
+			{
+				_originalText = val;
+				reset();
+			}
+			
+			private function commit():void
+			{
+				inputBox.horizontalScrollPosition = 0;
+				this.stringVal.validate();
+				this.saveBtn.enabled=false;
+				this.revertBtn.enabled=false;
+			}
+			
+			public function reset():void
+			{
+				inputBox.text = this._originalText;
+				commit();
+			}
+			
+			private function save():void
+			{
+				// 	Dispatch an UPDATE event here, with data=inputBox.text 
+				//Alert.show("New Value = " + inputBox.text, "Info");
+				var e : CairngormEvent = new CairngormEvent( "valueChanged" );
+				e.data = inputBox.text;
+				dispatchEvent( e );
+				
+				commit();
+			}
+			
+		]]>
+	</mx:Script>
+	
+	
+	<mx:StringValidator id="stringVal" source="{inputBox}" property="text" 
+		required="true"  
+    	tooShortError="This string is shorter than the minimum allowed length of 4." 
+    	tooLongError="This string is longer than the maximum allowed length of {valueMaxLength}." 
+    	minLength="4" maxLength="{valueMaxLength}"   
+    	trigger="{inputBox}" triggerEvent="change"  
+    	valid="{saveBtn.enabled=true,revertBtn.enabled=true}" 
+    	invalid="{saveBtn.enabled=false};" 
+    	/>
+    				
+	<mx:Form width="100%">
+		<mx:FormItem required="false" label="Description" fontWeight="bold" width="100%">
+			<mx:TextInput id="inputBox" width="100%" text="{_originalText}" fontWeight="normal"/>	
+		</mx:FormItem>
+		<mx:Spacer height="10"/>
+		<mx:HBox width="100%" horizontalAlign="center">
+      		<mx:Button id="revertBtn" label="Revert to Saved" enabled="false" click="reset();"/>
+        	<mx:Button id="saveBtn" label="Save Edited Description" enabled="false" click="save();"/>
+        </mx:HBox>
+	</mx:Form>
+        
+</mx:VBox>

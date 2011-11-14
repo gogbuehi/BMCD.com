@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" label="Edit Video" 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:imageCropper="com.hphant.components.imageCropper.*" xmlns:buttons="com.hphant.components.buttons.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<buttons:PalletButton id="createdImageButton" palletPosition="none" label="Created Video" enabled="false" palletClass="{ImageViewPallet}"/>
+		<mx:Button id="getImageBtn" click="{this.commitImage()}" label="Save Crop"/>
+		<mx:Button id="browsFiles" label="Select New Video" click="{cropperManager.uploadFileReference()}" />
+	</mx:VBox>
+	<imageCropper:VideoCropper id="imageCrop" creationComplete="{initManager()}" />
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.ImageCropperManager;
+			//import globals.ServerConfig;
+			import mx.graphics.codec.PNGEncoder;
+			import com.hphant.contentlibrary.view.ImageViewPallet;
+			import flash.net.URLLoader;
+			import flash.net.URLLoaderDataFormat;
+			import flash.net.URLRequest;
+			import flash.net.URLRequestHeader;
+			import flash.net.URLRequestMethod;
+			import com.hphant.utils.UploadPostHelper;
+			
+
+			private var cropperManager:ImageCropperManager;
+			private function initManager():void{
+				this.cropperManager = new ImageCropperManager();
+			}
+			private function cropperCallback(event:Event):void{
+				log(event);
+			}
+			
+			private function commitImage():void
+			{
+				this.imageCrop.commitCrop();
+			}
+		
+		
+		]]>
+	</mx:Script>
+</Pallet>

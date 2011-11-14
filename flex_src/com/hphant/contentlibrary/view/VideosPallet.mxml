@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" 
+		xmlns:mx="http://www.adobe.com/2006/mxml" data="{ContentModelLocator.getInstance().videos}" 
+		xmlns:buttons="com.hphant.components.buttons.*" implements="com.hphant.remoting.IResponder" added="{addRemoveEdditors()}"
+	    label="Videos" initialize="{defineListeners()}" xmlns:view="com.hphant.contentlibrary.view.*" xmlns:components="com.hphant.components.*">
+	<mx:DataGrid styleName="adminGrid" id="grid" rowHeight="70" rowCount="5" doubleClickEnabled="true" itemDoubleClick="{setEditVideo(event)}" change="{setSelectedMaster()}" dataChange="{gridDataChanged()}" width="100%" dataProvider="{data}" allowMultipleSelection="false" allowDragSelection="false">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Thumb" width="93">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Image source="{data.thumbnailLocation}" width="100%" height="100%" scaleContent="true"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Description" width="300">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Text htmlText="{data.description}" width="100%" height="100%"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Width" width="75" dataField="width"/>
+			<mx:DataGridColumn headerText="Height" width="75" dataField="height"/>
+			<!--<mx:DataGridColumn headerText="Size" width="75" />-->
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button id="removeButton" label="Delete Selected" enabled="false" click="{removeSelectedAlert(event)}"/>
+		<buttons:PalletButton id="editButton" click="{setEditVideo()}" pallet="{this.editImageCropper}"
+			label="Edit Master" enabled="false" palletPosition="none" palletLabel="Edit Master">
+		</buttons:PalletButton>
+		
+		<buttons:PalletButton id="viewerButton" label="Preview" palletPosition="none" palletLabel="Preview Video">
+			<buttons:pallet>
+				<Pallet id="viewer">
+					<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+					<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+					<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+						<mx:Image source="{viewer.data.thumbnailLocation}" autoLoad="true" />
+					</mx:Canvas>
+					<mx:Button label="{videoDisplay.playing ? 'Pause' : 'Play'}" click="{videoDisplay.playing ? videoDisplay.pause() : videoDisplay.play()}" width="100%"/>
+					</mx:VBox>
+					<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" borderStyle="solid" borderThickness="1" borderColor="#000000">
+						<mx:VideoDisplay id="videoDisplay" source="{viewer.data.location}" autoPlay="true" metadataReceived="{videoDisplay.pause()}"/>
+					</mx:Canvas>
+					</mx:HBox>
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton click="{getUploadedVideos()}" id="getUploadButton" label="Get Uploaded" palletPosition="none" palletLabel="Uploaded Videos">
+			<buttons:pallet>
+				<Pallet id="uploadPallet">
+					<mx:List id="videoUploadList" width="100%" rowCount="10" dataProvider="{ContentModelLocator.getInstance().uploadedVideos}" doubleClickEnabled="true" doubleClick="{createNewVideo()}" labelFunction="{nameLabel}"/>
+					<buttons:PalletButton label="Add Selected" pallet="{this.newImageCropper}"
+						palletPosition="none" enabled="{videoUploadList.selectedItem}" click="{createNewVideo()}">
+					</buttons:PalletButton>
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import mx.events.CloseEvent;
+			import com.hphant.contentlibrary.process.NewVideoProcess;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.contentlibrary.process.EditVideoProcess;
+			import com.hphant.components.FLVPlaybackFlexComp;
+			import com.hphant.contentlibrary.control.event.VideoEvent;
+			import com.hphant.components.events.PalletEvent;
+			import com.hphant.components.AlertPallet;
+			import mx.collections.ICollectionView;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.model.Video;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.process.NewMasterProcess;
+			import mx.controls.dataGridClasses.DataGridColumn;
+		
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			[Bindable]
+			private var editVideoProcess:EditVideoProcess = new EditVideoProcess();
+			[Bindable]
+			private var newVideoProcess:NewVideoProcess = new NewVideoProcess();
+			
+			[Bindable]
+			private var editImageCropper:EditVideoPallet = new EditVideoPallet();
+			[Bindable]
+			private var newImageCropper:EditVideoPallet = new EditVideoPallet();
+			
+			private function addRemoveEdditors():void{
+				/* PalletManager.openPallet(editImageCropper);
+				PalletManager.openPallet(newImageCropper);
+				PalletManager.closePallet(editImageCropper);
+				PalletManager.closePallet(newImageCropper); */
+			}
+			
+			[Bindable]
+			private var uploadList:ArrayCollection;
+			
+			private var getAllMasters:VideoEvent;
+			private function nameLabel(item:Object, column:DataGridColumn=null):String{
+				var split:Array = String(column ? item[column.dataField] : item).split("/");
+				return String(split[split.length-1]);
+			}
+			private function getUploadedVideos():void{
+				var event:VideoEvent = new VideoEvent(VideoEvent.GET_UPLOADED_FILES);
+				//event.responder = this;
+				event.dispatch(); 
+			}
+			private function createNewVideo():void{
+				if(this.videoUploadList.selectedItem){
+					var vid:com.hphant.contentlibrary.model.Video = new com.hphant.contentlibrary.model.Video();
+					vid.location = String(this.videoUploadList.selectedItem);
+					newImageCropper.data = vid;
+					newImageCropper.html = "";
+				}
+			}
+			private function startVideoDisplay():void{
+				if(videoDisplay.playing && viewer.data){
+					videoDisplay.play();
+				} else {
+					videoDisplay.pause();
+				}
+			}
+			private function setEditVideo(event:Event=null):void{
+				if(event){
+					PalletManager.openPallet(editImageCropper);
+				} 
+				editImageCropper.data = this.grid.selectedItem;
+				editImageCropper.html = com.hphant.contentlibrary.model.Video(this.grid.selectedItem).description;
+			}
+			private function removeSelectedMaster(event:CloseEvent):void{
+				if(event.detail==AlertPallet.YES){
+					log("Removing "+this.grid.selectedItem);
+					if(this.grid.selectedItem){
+						var removeMaster:VideoEvent = new VideoEvent(VideoEvent.REMOVE_VIDEO);
+						removeMaster.data = this.grid.selectedItem;
+						removeMaster.responder = this;
+						removeMaster.dispatch();
+					}
+				}
+			}
+			private function removeSelectedAlert(event:Event):void{
+				AlertPallet.show("Are you sure that you want to remove the selected video?",
+									 "Confirm Removal",
+									 AlertPallet.YES|AlertPallet.NO,
+									 AlertPallet.NO,
+									 removeSelectedMaster);
+			}
+			private function loadPreview():void{
+				if(this.grid.selectedItem){
+					log("loading preview of "+this.grid.selectedItem.location);
+					this.viewer.data = this.grid.selectedItem;
+				}
+			}
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet==this){
+					PalletManager.closePallet(editButton.pallet);
+					PalletManager.closePallet(viewerButton.pallet);
+					this.resetButtuns();
+				} else if(event.pallet==viewer){
+					if(videoDisplay.playing)
+						videoDisplay.stop();
+				}
+			}
+			
+			private function defineListeners():void{
+					this.editImageCropper.process = this.editVideoProcess;
+					this.newImageCropper.process = this.newVideoProcess;
+					this.editImageCropper.data = new com.hphant.contentlibrary.model.Video();
+					this.newImageCropper.data = new com.hphant.contentlibrary.model.Video();
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,palletClosed);
+				ContentModelLocator.getInstance().addEventListener("videosChanged",this.videosChanged);
+				editVideoProcess.addEventListener(Event.COMPLETE,updateMasterList);
+				newVideoProcess.addEventListener(Event.COMPLETE,updateMasterList);
+			}
+			private function updateMasterList(event:Event=null):void{
+				getAllMasters = new VideoEvent(VideoEvent.GET_ALL_VIDEOS);
+				getAllMasters.responder = this;
+				getAllMasters.dispatch();
+			}
+			private function setSelectedMaster():void{
+				loadPreview();
+				this.removeButton.enabled = true;
+				this.editButton.enabled = true;
+			}
+			private function resetButtuns():void{
+				this.removeButton.enabled = false;
+				this.editButton.enabled = false;
+			}
+			private function gridDataChanged():void{
+				if(grid.selectedIndex==-1){
+					resetButtuns();
+				}
+			}
+			public function videosChanged(event:Event):void{
+				
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				switch(event.type){
+					 case VideoEvent.GET_ALL_VIDEOS:
+						getUploadedVideos();
+					break; 
+					case VideoEvent.UPDATE_VIDEO:
+					case VideoEvent.ADD_VIDEO:
+					case VideoEvent.REMOVE_VIDEO:
+						updateMasterList();
+					break;
+					/* case VideoEvent.GET_UPLOADED_FILES:
+						var a:Array = result as Array;
+						var t:String = a.join(",");
+						for each (var vid:com.hphant.contentlibrary.model.Video in ContentModelLocator.getInstance().videos){
+							t = t.split(vid.location).join("").split(",,").join(",");
+						}
+						this.uploadList = new ArrayCollection(t.split(","));
+					break; */
+					default:
+						log("Service Result type = "+event.type);
+					break;
+				}
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

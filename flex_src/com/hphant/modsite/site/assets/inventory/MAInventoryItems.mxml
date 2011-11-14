@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:system="com.hphant.modsite.system.*"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	backgroundAlpha="0"
+	creationComplete="{this.creationCompleted()}"
+	verticalScrollPolicy="off"
+	horizontalScrollPolicy="off" 
+	horizontalAlign="center">
+	<system:ViewStateController id="viewStateController_in"/>
+	<system:ViewStateController id="viewStateController_out" reverse="true"/>
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script source="../interfaces/AssetIncludes.as"/>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * Imports
+			 **/
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.system.events.ViewStateChangeEvent;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import com.hphant.modsite.data.inventory.BMCDInventoryItemData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import mx.events.FlexEvent;
+			import mx.core.UIComponent;
+		    import flash.events.Event;
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * Variables
+			 **/
+			private var completeCount:uint = 0;
+			private var newItems:Array;
+			private var addedItems:Array;
+			private var addableItems:Array;
+			private var createdItems:Array;
+			public var _doBuildout:Boolean;
+			[Inspectable]
+			[Bindable]
+			public function get doBuildout():Boolean{
+				return this._doBuildout;
+			}
+			public function set doBuildout(value:Boolean):void{
+				var dbo:Boolean = this._doBuildout;
+				this._doBuildout = value;
+				if(!dbo && value && this.addedItems.length==this.newItems.length && this.addedItems.length==this.createdItems.length){
+					log("Calling the viewStateController from doBuildout.");
+					this.viewStateController_in.start();
+					this.viewStateController_out.start();
+				}
+			}
+			[Bindable("selectedIndexChanged")]
+			public function get selectedIndex():int{
+				return this._selectedIndex;
+			}
+			public function set selectedIndex(index:int):void{
+				if(this._selectedIndex != index){
+					var item:MAInventoryItem;
+					if(this._selectedIndex > -1 && this.numChildren > this._selectedIndex){
+						item = MAInventoryItem(this.getChildAt(this._selectedIndex));
+						item.content.currentState = "opened";
+						if(item!=this.expandedItem){
+							this.expandedItem.content.currentState = "opened";
+						}
+						this.expandedItem = null;
+					}
+					this._selectedIndex = index;
+					if(this._selectedIndex > -1 && this.numChildren > this._selectedIndex){
+						item = MAInventoryItem(this.getChildAt(this._selectedIndex));
+						item.content.currentState = "expanded";
+						if(item!=this.expandedItem){
+							this.expandedItem = item;
+						}
+					} else {
+						this._selectedIndex = -1;
+					}
+					this.dispatchEvent(new Event("selectedIndexChanged"));
+				}	
+			}
+			private var _selectedIndex:int = -1;
+			
+		
+			public function get selectedItem():MAInventoryItem{
+				return this.expandedItem;
+			}
+		
+			[Bindable]
+			private var itemList:XMLList;
+			private var isCreated:Boolean = false;
+			private var buildData:Object = new Object();
+			private var bottomIndex:int = -1;
+			private var itemsChanged:Boolean = false;
+			private var itemsAdded:Boolean;
+			private var itemsRemoved:Boolean;
+			private var itemAdder:Timer = new Timer(250);
+			private var addList:Array = new Array();
+			[Inspectable]
+			[Bindable]
+			public function get dataProvider():Array{return this._dataProvider;}
+			public function set dataProvider(value:Array):void{
+				this.newItems = new Array();
+				this.addedItems = new Array();
+				this.createdItems = new Array();
+				this.viewStateController_in.clear();
+				this.viewStateController_out.clear();
+				this.completeCount = 0;
+				this.itemsAdded = false;
+				this.itemsRemoved = false;
+				this.doBuildout = false;
+				this._dataProvider = value;
+				this.setDataItems();
+			}
+			private var _dataProvider:Array;
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * creationComplete functions
+			 **/
+			private function setViewStateListeners():void{
+				this.viewStateController_in.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.allNewItemsAdded);
+				this.viewStateController_out.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.allOldItemsRemoved);
+			}
+			private function creationCompleted():void{
+				this.setViewStateListeners();
+				this.isCreated = true;
+				this.invalidateProperties();
+			}
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * View state change functions
+			 **/
+			private function setNewItemListeners(item:IMAsset):void{
+				this.itemsChanged = true;
+				this.newItems.push(item);
+				var d:UIComponent = UIComponent(item);
+				d.addEventListener(Event.ADDED_TO_STAGE,this.removeAddItemListener);
+				d.addEventListener(FlexEvent.CREATION_COMPLETE,this.removeCreatedItemListener);
+			}
+			private function setOldItemListeners(item:IMAsset):void{
+				this.itemsChanged = true;
+				this.viewStateController_out.addItem(UIComponent(item));
+				var d:UIComponent = UIComponent(item);
+				d.addEventListener(ViewStateChangeEvent.CHANGE_COMPLETE,this.removeEnterStateItemListener);
+			}
+			private function removeEnterStateItemListener(e:ViewStateChangeEvent):void{
+				var d:UIComponent = UIComponent(e.currentTarget);
+					d.removeEventListener(FlexEvent.ENTER_STATE,this.removeEnterStateItemListener);
+					if(d.parent){
+						d.parent.removeChild(d);
+					}
+			}
+			private function removeAddItemListener(e:Event):void{
+				DisplayObject(e.currentTarget).removeEventListener(Event.ADDED_TO_STAGE,this.removeAddItemListener);
+				this.addedItems.push(e.currentTarget);
+				if(this.addedItems.length==this.newItems.length && this.addedItems.length==this.createdItems.length){
+					if(this.doBuildout){
+						log("Calling the viewStateController from removeAddItemListener : "+e.target);
+						this.viewStateController_in.start();
+						this.viewStateController_out.start();
+					} else {
+						this.dispatchEvent(new ViewStateChangeEvent('AllAdded'+ViewStateChangeEvent.STATE_REACHED,0));
+					}
+				}
+				
+			}
+			private function removeCreatedItemListener(e:FlexEvent):void{
+				DisplayObject(e.currentTarget).removeEventListener(FlexEvent.CREATION_COMPLETE,this.removeCreatedItemListener);
+				this.createdItems.push(e.currentTarget);
+				if(this.addedItems.length==this.newItems.length && this.addedItems.length==this.createdItems.length){
+					if(this.doBuildout){
+						log("Calling the viewStateController from removeCreatedItemListener : "+e.target);
+						this.viewStateController_in.start();
+						this.viewStateController_out.start();
+					} else {
+						this.dispatchEvent(new ViewStateChangeEvent('AllAdded'+ViewStateChangeEvent.STATE_REACHED,0));
+					}
+				}
+			}
+			private function allNewItemsAdded(e:ViewStateChangeEvent):void{
+				this.itemsAdded=true;
+				this.enablePage();
+			}
+			private function allOldItemsRemoved(e:ViewStateChangeEvent):void{
+				this.itemsRemoved = true;
+				this.enablePage();
+			}
+			private function enablePage():void{
+				this.completeCount++;
+				if(this.itemsAdded && this.itemsRemoved && this.completeCount==2){
+				 	this.dispatchTransitionCompleted();
+				 	this.dispatchEvent(new ViewStateChangeEvent('Special'+ViewStateChangeEvent.CHANGE_COMPLETE,0));
+				}
+			}
+			private function colapseEvent(e:MAListItemEvent):void{
+				
+				MAInventoryItem(e.currentTarget).content.currentState = "opened";
+			}
+			private var expandedItem:MAInventoryItem;
+			private function expandEvent(e:MAListItemEvent):void{
+				if(expandedItem){
+					expandedItem.content.currentState = "opened";
+				}
+				MAInventoryItem(e.currentTarget).content.currentState = "expanded";
+				expandedItem = MAInventoryItem(e.currentTarget);
+				this._selectedIndex = this.getChildIndex(expandedItem);
+				this.dispatchEvent(new MAListItemEvent(MAListItemEvent.EXPAND_CLICK,e.item));
+			}
+			private function linkClickEvent(e:MALinkClickEvent):void{
+				this.dispatchEvent(new MALinkClickEvent(e.type,e.item));
+			}
+			private function emailSendEvent(e:MAFormEvent):void{
+				this.dispatchEvent(new MAFormEvent(e.type,e.formData));
+			}
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * List change functions
+			 **/
+			private function setDataItems():void{
+				if(this.dataProvider && this.dataProvider.length>0){
+					this.bottomIndex = -1;
+					this.itemsChanged = false;
+					var k:uint = 0;
+					for each (var item:BMCDInventoryItemData in this.dataProvider){
+						log(k+" : "+item);
+						k = this.setDataItem(k,item);
+						k++;
+					}
+					if(!this.itemsChanged){
+						this.itemsAdded = this.itemsRemoved = true;
+						if(this.dataProvider.length==this.numChildren){
+							log("No Items needed to be changed");
+							this.enablePage();
+						} else {
+							for(var i:uint = this.dataProvider.length;i<this.numChildren;i++){
+								var asst:IMAsset = IMAsset(this.getChildAt(i));
+								this.setOldItemListeners(asst);
+							}
+							this.viewStateController_out.start();
+						}
+					}
+				} else {
+					for each (var m:DisplayObject in this.getChildren()){
+						this.setOldItemListeners(IMAsset(m));
+					}
+					log("Calling the viewStateController from setDataItems.");
+					this.viewStateController_in.start();
+					this.viewStateController_out.start();
+				}
+			}
+			private function setDataItem(index:uint,data:BMCDInventoryItemData):uint{
+				var i_:uint = index;
+				var notfound:Boolean = false;
+				
+				if(i_==this.numChildren){
+					var m:IMAsset = buildItem();
+					this.viewStateController_in.addItem(UIComponent(m));
+					this.setNewItemListeners(m);
+					//this.addList.push({mod:m,idx:++this.bottomIndex});
+					this.addChildAt(DisplayObject(m),++this.bottomIndex);
+					setItemData(m,data);
+					return i_;
+				}
+				for(var i:uint = index;i<this.numChildren;i++){
+					var asst:IMAsset = IMAsset(this.getChildAt(i));
+					if(!asst.xml || xml.attribute("class")==asst.xml.attribute("class")){
+						setItemData(asst,data);
+						this.bottomIndex = i;
+						return i;
+					} else {
+						this.setOldItemListeners(asst);
+					}
+					i_ = i+1;
+				}
+				return i_;
+			}
+			private function setItemData(item:Object,data:BMCDInventoryItemData):void{
+				item.data = data;
+			}
+			private function buildItem(e:Event=null):MAInventoryItem{
+				var ma:MAInventoryItem;
+					ma =	new MAInventoryItem();
+					ma.addEventListener(MAListItemEvent.COLAPSE_CLICK,colapseEvent);
+					ma.addEventListener(MAListItemEvent.EXPAND_CLICK,expandEvent);
+					ma.addEventListener(MAFormEvent.SEND_EMAIL,emailSendEvent);
+					ma.addEventListener(MALinkClickEvent.LINK_CLICKED,linkClickEvent);
+					ma.styleName = (this.numChildren/2==Math.round(this.numChildren/2)) ? "oddItemInventory" : "evenItemInventory";
+					ma.hRuleStyleName = (this.numChildren/2==Math.round(this.numChildren/2)) ? "oddItemInventory" : "evenItemInventory";
+					ma.suggestionsStyleName = (this.numChildren/2==Math.round(this.numChildren/2)) ? "evenItemInventory" : "oddItemInventory";
+					return ma;
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

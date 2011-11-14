@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:system="com.hphant.modsite.system.*"
+	implements="mx.collections.IList"
+	backgroundAlpha="0"
+	verticalScrollPolicy="off"
+	horizontalScrollPolicy="off" >
+    <mx:Metadata>
+		[Event(name="resizeBegin",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			/*
+			 * Imports
+			 **/
+		    import mx.events.PropertyChangeEvent;
+		    import mx.controls.listClasses.IListItemRenderer;
+			import com.hphant.renderers.ExpandableItemRenderer;
+			import mx.collections.IList;
+			import com.hphant.renderers.IVListItemRenderer;
+			import mx.effects.EffectManager;
+			import mx.controls.Button;
+			import mx.controls.List;
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			[Inspectable]
+			[Bindable]
+			public function get dataProvider():IList{return this._dataProvider;}
+			public function set dataProvider(value:IList):void{
+				//this.selectedIndex = -1;
+				if(value){
+					this._positionReverse = false;
+					if(!this._dataProvider){
+						this._items = new Array();
+						this._renderers = new Dictionary();
+					}
+					for(var i:int=0;i<value.length;i++){
+						this.setItemAt(value[i],i);
+					}
+					while(this._items.length>value.length){
+						this.removeItemAt(this._items.length-1);
+					}
+				} else if(this._dataProvider){
+					
+					this.removeAll();
+				}
+				this._dataProvider = value;
+			}
+			private var _dataProvider:IList;
+		]]>
+	</mx:Script>
+	<mx:String id="oddStyleName">oddItem</mx:String>
+	<mx:String id="evenStyleName">evenItem</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.BrowserScrollManager;
+			import mx.events.MoveEvent;
+			import mx.events.ResizeEvent;
+			import mx.collections.ArrayCollection;
+			import mx.automation.IAutomationObject;
+			import mx.core.ScrollPolicy;
+			import mx.core.IUIComponent;
+			import mx.controls.scrollClasses.ScrollBar;
+			import mx.core.EdgeMetrics;
+			import mx.core.Container;
+			import mx.managers.LayoutManager;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.utils.Logger;
+			import mx.core.UIComponent;
+			
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			
+			
+			
+			private function addEventListeners(value:IListItemRenderer):void{
+				value.addEventListener(MAListEvent.RESIZE_BEGIN,this.handleMAListEvent);
+				value.addEventListener(MoveEvent.MOVE,this.handleItemMove);
+				value.addEventListener(MAListEvent.RESIZE_COMPLETE,this.handleMAListEvent);
+				value.addEventListener(MAListItemEvent.EXPAND_CLICK,this.handleMAListItemEvent);
+				value.addEventListener(MAListItemEvent.COLAPSE_CLICK,this.handleMAListItemEvent);
+				value.addEventListener(MALinkClickEvent.LINK_CLICKED,this.handleMALinkClickEvent);
+				value.addEventListener(MAFormEvent.SEND_EMAIL,this.handleMAFormEvent);
+			}
+			private function handleItemMove(event:MoveEvent):void{
+				if(event.currentTarget==this._renderers[this.selectedItem]){
+					var dy:Number = event.currentTarget.y - event.oldY;
+					BrowserScrollManager.getInstance().setVScrollPosition(BrowserScrollManager.getInstance().vertical+dy);
+				}
+			}
+			private function handleMAListItemEvent(event:MAListItemEvent):void{
+				log(event.type+" | "+event.currentTarget);
+				this.dispatchEvent(new MAListItemEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			private var _resizeCount:uint = 0;
+			private function handleMAListEvent(event:MAListEvent):void{
+				this._resizeCount = (event.type==MAListEvent.RESIZE_BEGIN) ? this._resizeCount+1 : (event.type==MAListEvent.RESIZE_COMPLETE) ? this._resizeCount-1 : this._resizeCount;
+				if((event.type==MAListEvent.RESIZE_BEGIN && this._resizeCount == 1) || (event.type==MAListEvent.RESIZE_COMPLETE && this._resizeCount==0)){
+					this._numItems = (event.type==MAListEvent.RESIZE_COMPLETE) ? (this.dataProvider) ? this.dataProvider.length : 0 : this._numItems;
+					this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable));
+				}
+				if(event.type==MAListEvent.RESIZE_COMPLETE && this._resizeCount==0){
+					this.selectedIndex = this.selectedIndex;
+				}
+			}
+			private function handleMALinkClickEvent(event:MALinkClickEvent):void{
+				this.dispatchEvent(new MALinkClickEvent(event.type,event.item,event.bubbles,event.cancelable));
+			}
+			private function handleMAFormEvent(event:MAFormEvent):void{
+				this.dispatchEvent(new MAFormEvent(event.type,event.formData,event.bubbles,event.cancelable));
+			}
+			private var _selectedItemChanged:Boolean;
+			private var _selectedItem:Object;
+			private var _prevItem:Object = null;
+			public function set selectedItem(value:Object):void{
+				//if(this._selectedItem != value){
+					this.selectedIndex = this.getItemIndex(value);
+				//}
+			}
+			public function get selectedItem():Object{
+				return this.getItemAt(this.selectedIndex);
+			}
+			
+			private var _selectedIndex:int = -1;
+			private var _selectedIndexChanged:Boolean = false;
+			public function get selectedIndex():int{
+				return this._selectedIndex;
+			}
+			public function set selectedIndex(value:int):void{
+				this._selectedIndex = value;
+				this._selectedIndexChanged = true;
+				this.invalidateProperties();
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._selectedIndexChanged && this._dataProvider && this._dataProvider.length>0){
+					log("selectedIndex = "+this.selectedIndex);
+					var eir:UIComponent=UIComponent(this.getItemRenderer(this.selectedItem));
+					if(eir){
+						log(eir+".currentState="+eir.currentState);
+					} else {
+						//log("No itemRenderer found at "+this.selectedIndex);
+					}
+					
+					for each (var ir:UIComponent in this._openRenderers){
+						if(ir && ir!=eir){
+							ir.currentState = "colapsed";
+							this._openRenderers.removeItemAt(this._openRenderers.getItemIndex(ir));
+						}
+					}
+					if(eir){
+						eir.currentState = "expanded";
+						this._openRenderers.addItem(eir);
+					}
+					
+					this._selectedIndexChanged = true;
+				}
+			}
+			private var _items:Array = new Array();
+			private var _openRenderers:ArrayCollection = new ArrayCollection();
+			public function get length():int{return this._items.length}
+			
+			private var _factory:IFactory = new ClassFactory(com.hphant.renderers.ExpandableItemRenderer);
+			
+			[Inspectable]
+			public function get itemRenderer():Object{return this._factory;}
+			public function set itemRenderer(value:Object):void{
+				if(value is String){
+					this._factory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._factory = IFactory(value);
+				} else if(value is Class){
+					this._factory = new ClassFactory(Class(value));
+				}
+			}
+			private function getRendererInstance():IVListItemRenderer{
+				var obj:IVListItemRenderer = IVListItemRenderer(this._factory.newInstance());
+				return obj;
+			}
+			private function initItem(item:Object,index:int):IVListItemRenderer{
+				var obj:IVListItemRenderer = getRendererInstance();
+				obj.styleName = (index/2==Math.round(index/2)) ? this.oddStyleName : this.evenStyleName;
+				obj.hRuleStyleName = (index/2==Math.round(index/2)) ? this.oddStyleName : this.evenStyleName;
+				obj.suggestionsStyleName = (index/2==Math.round(index/2)) ? this.evenStyleName : this.oddStyleName;
+				obj.data = item;
+				addEventListeners(obj);
+				this._renderers[item] = obj;
+				return obj;
+			}
+			public function addItem(item:Object):void{
+				this.addChild(DisplayObject(this.initItem(item,this.length)));
+				this._items.push(item);
+				this._numItems = this._items.length;
+			}
+			public function addItemAt(item:Object,index:int):void{
+				if(index>=0&&index<this._items.length){
+					var obj:IVListItemRenderer = this.initItem(item,index);
+					this._items.splice(index,0,item);
+					this.addChildAt(DisplayObject(obj),index);
+				} else if(index>=this._items.length){
+					this.addItem(item);
+				}
+			}
+			public function getItemAt(index:int,prefetch:int=0):Object{
+				return (index>=0&&index<this._items.length) ? this._items[index] : null;
+			}
+			public function getItemRenderer(item:Object):IVListItemRenderer{
+				return IVListItemRenderer(this._renderers[item]);
+			}
+			public function getItemIndex(item:Object):int{
+				for(var i:uint=0;i<this._items.length;i++){
+					if(this._items[i]==item){
+						return i;
+					}
+				}
+				return -1;
+			}
+			public function itemUpdated(item:Object, property:Object = null, oldValue:Object = null, newValue:Object = null):void{
+				this.dispatchEvent(new PropertyChangeEvent(PropertyChangeEvent.PROPERTY_CHANGE,false,false,null,property,oldValue,newValue,item));
+			}
+			private var _renderers:Dictionary = new Dictionary(true);
+			public function removeAll():void{
+				/* var itms:Array = this._items.concat([]);
+				itms.reverse();
+				
+				for(var i:int=0;i<itms.length;i++){
+					this.setItemAt(itms[i],i);
+					IVListItemRenderer(this._renderers[itms[i]]).suggestionsStyleName = ((itms.length-i-1)/2==Math.round((itms.length-i-1)/2)) ? this.evenStyleName : this.oddStyleName;
+					IVListItemRenderer(this._renderers[itms[i]]).styleName = ((itms.length-i-1)/2==Math.round((itms.length-i-1)/2)) ? this.oddStyleName : this.evenStyleName;
+					IVListItemRenderer(this._renderers[itms[i]]).hRuleStyleName = ((itms.length-i-1)/2==Math.round((itms.length-i-1)/2)) ? this.oddStyleName : this.evenStyleName;
+				} */
+				this._positionReverse = true;
+				this.removeAllChildren();
+				this._items = new Array();
+			}
+			public function removeItemAt(index:int):Object{
+				if(index>=0&&index<this._items.length){
+					var item:Object = this._items[index];
+					this._renderers[item]=null;
+					this._items.splice(index,1);
+					this.removeChildAt(index);
+					return item;
+				}
+				return null;
+			}
+			public function setItemAt(item:Object, index:int):Object{
+				if(index>=0&&index<this._items.length){
+					var obj:IVListItemRenderer = IVListItemRenderer(this.getChildAt(index));
+					this._renderers[obj.data] = null;
+					obj.styleName = (index/2==Math.round(index/2)) ? this.oddStyleName : this.evenStyleName;
+					obj.hRuleStyleName = (index/2==Math.round(index/2)) ? this.oddStyleName : this.evenStyleName;
+					obj.suggestionsStyleName = (index/2==Math.round(index/2)) ? this.evenStyleName : this.oddStyleName;
+					obj.data = item;
+					this._renderers[item] = obj;
+					this._items[index] = item;
+					return item;
+				} else if(index>=this._items.length){
+					this.addItem(item);
+					return item;
+				}
+				return null;
+			}	
+			public function toArray():Array{
+				return this._items;
+			}
+			public override function addChildAt(child:DisplayObject, index:int):DisplayObject{
+				
+				if(index>numChildren){
+					return super.addChildAt(child,numChildren);
+				} else {
+					return super.addChildAt(child,index);
+				}
+			}
+			private function log(message:Object,level:int=0):void{
+				Logger.log("[Vlist "+this+"] "+message,level);
+			}
+			private var _positionReverse:Boolean = false;
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				var target:Container = this;
+				var n:int = target.numChildren;
+				if (n == 0)
+					return;
+		
+				var vm:EdgeMetrics = target.viewMetricsAndPadding;
+				var paddingLeft:Number = target.getStyle("paddingLeft");
+				var paddingTop:Number = target.getStyle("paddingTop");
+				var horizontalAlign:Number = .5;//getHorizontalAlignValue();
+				var verticalAlign:Number = 0;//getVerticalAlignValue();
+				var mw:Number = target.scaleX > 0 && target.scaleX != 1 ?
+								target.minWidth / Math.abs(target.scaleX) :
+								target.minWidth;
+				var mh:Number = target.scaleY > 0 && target.scaleY != 1 ?
+								target.minHeight / Math.abs(target.scaleY) :
+								target.minHeight;
+				var w:Number = Math.max(unscaledWidth, mw) - vm.right - vm.left;
+				var h:Number = Math.max(unscaledHeight, mh) - vm.bottom - vm.top;
+				var horizontalScrollBar:ScrollBar = target.horizontalScrollBar;
+				var verticalScrollBar:ScrollBar = target.verticalScrollBar;
+				var gap:Number;
+				var numChildrenWithOwnSpace:int;
+				var excessSpace:Number;
+				var top:Number;
+				var left:Number;
+				var i:int;
+				var obj:IUIComponent;
+				
+				gap = target.getStyle("verticalGap");
+
+				numChildrenWithOwnSpace = n;
+				for (i = 0; i < n; i++)
+				{
+					if (!IUIComponent(target.getChildAt(i)).includeInLayout)
+						numChildrenWithOwnSpace--;
+				}
+				// Stretch everything as needed, including widths.
+				excessSpace =0;
+	
+				// Ignore scrollbar sizes for child alignment purpose.
+				if (horizontalScrollBar != null &&
+					target.horizontalScrollPolicy == ScrollPolicy.AUTO)
+				{
+					excessSpace += horizontalScrollBar.minHeight;
+				}
+				if (verticalScrollBar != null &&
+					target.verticalScrollPolicy == ScrollPolicy.AUTO)
+				{
+					w += verticalScrollBar.minWidth;
+				}
+	
+				top = paddingTop + excessSpace * verticalAlign;
+				if(this._positionReverse){
+						
+					for (i = n-1; i >= 0; i--)
+					{
+						obj = IUIComponent(target.getChildAt(i));
+						left = (w - obj.width) * horizontalAlign + paddingLeft;
+						obj.move(Math.floor(left), Math.floor(top));
+						if (obj.includeInLayout){
+							top += obj.height + gap;
+						}
+					}
+				} else {
+					
+					for (i = 0; i < n; i++)
+					{
+						obj = IUIComponent(target.getChildAt(i));
+						left = (w - obj.width) * horizontalAlign + paddingLeft;
+						obj.move(Math.floor(left), Math.floor(top));
+						if (obj.includeInLayout)
+							top += obj.height + gap;
+					}
+				}
+				obj = IUIComponent(target.getChildAt(0));
+			}
+			private var _numItems:int = 0;
+			private var _prevMeasureH:Number = 0;
+			private var _prevMeasureW:Number = 0;
+			private var _prevMeasureMinH:Number = 0;
+			private var _prevMeasureMinW:Number = 0;
+			override protected function measure():void
+			{
+				super.measure();
+				var target:Container = this;
+		
+				var isVertical:Boolean = true;
+		
+				var minWidth:Number = 0;
+				var minHeight:Number = 0;
+		
+				var preferredWidth:Number = 0;
+				var preferredHeight:Number = 0;
+				
+				var ir:ExpandableItemRenderer = ExpandableItemRenderer(ClassFactory(this.itemRenderer).newInstance());
+				ir.transitions = null;
+		
+				var n:int = this.numChildren;
+				var numChildrenWithOwnSpace:int = n;
+				for (var i:int = 0; i < n; i++)
+				{
+					var child:IUIComponent;
+					
+					child = IUIComponent(target.getChildAt(i));
+					if (!child.includeInLayout)
+					{
+						numChildrenWithOwnSpace--;
+						continue;
+					}
+		
+					var wPref:Number = child.getExplicitOrMeasuredWidth();
+					var hPref:Number = child.getExplicitOrMeasuredHeight();
+		
+					if (isVertical)
+					{
+						minWidth = Math.max(!isNaN(child.percentWidth) ?
+							child.minWidth : wPref, minWidth);
+		
+						preferredWidth = Math.max(wPref, preferredWidth);
+		
+						minHeight += !isNaN(child.percentHeight) ?
+							child.minHeight : hPref;
+		
+						preferredHeight += hPref;
+		
+					}
+					else
+					{
+						minWidth += !isNaN(child.percentWidth) ?
+							child.minWidth : wPref;
+		
+						preferredWidth += wPref;
+		
+						minHeight = Math.max(!isNaN(child.percentHeight) ?
+							child.minHeight : hPref, minHeight);
+		
+						preferredHeight = Math.max(hPref, preferredHeight);
+		
+					}
+				}
+		
+				var wPadding:Number = widthPadding(numChildrenWithOwnSpace);
+				var hPadding:Number = heightPadding(numChildrenWithOwnSpace);
+				if(this._numItems<=this.numChildren){
+					target.measuredMinWidth = minWidth + wPadding;
+					target.measuredMinHeight = minHeight + hPadding;
+					target.measuredWidth = preferredWidth + wPadding;
+					target.measuredHeight = preferredHeight + hPadding;
+					_prevMeasureH = target.measuredHeight;
+					_prevMeasureW = target.measuredWidth;
+					_prevMeasureMinH = target.measuredMinHeight;
+					_prevMeasureMinW = target.measuredMinWidth;
+				} else {
+					target.measuredMinWidth = _prevMeasureMinW;
+					target.measuredMinHeight = _prevMeasureMinH;
+					target.measuredWidth = _prevMeasureW;
+					target.measuredHeight = _prevMeasureH;
+				}
+			}
+			
+			private function widthPadding(numC:Number):Number
+			{
+				var vm:EdgeMetrics = this.viewMetricsAndPadding;
+				var padding:Number = vm.left + vm.right;
+		
+				if (numC > 1 && false)
+				{
+					padding += this.getStyle("horizontalGap") *
+							   (numC - 1);
+				}
+		
+				return padding;
+			}
+		
+			private function heightPadding(numC:Number):Number
+			{
+				var vm:EdgeMetrics = this.viewMetricsAndPadding;
+				var padding:Number = vm.top + vm.bottom;
+		
+				if (numC > 1 && true)
+				{
+					padding += this.getStyle("verticalGap") *
+							   (numC - 1);
+				}
+		
+				return padding;
+			}
+			
+		]]>
+	</mx:Script>
+</mx:Canvas>

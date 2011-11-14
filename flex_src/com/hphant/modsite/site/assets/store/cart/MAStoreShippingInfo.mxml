@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{this.applyBillingInfo()}" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center">
+<mx:Label id="title" styleName="cartTitle" text="Shipping Address:"/>
+		
+	
+	
+<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+<mx:HBox width="100%" id="checkBoxes" paddingLeft="10" horizontalGap="25" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off">
+		<mx:CheckBox id="useBillTo" change="{applyBillingInfo()}" labelPlacement="right" label="Use Billing"/>
+		<mx:CheckBox id="usePickup" labelPlacement="right" label="Hold for Pickup"/>
+	</mx:HBox>
+	<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:Label id="firstNameLabel" text="First Name:" width="50%" textAlign="left"/>
+				<mx:Label id="lastNameLabel" text="Last Name:" width="50%" textAlign="left"/>
+			</mx:HBox>
+			<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:TextInput id="firstNameInput" width="50%"/>
+				<mx:TextInput id="lastNameInput" width="50%"/>
+			</mx:HBox>
+	</mx:VBox>
+	<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:Label id="addressLabel1" text="Address:" width="100%" textAlign="left"/>
+			<mx:TextInput id="addressInput1" width="100%"/>
+	</mx:VBox>
+			<mx:TextInput id="addressInput2" width="100%"/>
+	<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:Canvas width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:Label id="cityLabel" text="City:" x="{cityInput.x}" textAlign="left"/>
+				<mx:Label id="stateLabel" text="State:" x="{stateInput.x}" width="10%" textAlign="left"/>
+				<mx:Label id="zipLabel" text=" ZIP:" x="{zipInput.x}" width="20%" textAlign="left"/>
+			</mx:Canvas>
+			<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:TextInput id="cityInput" width="70%"/>
+				<mx:ComboBox id="stateInput" width="10%" selectedIndex="0" dataProvider="{this.stateAbr}" />
+				<mx:TextInput id="zipInput" width="20%"/>
+			</mx:HBox>
+	</mx:VBox>
+	<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:Label id="prefPhoneLabel" text="Phone 1:" width="100%" textAlign="left"/>
+			<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:ComboBox id="prefPhoneType" dataProvider="{this.phoneTypes}" selectedIndex="0"/>
+				<mx:TextInput id="prefPhoneInput" width="100%" change="{phoneNumberChange(event)}"/>
+			</mx:HBox>
+	</mx:VBox>
+	<!--<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:Label id="secdPhoneLabel" text="Phone 2:" width="20%" textAlign="left" visible="false" enabled="false"/>
+			<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" visible="false" enabled="false">
+				<mx:ComboBox id="secdPhoneType" dataProvider="{this.phoneTypes}" selectedIndex="0"/>
+				<mx:TextInput id="secdPhoneInput" width="100%" change="{phoneNumberChange(event)}"/>
+			</mx:HBox>
+	</mx:VBox>
+	<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-2">
+			<mx:Label id="emailLabel" text="Email:" width="100%" textAlign="left"/>
+			<mx:TextInput id="emailInput" width="100%"/>
+	</mx:VBox>
+	
+	<mx:Text styleName="disclaimer" id="contactDisclaimer" width="100%" textAlign="center">
+		<mx:text>Shipping status updates and acception notice will be sent here.</mx:text>
+	</mx:Text>-->
+	</mx:VBox>
+	<!--<mx:Boolean id="isEmailValid">false</mx:Boolean>
+	<mx:EmailValidator id="emailValidator"
+					    source="{this.emailInput}"
+					    property="text"
+					    requiredFieldError="Please provide a valid Email."
+					    required="true"
+					    valid="{this.isEmailValid=true}"/>-->
+	<mx:Boolean id="isZipValid">false</mx:Boolean>
+	<mx:ZipCodeValidator id="zipValidator"
+					    source="{this.zipInput}"
+					    property="text"
+					    requiredFieldError="Please provide a ZIP code."
+					    required="true"
+					    domain="US Only"
+					    valid="{this.isZipValid=true}"/>
+	<mx:Boolean id="isStateValid">false</mx:Boolean>
+	<mx:NumberValidator id="stateValidator"
+					    source="{this.stateInput}"
+					    requiredFieldError="Please select a State."
+					    lowerThanMinError="Please select a State."
+					    property="selectedIndex"
+					    required="true"
+					    domain="int"
+					    minValue="1"
+					    valid="{this.isStateValid=true}"/>
+	<mx:Boolean id="isPhone1TypeValid">false</mx:Boolean>
+	<mx:NumberValidator id="phone1TypeValidator"
+					    source="{this.prefPhoneType}"
+					    requiredFieldError="Please specify the phone type."
+					    lowerThanMinError="Please specify the phone type."
+					    property="selectedIndex"
+					    domain="int"
+					    minValue="1"
+					    valid="{this.isPhone1TypeValid=true}"/>
+	<mx:Boolean id="isPhone1Valid">false</mx:Boolean>
+	<mx:PhoneNumberValidator id="phone1Validator"
+					    source="{this.prefPhoneInput}"
+					    property="text"
+					    requiredFieldError="Please provide a phone number."
+					    required="true"
+					    valid="{this.isPhone1Valid=true}"/>
+	<mx:Boolean id="isCityValid">false</mx:Boolean>
+	<mx:Validator id="cityValidator"
+					    source="{this.cityInput}"
+					    property="text"
+					    requiredFieldError="Please provide a city name."
+					    required="true"
+					    valid="{this.isCityValid=true}"/>
+	<mx:Boolean id="isAddressValid">false</mx:Boolean>
+	<mx:Validator id="addressValidator"
+					    source="{this.addressInput1}"
+					    property="text"
+					    requiredFieldError="Please provide a street address."
+					    required="true"
+					    valid="{this.isAddressValid=true}"/>
+	<mx:Boolean id="isLastNameValid">false</mx:Boolean>
+	<mx:Validator id="lastNameValidator"
+					    source="{this.lastNameInput}"
+					    property="text"
+					    requiredFieldError="Please provide a last name."
+					    required="true"
+					    valid="{this.isLastNameValid=true}"/>
+	<mx:Boolean id="isFirstNameValid">false</mx:Boolean>
+	<mx:Validator id="firstNameValidator"
+					    source="{this.firstNameInput}"
+					    property="text"
+					    requiredFieldError="Please provide a first name."
+					    required="true"
+					    valid="{this.isFirstNameValid=true}"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.formatters.PhoneFormatter;
+			import mx.validators.Validator;
+			public function validateForm():Boolean{
+				this.addressValidator.validate();
+				this.cityValidator.validate();
+				this.firstNameValidator.validate();
+				this.lastNameValidator.validate();
+				this.stateValidator.validate();
+				this.zipValidator.validate();
+				this.phone1Validator.validate();
+				this.phone1TypeValidator.validate();
+				this.addressValidator.validate();
+				return (this.isAddressValid && 
+						this.isCityValid && 
+						this.isFirstNameValid && 
+						this.isLastNameValid && 
+						this.isPhone1TypeValid &&
+						this.isStateValid &&
+						this.isZipValid);
+			}
+			private function applyBillingInfo():void{
+				if(this.data && this.useBillTo.selected){
+				this.addressInput1.text = data.addressInput1.text;
+				this.addressInput2.text = data.addressInput2.text;
+				this.firstNameInput.text = data.firstNameInput.text;
+				this.lastNameInput.text = data.lastNameInput.text;
+				this.stateInput.selectedIndex = data.stateInput.selectedIndex;
+				this.cityInput.text = data.cityInput.text;
+				this.zipInput.text = data.zipInput.text;
+				this.prefPhoneInput.text = data.prefPhoneInput.text;
+				this.prefPhoneType.selectedIndex = data.prefPhoneType.selectedIndex;
+				}
+			}
+			public function get infoData():Object{
+				
+				var obj:Object = {address1:this.addressInput1.text,
+								  address2:this.addressInput2.text,
+								  firstName:this.firstNameInput.text,
+								  lastName:this.lastNameInput.text,
+								  state:this.stateInput.selectedItem,
+								  city:this.cityInput.text,
+								  zip:this.zipInput.text,
+								  phone:this.correctFormatChars(this.prefPhoneInput.text,phone1Validator.allowedFormatChars),
+								  phoneType:this.prefPhoneType.selectedItem,
+								  useBilling:this.useBillTo.selected,
+								  pickup:this.usePickup.selected};
+				return obj;
+			}
+			private function phoneNumberChange(event:Event):void{
+				TextInput(event.currentTarget).text = this.correctFormatChars(TextInput(event.currentTarget).text,phone1Validator.allowedFormatChars);
+				
+			}
+			private function correctFormatChars(string:String,chars:String):String{
+				var newString:String = string;
+				var pf:PhoneFormatter = new PhoneFormatter();
+				for(var i:int = 0; i < chars.length; i++){
+					newString = newString.split(chars.charAt(i)).join("");
+				}
+				var f:String = pf.format(newString);
+				return (f!="") ? f : string;
+			}
+			public function clear():void{
+				this.addressInput1.text = "";
+				this.addressInput2.text = "";
+				this.firstNameInput.text = "";
+				this.lastNameInput.text = "";
+				this.stateInput.selectedIndex = 0;
+				this.cityInput.text = "";
+				this.zipInput.text = "";
+				this.prefPhoneInput.text = "";
+				this.prefPhoneType.selectedIndex = 0;
+				this.useBillTo.selected = false;
+				this.usePickup.selected = false;
+			}
+		]]>
+	</mx:Script>
+	<mx:Array id="phoneTypes">
+		<mx:String>Type</mx:String>
+		<mx:String>Cell</mx:String>
+		<mx:String>Home</mx:String>
+		<mx:String>Work</mx:String>
+		<mx:String>Other</mx:String>
+	</mx:Array>
+	<mx:Array id="stateAbr">
+		<mx:String>--</mx:String>
+		<mx:String>AL</mx:String>
+		<mx:String>AK</mx:String>
+		<mx:String>AS</mx:String>
+		<mx:String>AZ</mx:String>
+		<mx:String>AR</mx:String>
+		<mx:String>CA</mx:String>
+		<mx:String>CO</mx:String>
+		<mx:String>CT</mx:String>
+		<mx:String>DE</mx:String>
+		<mx:String>DC</mx:String>
+		<mx:String>FM</mx:String>
+		<mx:String>FL</mx:String>
+		<mx:String>GA</mx:String>
+		<mx:String>GU</mx:String>
+		<mx:String>HI</mx:String>
+		<mx:String>ID</mx:String>
+		<mx:String>IL</mx:String>
+		<mx:String>IN</mx:String>
+		<mx:String>IA</mx:String>
+		<mx:String>KS</mx:String>
+		<mx:String>KY</mx:String>
+		<mx:String>LA</mx:String>
+		<mx:String>ME</mx:String>
+		<mx:String>MH</mx:String>
+		<mx:String>MD</mx:String>
+		<mx:String>MA</mx:String>
+		<mx:String>MI</mx:String>
+		<mx:String>MN</mx:String>
+		<mx:String>MS</mx:String>
+		<mx:String>MO</mx:String>
+		<mx:String>MT</mx:String>
+		<mx:String>NE</mx:String>
+		<mx:String>NV</mx:String>
+		<mx:String>NH</mx:String>
+		<mx:String>NJ</mx:String>
+		<mx:String>NM</mx:String>
+		<mx:String>NY</mx:String>
+		<mx:String>NC</mx:String>
+		<mx:String>ND</mx:String>
+		<mx:String>MP</mx:String>
+		<mx:String>OH</mx:String>
+		<mx:String>OK</mx:String>
+		<mx:String>OR</mx:String>
+		<mx:String>PW</mx:String>
+		<mx:String>PA</mx:String>
+		<mx:String>PR</mx:String>
+		<mx:String>RI</mx:String>
+		<mx:String>SC</mx:String>
+		<mx:String>SD</mx:String>
+		<mx:String>TN</mx:String>
+		<mx:String>TX</mx:String>
+		<mx:String>UT</mx:String>
+		<mx:String>VT</mx:String>
+		<mx:String>VI</mx:String>
+		<mx:String>VA</mx:String>
+		<mx:String>WA</mx:String>
+		<mx:String>WV</mx:String>
+		<mx:String>WI</mx:String>
+		<mx:String>WY</mx:String>
+	</mx:Array>
+</mx:VBox>

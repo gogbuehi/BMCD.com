@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns="com.hphant.modsite.site.modules.*" 
+	       xmlns:mx="http://www.adobe.com/2006/mxml" 
+	       visible="false"
+	       mouseMove="{repositionToolTip()}"
+	       updateComplete="{creationCompleted()}"
+	       xmlns:text="com.hphant.modsite.site.assets.text.*" clipContent="false"
+	       autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" implements="com.hphant.modsite.site.modules.interfaces.IModule" 
+	       width="0" height="0" xmlns:menu="com.hphant.modsite.site.assets.menu.*" currentState="state0" xmlns:text1="flash.text.*">
+	       <menu:MALinkBarSubmenu data="{selSub}" visible="false"  y="{this.subY}" xml="{this.subXML}"  styleName="headerSubMenu" creationComplete="{this.subMenu.addEventListener(MALinkClickEvent.LINK_CLICKED,this.menuCick)}" moveEffect="{this.subMove}" id="subMenu" x="15" width="{this.width-this.getStyle('cornerRadius')*2}"/>
+	       <mx:Canvas mask="{bgImageMask}" id="bgImage" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="{this.width}" height="{this.height}">
+	       		<mx:Image toolTipShow="{repositionToolTip()}" x="{ol_thisckness}" y="{ol_thisckness}"  id="bgBase" source="@Embed(source='embeds/999headerbackground_base.png')" />
+	       		<mx:Image toolTipShow="{repositionToolTip()}" x="{ol_thisckness}" y="{ol_thisckness}" id="bgGlass" source="@Embed(source='embeds/999headerbackground_glass.swf')" />
+	       </mx:Canvas>
+	       <mx:Canvas id="bgImageMask" styleName="headerMask"  width="{this.width-ol_thisckness*2}" height="{this.height-ol_thisckness*2}" x="{ol_thisckness}" y="{ol_thisckness}" />
+	       <mx:Canvas id="bgOutline"  x="0" y="0" width="{this.width}" height="{this.height}" borderColor="{this.ol_color}" borderThickness="{ol_thisckness}" backgroundAlpha="0" borderStyle="solid" cornerRadius="{corner}"/>
+	       <mx:VBox width="100%" height="100%">
+	       <mx:HBox id="logoHolder" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" paddingTop="4" paddingLeft="4" paddingRight="8">
+	       		
+	       		<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-28">
+		       		<mx:HBox id="textHolder" width="100%" maxHeight="100" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			       		<mx:VBox id="makeText" alpha="0" width="150" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-10">
+			       			<text:MAText id="lamboText" width="100%" styleName="headerTitle"/>
+			       			<text:MAText id="lotusText" width="100%" styleName="headerTitle"/>
+			       			<text:MAText id="bentlyText" width="100%" styleName="headerTitle"/>
+			       		</mx:VBox>
+			       		<mx:VBox id="titleHolder" width="100%" paddingTop="5" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-20">
+				       		<text:MAText id="title" styleName="headerTitleLarge" width="100%" alpha="0" />
+			       			<text:MAText id="subtitle" styleName="headerSubTitle" width="100%" alpha="0" />
+		       			</mx:VBox>
+		       			<mx:VBox id="addressHolder" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-8">
+		       				<text:MAText id="phone" styleName="headerPhone" textAlign="right" width="300" insertBreaks="false"/>
+		       				<text:MAText id="address" styleName="headerAddress" textAlign="right" width="300" alpha="0" insertBreaks="false"/>
+		       			</mx:VBox>
+		       		</mx:HBox>
+	       			<mx:HBox id="menuHolder" styleName="headerMenuHolder" height="65" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+			       	   
+			       	   <menu:MAHeaderMenu addedEffect="{menuFade}" click="{this.menuCick(event)}" mouseOver="{this.menuMouseOver(event)}" id="mainMenu" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" >
+			       	   	<menu:moveEffect>
+			       	   		<mx:Move />
+			       	   	</menu:moveEffect>
+			       	   </menu:MAHeaderMenu>
+				       <mx:Image toolTipShow="{repositionToolTip()}" id="bentlyLogo" width="101" height="50" alpha="0" click="{this.logoClicked(event)}" autoLoad="true" buttonMode="true"/>
+				       <mx:Image toolTipShow="{repositionToolTip()}" id="lotusLogo" width="65" height="65" alpha="0" click="{this.logoClicked(event)}" autoLoad="true" buttonMode="true"/>
+				       <mx:Image toolTipShow="{repositionToolTip()}" id="lamboLogo" width="60" height="63" alpha="0" click="{this.logoClicked(event)}" autoLoad="true" buttonMode="true"/>
+				    </mx:HBox>
+	       		</mx:VBox>
+	       </mx:HBox>
+	       
+		   </mx:VBox>
+	       <menu:MAVerticleSubMenu rollOut="{this.huvMenu.visible=false}"  visible="false" hideEffect="{this.huvFade}" showEffect="{this.huvFade}" x="144.6" y="102" creationComplete="{this.huvMenu.addEventListener(MALinkClickEvent.LINK_CLICKED,this.menuCick)}" id="huvMenu" width="50"/>
+		   <mx:Move id="huvMove" target="{this.huvMenu}"/>
+		   <mx:Move id="subMove"/>
+		   <mx:Fade id="huvFade"/>
+		   <mx:Fade id="menuFade"/>
+	       
+		   <mx:states>
+		   		<mx:State name="state0">
+		   			<mx:RemoveChild target="{title}"/>
+		   			<mx:RemoveChild target="{subtitle}"/>
+		   			<mx:RemoveChild target="{address}"/>
+		   			<mx:RemoveChild target="{bentlyLogo}"/>
+		   			<mx:RemoveChild target="{lotusLogo}"/>
+		   			<mx:RemoveChild target="{lamboLogo}"/>
+		   			<mx:RemoveChild target="{mainMenu}"/>
+		   			<mx:RemoveChild target="{huvMenu}"/>
+		   			<mx:RemoveChild target="{subMenu}"/>
+		   			<mx:RemoveChild target="{phone}"/>
+		   			<mx:SetProperty target="{this}" name="visible" value="true"/>
+		   		</mx:State>
+		   		<mx:State name="state1" basedOn="state0">
+		   			<mx:SetProperty target="{this}" name="height" value="138"/>
+		   			<mx:SetProperty target="{this}" name="width" value="984"/>
+		   		</mx:State>
+		   		<mx:State name="state2" basedOn="state1">
+		   			<mx:SetProperty target="{subMenu}" value="true" name="visible"/>
+		   			<mx:AddChild target="{mainMenu}" relativeTo="{menuHolder}" position="1"/>
+		   		</mx:State>
+		   		<mx:State name="state3" basedOn="state2">
+		   			<mx:AddChild target="{title}" relativeTo="{titleHolder}"/>
+		   			<mx:AddChild target="{subtitle}" relativeTo="{titleHolder}"/>
+		   			<mx:AddChild target="{phone}" relativeTo="{addressHolder}" position="firstChild"/>
+		   			<mx:AddChild target="{address}" relativeTo="{addressHolder}" position="lastChild"/>
+		   		</mx:State>
+		   		<mx:State name="state4" basedOn="state3">
+		   			<mx:AddChild target="{bentlyLogo}" relativeTo="{menuHolder}"/>
+		   			<mx:AddChild target="{lotusLogo}" relativeTo="{menuHolder}"/>
+		   			<mx:AddChild target="{lamboLogo}" relativeTo="{menuHolder}" position="lastChild"/>
+		   			<mx:AddChild target="{huvMenu}"/>
+		   			<mx:AddChild target="{subMenu}" position="firstChild"/>
+		   			<!--<mx:SetProperty target="{subMenu}" name="y" value="80"/>-->
+		   		</mx:State>
+		   		</mx:states>
+		   <mx:transitions>
+		   		<mx:Transition fromState="*" toState="state1">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+						<mx:Resize target="{this}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state1" toState="state2">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:AddChildAction target="{bentlyLogo}"/>
+		   				<mx:AddChildAction target="{lotusLogo}"/>
+		   				<mx:AddChildAction target="{lamboLogo}"/>
+		   				<mx:Parallel>
+		   					<mx:Fade target="{bentlyLogo}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{lotusLogo}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{lamboLogo}" alphaFrom="0" alphaTo="1"/>
+		   				</mx:Parallel>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state2" toState="state3">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:AddChildAction target="{title}"/>
+		   				<mx:AddChildAction target="{subtitle}"/>
+		   				<mx:AddChildAction target="{address}"/>
+		   				<mx:AddChildAction target="{phone}"/>
+		   				<mx:Parallel>
+		   					<mx:Fade target="{title}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{subtitle}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{address}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{phone}" alphaFrom="0" alphaTo="1"/>
+		   					<mx:Fade target="{makeText}" alphaFrom="0" alphaTo="1"/>
+		   				</mx:Parallel>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state3" toState="state4">
+		   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+		   				<mx:AddChildAction target="{mainMenu}"/>
+		   				<mx:AddChildAction target="{huvMenu}"/>
+		   				<mx:AddChildAction target="{subMenu}"/>
+		   				<mx:SetPropertyAction target="{subMenu}"/>
+		   				<mx:Pause duration="500" suspendBackgroundProcessing="false"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state4" toState="state3">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:RemoveChildAction target="{mainMenu}"/>
+		   				<mx:RemoveChildAction target="{huvMenu}"/>
+		   				<mx:RemoveChildAction target="{subMenu}"/>
+		   				<mx:SetPropertyAction target="{subMenu}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state3" toState="state2">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:Parallel>
+		   					<mx:Fade target="{title}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{subtitle}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{address}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{phone}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{makeText}" alphaFrom="1" alphaTo="0"/>
+		   				</mx:Parallel>
+		   				<mx:RemoveChildAction target="{title}"/>
+		   				<mx:RemoveChildAction target="{subtitle}"/>
+		   				<mx:RemoveChildAction target="{address}"/>
+		   				<mx:RemoveChildAction target="{phone}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state2" toState="state1">
+		   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+		   				<mx:Parallel>
+		   					<mx:Fade target="{bentlyLogo}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{lotusLogo}" alphaFrom="1" alphaTo="0"/>
+		   					<mx:Fade target="{lamboLogo}" alphaFrom="1" alphaTo="0"/>
+		   				</mx:Parallel>
+		   				<mx:RemoveChildAction target="{bentlyLogo}"/>
+		   				<mx:RemoveChildAction target="{lotusLogo}"/>
+		   				<mx:RemoveChildAction target="{lamboLogo}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   		<mx:Transition fromState="state1" toState="state0">
+		   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+		   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+						<mx:Resize target="{this}"/>
+		   			</mx:Sequence>
+		   		</mx:Transition>
+		   </mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.URLUtil;
+			import mx.core.Application;
+			import com.hphant.utils.XMLUtility;
+			import mx.managers.ToolTipManager;
+			import mx.core.IToolTip;
+			import mx.effects.easing.Back;
+			import mx.controls.Button;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.style.CSSInstance;
+		    include "interfaces/ModuleIncludes.as";
+			import mx.core.UIComponent;
+			
+			private function repositionToolTip():void{
+				var p:Point = new Point(this.mouseX,this.mouseY);
+				p = this.localToGlobal(p);
+				var tt:IToolTip = ToolTipManager.currentToolTip;
+				if(tt){
+					tt.x = p.x;
+					tt.y = p.y - tt.height;
+				}
+			}
+			
+			private function creationCompleted():void{
+				var cr:Number = this.getStyle('cornerRadius');
+				this.subMenu.width = this.width-cr*2;
+				this.subMenu.x = cr;
+				corner = cr;
+				ol_thisckness = this.getStyle('borderThickness')
+				ol_color = this.getStyle('borderColor')
+			}
+			[Bindable]
+			private var subY:Number = 1;
+			[Bindable]
+			private var selSub:XML;
+			[Bindable]
+			private var subXML:XMLList;
+			[Bindable]
+			private var ol_color:uint = 0x000000;
+			[Bindable]
+			private var ol_thisckness:Number = 1;
+			[Bindable]
+			private var corner:Number = 0;
+			/* protected override function styleChanged
+				ol_color = this.getStyle('backgroundColor');
+				ol_thisckness = this.getStyle('borderThickness');
+			} */
+		    protected override function commitProperties():void{
+				if(this.xmlChanged){
+					this.mainMenu.xml = this._xml.ul.(attribute("class")=="MAHeaderMenu");
+					var selectedFound:Boolean = false;
+					try{
+						for each(var liNode:XML in this.mainMenu.xml.li){
+							//if(liNode.@selected=="selected"){
+							if(this.uriManager.current.indexOf(String(liNode.a.@href).replace("http://"+URLUtil.getServerName(Application.application.url),""))==0){
+								for each(var subli:XML in liNode.ul.li){
+									if(this.uriManager.current.indexOf(String(subli.a.@href).replace("http://"+URLUtil.getServerName(Application.application.url),""))==0){
+										selSub = subli;
+										if(subMenu){
+											subMenu.data = subli;
+										}
+									}
+								}
+								subXML = liNode.ul;
+								selectedFound = true;
+							}
+						}
+					} catch (e:Error){
+						log("Unable to locate a selected section");
+					}
+					if(!selectedFound){
+						subXML = null;
+					}
+					if(subXML && subXML.length()>0){
+						subY = 70;
+					} else {
+						subY = 1;
+					}
+					XMLUtility.insertBlankNode(this._xml.h1);
+					XMLUtility.insertBlankNode(this._xml.h2);
+					XMLUtility.insertBlankNode(this._xml.h3);
+					var ttl:XMLList = this._xml.h1.(String(@['class']).toLowerCase()=="title");
+					this.title.xml = this._xml.h2.(String(@['class']).toLowerCase()=="title");
+					this.phone.xml = this._xml.h2.(attribute("class")=="Address");
+					this.lamboText.xml = XMLList(ttl[0]);
+					this.lotusText.xml = XMLList(ttl[1]);
+					this.bentlyText.xml = XMLList(ttl[2]);
+					
+					this.subtitle.xml = this._xml.h2.(attribute("class")=="SubTitle");
+					this.address.xml = this._xml.h3.(attribute("class")=="Address");
+					this.loadBentlylogo();
+					this.loadLotusLogo();
+					this.loadLamboLogo();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function loadBentlylogo():void{
+				var b:XMLList = this._xml.div.(attribute("class")=="BentleyLogo").a;
+				if(b.length()==0){
+					b = this._xml.div.(attribute("class")=="BentleyLogo");
+				}
+				XMLUtility.insertBlankNode(b.img);
+				if(String(this.bentlyLogo.source) != String(b.img.@src)){
+					this.bentlyLogo.data = b;
+					this.bentlyLogo.source = String(b.img.@src);
+					this.bentlyLogo.toolTip = b.img.@title;
+				}
+			}
+			private function loadLotusLogo():void{
+				var b:XMLList = this._xml.div.(attribute("class")=="LotusLogo").a;
+				if(b.length()==0){
+					b = this._xml.div.(attribute("class")=="LotusLogo");
+				}
+				XMLUtility.insertBlankNode(b.img);
+				if(this.lotusLogo.source != b.img.@src){
+					this.lotusLogo.data = b;
+					this.lotusLogo.source = b.img.@src;
+					this.lotusLogo.toolTip = b.img.@title;
+				}
+				
+			}
+			private function loadLamboLogo():void{
+				var b:XMLList = this._xml.div.(attribute("class")=="LamboLogo").a;
+				if(b.length()==0){
+					b = this._xml.div.(attribute("class")=="LamboLogo");
+				}
+				XMLUtility.insertBlankNode(b.img);
+				if(this.lamboLogo.source != b.img.@src){
+					this.lamboLogo.data = b;
+					this.lamboLogo.source = b.img.@src;
+					this.lamboLogo.toolTip = b.img.@title;
+				}
+				
+			}
+		    private function menuMouseOver(e:MouseEvent):void{
+		    	if(e.target is Button){
+		    		this.huvMenu.xml = XMLList(e.target.data.ul);
+		    		var p:Point = Button(e.target).contentToGlobal(new Point(Button(e.target).width/2,Button(e.target).height));//this.mainMenu.contentToGlobal(new Point(Button(e.target).x+Button(e.target).width/2,Button(e.target).y+Button(e.target).height+5));
+		    		var p2:Point = this.localToGlobal(new Point(this.x,this.y));
+		    		var doResume:Boolean = false;
+		    		if(this.huvMenu.xml.length()>0){
+		    			this.huvMenu.visible = true;
+			    		if(!this.huvMove.isPlaying){
+			    			this.huvMove.pause();
+			    		}
+			    		//this.huvMove.end()
+			  			//this.huvMove.startDelay = 200;
+			    		//this.huvMove.xFrom = this.huvMenu.x;
+			    		//this.huvMove.yFrom = this.huvMenu.y;
+			    		this.huvMove.xTo = p.x-p2.x;
+			    		this.huvMove.yTo = p.y-p2.y+5;
+			    		this.huvMove.play();
+		    		} else {
+		    			this.huvMenu.visible = false;
+		    		}
+		    		
+		    	}
+		    	
+		    }
+		    private function menuCick(e:Event):void{
+		    	this.huvMenu.visible=false;
+		    	this._xml = null;
+		    	if(e is MALinkClickEvent){
+		    		this.uriManager.goToURI(MALinkClickEvent(e).item.a.@href)
+		    	} else if(e is MouseEvent){
+			    	if(e.target.data){
+				    	if(e.target is Button || e.target==this.subMenu){
+				    		this.uriManager.goToURI(e.target.data.a.@href)
+				    	}
+			    	}
+		    	}
+		    	
+		    }
+		    private function logoClicked(e:MouseEvent):void{
+		    	if(e.currentTarget.data && e.currentTarget.data.@href){
+		    		this.uriManager.goToURI(e.currentTarget.data.@href)
+		    	}
+		    }
+		    public function duplicate():IModule{
+				var m:ModBMCD999Header = new ModBMCD999Header();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+	
+</mx:Canvas>

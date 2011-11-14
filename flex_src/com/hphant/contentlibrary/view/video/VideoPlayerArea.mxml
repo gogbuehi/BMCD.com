@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:utils="com.hphant.utils.*"
+	width="800" height="700"
+	borderStyle="outset"
+	creationComplete="onCreationComplete()" 
+	>
+	<!--
+	xmlns:vp="com.jeroenwijering.player.*"
+	-->
+
+
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			//import com.jeroenwijering.player.Player;
+			
+	        
+			private function onCreationComplete():void 
+			{
+				//Alert.show("Pretending saving something...", "Info");
+				
+				//var mp:Object = new Player();
+				
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<!--
+		Video Player should be placed here.
+		
+	<vp:Player />
+	-->
+	
+	<mx:VBox width="100%" height="100%" horizontalAlign="center">
+		
+	    <mx:VideoDisplay id="videoDisp"
+	    		width="700" height="600"
+	    		/>
+				<!--
+	    		source="{sourceURL.text}" autoPlay="false"
+	    		width="100%" height="100%"
+	    		cachePolicy="auto"
+				--> 
+				   		
+		<!--
+	    <mx:HBox width="100%">
+		    <mx:Spacer width="5"/>
+		    <mx:Label text="Source URL" color="#909090"/>
+			<utils:PersistentTextInput id="sourceURL" persistenceId="sourceURL" 
+				width="100%" fontSize="10" backgroundAlpha="1"/>
+		    <mx:Spacer width="5"/>
+	    </mx:HBox>
+		-->
+	
+	</mx:VBox>
+	
+</mx:Canvas>

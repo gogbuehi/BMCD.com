@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" minWidth="{pageMeta.width}" creationComplete="{setButtonEnableds()}" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0"
+    label="Page Editing" closeEnabled="false" dragEnabled="false" xmlns:buttons="com.hphant.components.buttons.*" xmlns:text="com.hphant.components.text.*" xmlns:ui="flash.ui.*">
+    <mx:Button id="account" label="My Account" width="100%" click="{accountClicked(event)}" />
+	<mx:Button id="editBtn" label="Edit Page" width="100%" click="{editClicked(event)}"/>
+	<mx:Button id="exitBtn" label="Exit Edit Page" width="100%" click="{exitClicked(event)}"/>
+	<mx:Button id="logout" label="Logout" width="100%" click="{logoutClicked(event)}" />
+	<buttons:PalletButton height="0" visible="false" palletPosition="none" opened="{exitBtn.enabled}">
+		<buttons:pallet>
+			<Pallet id="pageMeta" enabled="{enabled}" label="SEO Tools" minWidth="{width}" x="{x+width-pageMeta.width}" y="{y+height}" verticalGap="0" closeEnabled="false">
+				<buttons:PalletButton label="Title" width="100%" palletPosition="left" palletLabel="Page Title">
+					<buttons:pallet>
+						<Pallet width="500">
+							<text:BaseTextArea id="pageTitle" width="100%" height="100" text="{head.title}"/>
+						</Pallet>
+					</buttons:pallet>
+				</buttons:PalletButton>
+				<buttons:PalletButton label="Description" width="100%" palletPosition="left" palletLabel="Page Description">
+					<buttons:pallet>
+						<Pallet width="500">
+							<text:BaseTextArea id="pageDescription" width="100%" height="100" text="{head.description}"/>
+						</Pallet>
+					</buttons:pallet>
+				</buttons:PalletButton>
+				<buttons:PalletButton label="Keywords" width="100%" palletPosition="left" palletLabel="Page Keywords">
+					<buttons:pallet>
+						<Pallet width="500">
+							<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+								<mx:List id="wordList" width="200" rowCount="10" dataProvider="{this.keywordsCollection}" allowMultipleSelection="true">
+									<mx:contextMenu>
+								    	<ui:ContextMenu customItems="{this._cmArray}">
+								    		<ui:builtInItems>
+								    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+								    		</ui:builtInItems>
+								    	</ui:ContextMenu>
+								    </mx:contextMenu>
+								</mx:List>
+								<mx:VBox verticalScrollPolicy="off" width="100%" height="100%" horizontalScrollPolicy="off" verticalGap="0">
+									<mx:Text text="Seperate keywords with a comma." width="100%"/>
+									<text:BaseTextArea id="newKeywords" width="100%" height="100%"/>
+									<mx:Button width="100%" enabled="{Boolean(newKeywords.text)}" label="Add Keywords" click="{addKeywords()}" />
+								</mx:VBox>
+							</mx:HBox>
+						</Pallet>
+					</buttons:pallet>
+				</buttons:PalletButton>
+			</Pallet>
+		</buttons:pallet>
+	</buttons:PalletButton>
+    <bottomBar>
+		<mx:Canvas width="100%" height="0"/>
+	</bottomBar>
+	<mx:Binding destination="head.title" source="pageTitle.text"/>
+	<mx:Binding destination="head.description" source="pageDescription.text"/>
+	<mx:Binding destination="head.keywords" source="keywords"/>
+	<mx:Binding destination="keywords" source="head.keywords"/>
+	<mx:Binding destination="removeWords.enabled" source="wordList.selectedItems.length>0"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import mx.collections.ArrayCollection;
+			import com.hphant.modsite.admin.model.HeadXML;
+			private function setButtonEnableds():void{
+				this.editBtn.enabled = _btnsEnabled && !_peMode;
+				this.exitBtn.enabled = _btnsEnabled && _peMode;
+				removeWords.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,removeSelectedWords);
+				_cmArray.push(removeWords);
+			}
+			[Bindable]
+			private var _cmArray:Array = [];
+			private var removeWords:ContextMenuItem = new ContextMenuItem("Remove Selected Words.");
+			
+			private function removeSelectedWords(event:ContextMenuEvent):void{
+				var selected:Array = wordList.selectedItems;
+				for each(var word:String in selected){
+					try{
+						keywordsCollection.removeItemAt(keywordsCollection.getItemIndex(word));
+					}catch(e:Error){
+						log(e);
+					}
+				}
+				_keywords = keywordsCollection.source.join(",");
+				this.dispatchEvent(new Event("keywordsChanged"));
+
+			}
+			private function addKeywords():void{
+				for each (var word:String in newKeywords.text.split(",")){
+					keywordsCollection.addItem(StringUtil.trim(word));
+				}
+				_keywords = keywordsCollection.source.join(",");
+				newKeywords.text = "";
+				this.dispatchEvent(new Event("keywordsChanged"));
+			}
+			
+			[Bindable]
+			public var head:HeadXML;
+			
+			[Inspectable]
+			public function get pageEditMode():Boolean{
+				return this._btnsEnabled;
+			}
+			public function set pageEditMode(value:Boolean):void{
+				this._peMode = value;
+				setButtonEnableds();
+			}
+			private var _peMode:Boolean = false;
+			[Inspectable]
+			public function get buttonsEnabled():Boolean{
+				return this._btnsEnabled;
+			}
+			public function set buttonsEnabled(value:Boolean):void{
+				this._btnsEnabled = value;
+				setButtonEnableds();
+			}
+			private var _btnsEnabled:Boolean = true;
+			private function editClicked(event:MouseEvent):void{
+				this.dispatchEvent(new Event("editClicked"));
+				setButtonEnableds();
+			}
+			private function exitClicked(event:MouseEvent):void{
+				this.dispatchEvent(new Event("exitClicked"));
+				setButtonEnableds();
+			}
+			private function logoutClicked(event:MouseEvent):void{
+				this.dispatchEvent(new Event("logoutClicked"));
+			}
+			private function accountClicked(event:MouseEvent):void{
+				this.dispatchEvent(new Event("accountClicked"));
+			}
+			[Bindable("keywordsChanged")]
+			private function get keywords():String{
+				return keywordsCollection.source.join(",");
+			}
+			private function set keywords(value:String):void{
+				var changed:Boolean = _keywords != value;
+				_keywords = value;
+				if(value){
+					var words:Array = value.split(",");
+					for(var i:uint=0;i<words.length;i++){
+						words[i]=StringUtil.trim(String(words[i]));
+					}
+					keywordsCollection.source = words;
+				} else {
+					keywordsCollection.source = [];
+				}
+				if(changed)
+					this.dispatchEvent(new Event("keywordsChanged"));
+			}
+			private var _keywords:String = "";
+			[Bindable]
+			private var keywordsCollection:ArrayCollection = new ArrayCollection();
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="1024" 
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="0"
+		   creationComplete="{this.isCreated = true;this.invalidateProperties()}"
+		   paddingTop="{this.getStyle('verticalGap')}"
+		   paddingBottom="{this.getStyle('verticalGap')}"
+		   verticalScrollPolicy="off"
+		   horizontalScrollPolicy="off" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import mx.effects.Resize;
+			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			include "../interfaces/AssetIncludes.as";
+			private var selectedItem:MAStoreItem;
+			private var itemList:XMLList;
+			private var addingIndex:uint = 0;
+			private var isCreated:Boolean = false;
+			private var buildTimer:Timer;
+			private var buildData:Object = new Object();
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml && this.isCreated){
+					this.addingIndex = 0;
+					this.addItems();
+						
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function addItems():void{
+				if(this.buildTimer){
+					this.buildTimer.stop();
+				}
+				this.itemList = this._xml.(attribute("class").toLowerCase()==String("MAStoreItems").toLowerCase()).li.(attribute("class").toLowerCase()==String("MAStoreItem").toLowerCase());
+				var existingCount:uint = this.numChildren;
+				var xmlCount:uint = this.itemList.length();
+				var e:MAStoreItem;
+				if(xmlCount>existingCount){
+					var i:uint = 0;
+					for(i=0;i<existingCount;i++){
+						e = MAStoreItem(this.getChildAt(i));
+						e.xml = XMLList(new XML(this.itemList[i]).toXMLString());
+					}
+					this.buildTimer = new Timer(320,xmlCount-existingCount);
+					this.buildTimer.addEventListener(TimerEvent.TIMER,this.buildItem);
+					this.buildTimer.start();
+				} else if(this.numChildren>=xmlCount){
+					for(var k:uint=0;k<xmlCount;k++){
+						e = MAStoreItem(this.getChildAt(k));
+						e.xml = XMLList(new XML(this.itemList[k]).toXMLString());
+					}
+					for(var j:uint=this.numChildren;j>xmlCount;j--){
+						
+						this.removeChildAt(j-1);
+					}
+				}
+				
+			}
+			private function buildItem(e:Event=null):MAStoreItem{
+				var ma:MAStoreItem;
+					ma =	new MAStoreItem();
+					ma.addEventListener(FlexEvent.CREATION_COMPLETE,this.eventCreated);
+					ma.addEventListener(EffectEvent.EFFECT_END,this.effectEnded);
+					ma.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE,this.eventStateChanged);
+					ma.addEventListener(MAStoreEvent.ADD_TO_CART,this.cartListener);
+					ma.addEventListener(MAStoreEvent.VIEW_CART,this.cartListener);
+					ma.styleName = (this.numChildren/2==Math.round(this.numChildren/2)) ? "oddItem" : "evenItem";
+					this.addChild(ma);
+					ma.css = this.css;
+					return ma;
+			}
+			private function eventCreated(e:FlexEvent):void{
+					e.currentTarget.currentState = "colapsed"; 
+					try{
+						e.currentTarget.xml = XMLList(this.itemList[this.getChildIndex(DisplayObject(e.currentTarget))]);
+					} catch (e:Error){
+					}
+				
+			}
+			private function cartListener(e:MAStoreEvent):void{
+				this.dispatchEvent(new MAStoreEvent(e.type,e.item));
+			}
+			private function eventStateChanged(e:StateChangeEvent):void{
+				if(e.oldState != "begin" && e.newState != "begin" ){
+					if(e.newState=="expanded"){
+						if(this.selectedItem){
+							this.selectedItem.currentState = "colapsed";
+						}
+						this.selectedItem = MAStoreItem(e.currentTarget);
+						this.dispatchEvent(new MAStoreEvent(MAStoreEvent.ITEM_SELECTED,XML(this.selectedItem.xml)));
+					} else {
+						if(e.currentTarget == this.selectedItem){
+							this.selectedItem = null;
+						}
+					}
+				}
+			}
+			private function effectEnded(e:EffectEvent):void{
+				e.currentTarget.removeEventListener(EffectEvent.EFFECT_END,this.effectEnded);
+				if(this.numChildren<this.itemList.length()){
+					this.buildItem();
+				} else {
+					this.dispatchEvent(new MAListEvent(MAListEvent.BUILD_COMPLETE));
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" implements="com.hphant.remoting.IResponder"
+    creationComplete="{init()}" xmlns:ui="flash.ui.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:components="com.hphant.components.*">
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+    	<mx:Label text="Available PDFs:"/>
+		<mx:List id="availableList" width="100%" height="300"
+		    dragEnabled="true"
+		    allowDragSelection="false" selectedItem="{this.selectedPDF}" change="{this.dispatchEvent(event)}"
+		    allowMultipleSelection="false" labelField="title"
+			dataProvider="{ContentModelLocator.getInstance().pdfs}">
+		</mx:List>
+    </mx:VBox>
+    <mx:Binding destination="selectedPDF" source="PDF(availableList.selectedItem)"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.contentlibrary.control.event.PDFEvent;
+			import com.hphant.contentlibrary.model.PDF;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			[Bindable('selectedPDFChanged')]
+			public function get selectedPDF():PDF{
+				return _pdf;
+			}
+			private function init():void{
+				ContentModelLocator.getInstance().addEventListener('pdfsChanged',findURL);
+				var evt:PDFEvent = new PDFEvent(PDFEvent.GET_ALL_PDFS);
+				evt.dispatch();
+			}
+			public function set selectedPDF(value:PDF):void{
+				_pdf = value;
+				this.dispatchEvent(new Event('selectedPDFChanged'));
+			}
+			private var _pdf:PDF;
+			[Bindable]
+			public function get url():String{
+				return _pdf ? _pdf.location : _url;
+			}
+			public function set url(value:String):void{
+				_url = value;
+				var evt:PDFEvent = new PDFEvent(PDFEvent.GET_ALL_PDFS);
+				evt.responder = this;
+				evt.dispatch();
+			}
+			private var _url:String = "";
+			private function findURL(event:Event = null):void{
+				for each (var pdf:PDF in ContentModelLocator.getInstance().pdfs){
+					if(pdf.location == _url){
+						selectedPDF = pdf;
+						return;
+					}
+				}
+				selectedPDF = null;
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				findURL();
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

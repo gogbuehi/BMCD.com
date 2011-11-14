@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="984" backgroundAlpha="0" height="0"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       dataChange="{dataChanged()}"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<images:MAImageShow id="imageShow" xml="{imgs}"/>
+	<forms:MAEventCalendarEmail id="email" minHeight="{imageShow.height}" data="{dataItem}"  width="300" sendEmail="{this.dispatchEvent(new MAFormEvent(event.type,event.formData))}"/>
+	<mx:states>
+		<mx:State name="colapsed" >
+			<mx:SetProperty target="{this}" name="height" value="0" />
+		</mx:State>
+		<mx:State name="expanded" basedOn="colapsed">
+			<mx:SetProperty target="{this}" name="height" />
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="*" toState="colapsed">
+			<mx:Sequence id="closeEffect">
+				<mx:Resize target="{this}" />
+				<!--<mx:Parallel>
+					<mx:Resize target="{email}" widthFrom="0" widthTo="350" heightFrom="0" heightTo="350"/>
+					<mx:Resize target="{imageShow}" widthFrom="0" widthTo="350" heightFrom="0" heightTo="350"/>
+				</mx:Parallel>-->
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="*" toState="expanded">
+			<mx:Sequence id="openEffect">
+				<mx:Resize target="{this}" />
+				<!--<mx:Parallel>
+					<mx:Resize target="{email}" widthFrom="0" widthTo="350" heightFrom="0" heightTo="350"/>
+					<mx:Resize target="{imageShow}" widthFrom="0" widthTo="350" heightFrom="0" heightTo="350"/>
+				</mx:Parallel>-->
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.calendar.BMCDEventItemData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			private var imgs:XMLList;
+			[Bindable]
+			private var dataItem:BMCDEventItemData;
+			
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			
+			protected function dataChanged():void{
+				if(data){
+					var di:BMCDEventItemData = new BMCDEventItemData();
+					di.row = XML(data);
+					dataItem = di;
+					var tmp:XMLList = XMLList(di.images.data);
+					var ui:XML = <ui />
+					ui.@['class'] = "MAImageSelectorH";
+					var image:XML
+					if(tmp.li.length()>0){
+						for each(image in tmp.li.img){
+							ui.appendChild(this.buildLI(image));
+						}
+					} else if(tmp.length()>1){
+						for each(image in tmp){
+							ui.appendChild(this.buildLI(image));
+						}
+					}
+					imgs = XMLList(ui);
+				} else {
+					imgs = null;
+				}
+				
+			}
+			private function buildLI(image:XML):XML{
+				var s:String = String(image.@src);//.replace("XXXXXX",BMCDInventoryItemData(data).stockNumber.data);
+				var img:XML = <img />
+				var a:XML = <a />
+				var li:XML = <li />
+				li.@['class'] = "Image";
+				a.@href = s;
+				img.@src = s;
+				img.@width = 93;
+				img.@height = 70;
+				li.appendChild(a.appendChild(img));
+				return li;
+			}
+		]]>
+	</mx:Script>
+</mx:HBox>

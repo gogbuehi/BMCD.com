@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" clipContent="false" backgroundAlpha="0"  currentState="form"
+	borderThickness="0" verticalAlign="middle" horizontalAlign="center" 
+	xmlns:forms="com.hphant.modsite.site.forms.*"
+    creationComplete="{this.setInputTypes()}">
+	<forms:EmailForm id="baseForm" formName="{formName}" dataMap="{this.dataMap}" sendEmail="{sendEmailEvent(event)}" clearForm="{this.currentState='form'}"/>
+	<mx:String id="formName">EmailFriendForm</mx:String>
+	<forms:EmailFriendFormDataMap id="dataMap"/>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.data.forms.EmailFriendFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function setInputTypes():void{
+				this.baseForm.data1.type = FormInputType.NAME;
+				this.baseForm.data2.type = FormInputType.EMAIL;
+				this.baseForm.data3.type = FormInputType.NAME;
+				this.baseForm.data4.type = FormInputType.EMAIL;
+				this.baseForm.data1.label = "Your Name";
+				this.baseForm.data2.label = "Your Email";
+				this.baseForm.data3.label = "Friend's Name";
+				this.baseForm.data4.label = "Friend's Email";
+			}
+			private function sendEmailEvent(event:MAFormEvent):void{
+				var fd:EmailFriendFormData = new EmailFriendFormData();
+				fd.comment = EmailFormData(event.formData).message;
+				fd.friendsFirstName = EmailFormData(event.formData).toFirstName;
+				fd.friendsEmail = EmailFormData(event.formData).toEmail;
+				fd.yourName = EmailFormData(event.formData).fromFirstName;
+				fd.yourEmail = EmailFormData(event.formData).fromEmail;
+				this.dispatchEvent(new MAFormEvent(event.type,fd));
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="form" />
+		<mx:State name="sent" >
+			<mx:SetProperty target="{baseForm}" name="currentState" value="sent" />
+		</mx:State>
+	</mx:states>
+</mx:VBox>

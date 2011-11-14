@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet label="Product Information" xmlns="com.hphant.components.containers.*" implements="com.hphant.remoting.IResponder"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:components="com.hphant.components.*" 
+	xmlns:text="com.hphant.components.text.*" xmlns:buttons="com.hphant.components.buttons.*" dataChange="{handleData()}"
+    creationComplete="{init()}"
+	xmlns:view="com.hphant.data.view.*">
+	<mx:VBox width="100%" height="100%">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0" width="200">
+			<mx:ComboBox width="100%" id="make" dataProvider="{makes}" selectedIndex="{selectedMake}" change="{changeListener(event)}"/>
+			<!--<buttons:PalletButton label="+" left="0" right="0" paddingLeft="0" paddingRight="0"/>-->
+		</mx:HBox>
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0" width="200">
+			<mx:ComboBox width="100%" id="model" dataProvider="{models}" selectedIndex="{selectedModel}" change="{changeListener(event)}"/>
+			<buttons:PalletButton label="+" palletLabel="Add Model Name" minWidth="0" width="15" left="0" right="0" paddingLeft="0" paddingRight="0">
+				<buttons:pallet>
+					<view:NameReferencePallet />
+				</buttons:pallet>
+			</buttons:PalletButton>
+		</mx:HBox>
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0" width="200">
+			<mx:ComboBox width="100%" id="submodel" dataProvider="{submodels}" selectedIndex="{selectedSubModel}" change="{changeListener(event)}"/>
+			<buttons:PalletButton label="+" palletLabel="Add Sub-Model Name" minWidth="0" width="15" left="0" right="0" paddingLeft="0" paddingRight="0">
+				<buttons:pallet>
+					<view:NameReferencePallet />
+				</buttons:pallet>
+			</buttons:PalletButton>
+		</mx:HBox>
+	</mx:HBox>	
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="Engine:" width="200" id="engine" text="{ModelRecord(data).engine}" change="{changeListener(event)}"/>
+		<text:SelfLabelTextInput label="Displacement:" width="200" id="displacement" text="{ModelRecord(data).displacement}" change="{changeListener(event)}"/>	
+		<text:SelfLabelTextInput label="Horsepower:" width="200" id="horsepower" text="{ModelRecord(data).horsepower}" change="{changeListener(event)}"/>
+	</mx:HBox>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="Acceleration:" width="200" id="acceleration" text="{ModelRecord(data).acceleration}" change="{changeListener(event)}"/>
+		<text:SelfLabelTextInput label="Top Speed:" width="200" id="topSpeed" text="{ModelRecord(data).topSpeed}" change="{changeListener(event)}"/>	
+		<text:SelfLabelTextInput label="MSRP:" width="200" id="msrp" text="{ModelRecord(data).msrp}" change="{changeListener(event)}"/>
+	</mx:HBox>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0" width="200" verticalAlign="middle">
+			<text:SelfLabelTextInput label="Brouchure URL:" width="100%" editable="false" text="{brochure.selectedPDF ? brochure.selectedPDF.title : brochure.url}"/>
+			<buttons:PalletButton label="..." palletLabel="Select PDF" pallet="{brochure}" minWidth="0" left="0" right="0" paddingLeft="0" paddingRight="0">
+			</buttons:PalletButton>
+		</mx:HBox>
+		<text:SelfLabelTextInput label="Configurator URL:" width="200" id="configurator" text="{ModelRecord(data).configurator}" change="{changeListener(event)}"/>	
+		<text:SelfLabelTextInput label="Manufacturer URL:" width="200" id="manufacture" text="{ModelRecord(data).manufacture}" change="{changeListener(event)}"/>
+	</mx:HBox>	
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+		<buttons:PalletButton id="thumbButton" label="Videos" palletPosition="none" palletLabel="Select Videos" pallet="{this.videos}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="imagesButton" label="Images" palletPosition="none" palletLabel="Select Images" pallet="{this.images}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="seoButton" label="SEO Tools" palletPosition="bottom" pallet="{this.seo}">
+		</buttons:PalletButton>
+		<mx:CheckBox id="show" label="Visible:" labelPlacement="left" selected="{Boolean(ModelRecord(data).visible)}" change="{changeListener(event)}"/>
+	</mx:HBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+		<mx:Label text="Description"/>
+		<components:ExtendedRichTextEditor id="description" isUsingColor="false" htmlText="{ModelRecord(data).description}" width="100%" height="225" displayTools="false" change="{changeListener(event)}"/>
+	</mx:VBox>
+	</mx:VBox>
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:Button label="Save" enabled="{changed}" click="{saveRecord()}"/>
+		<mx:Button label="New" click="{newRecord()}"/>
+		<mx:Button label="Duplicate" enabled="{Boolean(data)}" click="{duplicateRecord()}"/>
+		<mx:Button label="Remove" enabled="{Boolean(data)}" click="{removeRecord()}"/>
+	</mx:HBox>
+	<mx:Binding source="ModelRecord(data).images.split(',')" destination="images.images" />
+	<mx:Binding source="ModelRecord(data).videos.split(',')" destination="videos.videos" />
+	<mx:Binding source="ModelRecord(data).brochure" destination="brochure.url" />
+	<mx:Binding source="ModelRecord(data).pageDescription" destination="seo.description" />
+	<mx:Binding source="ModelRecord(data).pageKeywords" destination="seo.keywords" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.containers.PDFSelector;
+			import com.hphant.data.view.DataSEOPallet;
+			import com.hphant.components.containers.VideosSelector;
+			import com.hphant.components.events.AlertCloseEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.components.AlertPallet;
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.remoting.IResponder;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.components.containers.ImagesSelector;
+			import com.hphant.data.control.event.ModelEvent;
+			import com.hphant.data.model.ModelRecord;
+			import com.hphant.components.containers.ThumbnailSelector;
+			
+			public function handleFault(event:GeneralEvent, fault:Fault):void{
+				AlertPallet.show(fault.message,"Error "+fault.errorID,
+								AlertPallet.OK,AlertPallet.OK);
+			}
+			public function handleResult(event:GeneralEvent, result:Object):void{
+				var action:String = event.type==ModelEvent.UPDATE ? "y Saved" : event.type==ModelEvent.REMOVE ? "y Removed" : "";
+				AlertPallet.show(ModelRecord(data).model+" "+ModelRecord(data).model+" "+ModelRecord(data).submodel+" was successfull"+action+".","Success",
+								AlertPallet.OK,AlertPallet.OK);
+				var e:ModelEvent = new ModelEvent(ModelEvent.GET_ALL);
+				e.dispatch();
+			}
+			private function changeListener(event:Event):void{
+				 changed = true;
+			}
+			[Bindable]
+			private var changed:Boolean = false;
+			[Bindable]
+			private var videos:VideosSelector = new VideosSelector();
+			[Bindable]
+			private var images:ImagesSelector = new ImagesSelector();
+			[Bindable]
+			private var brochure:PDFSelector = new PDFSelector();
+			[Bindable]
+			private var seo:DataSEOPallet = new DataSEOPallet();
+			private function init():void{
+				videos.videoSizes = images.imageSizes = [new Rectangle(0,0,420,280)];
+				images.addEventListener(Event.CHANGE,changeListener);
+				videos.addEventListener(Event.CHANGE,changeListener);
+				brochure.addEventListener(Event.CHANGE,changeListener);
+				seo.addEventListener(Event.CHANGE,changeListener);
+			}
+			public override function reset():void{
+				super.reset();
+				PalletManager.closePallet(images);
+				PalletManager.closePallet(videos);
+				PalletManager.closePallet(brochure);
+				PalletManager.closePallet(seo);
+				this.data = null;
+			}
+			[Bindable]
+			public var makes:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var models:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var submodels:ArrayCollection = new ArrayCollection();
+			
+			private function saveRecord():void{
+				if(data){
+					ModelRecord(data).videos = videos.videos.join(",");
+					ModelRecord(data).images = images.images.join(",");
+					ModelRecord(data).description = description.htmlText;
+					ModelRecord(data).visible = show.selected ? 1 : 0;
+					ModelRecord(data).make = String(make.selectedIndex?make.selectedItem:'');
+					ModelRecord(data).model = String(model.selectedIndex?model.selectedItem:'');
+					ModelRecord(data).submodel = String(submodel.selectedIndex?submodel.selectedItem:'');
+					ModelRecord(data).engine = engine.text;
+					ModelRecord(data).displacement = displacement.text;
+					ModelRecord(data).horsepower = horsepower.text;
+					ModelRecord(data).acceleration = acceleration.text;
+					ModelRecord(data).topSpeed = topSpeed.text;
+					ModelRecord(data).msrp = msrp.text;
+					ModelRecord(data).brochure = brochure.url;
+					ModelRecord(data).configurator = configurator.text;
+					ModelRecord(data).manufacture = manufacture.text;
+					ModelRecord(data).pageDescription = seo.description;
+					ModelRecord(data).pageKeywords = seo.keywords;
+					
+					var event:ModelEvent = new ModelEvent(isNew ? ModelEvent.ADD_NEW : ModelEvent.UPDATE);
+					event.data = data;
+					event.responder = this;
+					isNew = false;
+					event.dispatch();
+				}
+			}
+			private var isNew:Boolean = false;
+			
+			[Bindable('dataChange')]
+			private function get selectedModel():int{
+				return ( data && ModelRecord(data).model ) ? models.getItemIndex(ModelRecord(data).model) : 0;
+			}
+			
+			[Bindable('dataChange')]
+			private function get selectedMake():int{
+				return ( data && ModelRecord(data).make ) ? makes.getItemIndex(ModelRecord(data).make) : 0;
+			}
+			
+			[Bindable('dataChange')]
+			private function get selectedSubModel():int{
+				return ( data && ModelRecord(data).submodel ) ? submodels.getItemIndex(ModelRecord(data).submodel) : 0;
+			}
+			
+			private function newRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createNewRecord();
+				}
+			}
+			private function removeRecord():void{
+				AlertPallet.show("Are you sure you want to remove the Item?","Remove Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,removeExistingRecord);
+			}
+			private function createNewRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					data = new ModelRecord();
+					isNew = true;
+				}
+			}
+			private function duplicateRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item based off of the current information?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createDuplicateRecord();
+				}
+			}
+			
+			private function createDuplicateRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					var nItem:ModelRecord = new ModelRecord();
+					nItem.videos = videos.videos.join(",");
+					nItem.images = images.images.join(",");
+					nItem.description = description.htmlText;
+					nItem.visible = show.selected ? 1 : 0;
+					nItem.make = String(make.selectedIndex?make.selectedItem:'');
+					nItem.model = String(model.selectedIndex?model.selectedItem:'');
+					nItem.submodel = String(submodel.selectedIndex?submodel.selectedItem:'');
+					nItem.engine = engine.text;
+					nItem.displacement = displacement.text;
+					nItem.horsepower = horsepower.text;
+					nItem.acceleration = acceleration.text;
+					nItem.topSpeed = topSpeed.text;
+					nItem.msrp = msrp.text;
+					nItem.brochure = brochure.url;
+					nItem.configurator = configurator.text;
+					nItem.manufacture = manufacture.text;
+					nItem.pageDescription = seo.description;
+					nItem.pageKeywords = seo.keywords;
+					nItem.id = 0;
+					data = nItem;
+					changed = true;
+					isNew = true;
+				}
+			}
+			private function removeExistingRecord(event:AlertCloseEvent=null):void{
+				if(event.detail == AlertPallet.YES){
+					if(!isNew){
+						var e:ModelEvent = new ModelEvent(ModelEvent.REMOVE);
+						e.data = data;
+						e.responder = this;
+						e.dispatch();
+					}
+					data = null;
+					description.htmlText = "";
+				}
+			}
+			private function handleData():void{
+				isNew=false;
+				changed = false;
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

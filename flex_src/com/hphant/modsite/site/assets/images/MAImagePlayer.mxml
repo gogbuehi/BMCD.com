@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:mx="http://www.adobe.com/2006/mxml" implements="com.hphant.modsite.site.assets.interfaces.IMAsset" xmlns:images="com.hphant.modsite.site.assets.images.*" xmlns:utils="flash.utils.*">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.skins.image.ImagePlayerSkin;
+			import com.hphant.skins.image.ImageSkinEvent;
+			import mx.core.UIComponent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			
+			private var _skinFactory:IFactory;
+			[Bindable]
+			private var imgXML:XMLList;
+			[Inspectable]
+			public function get skinFactory():Object{
+				return this._skinFactory;
+			}
+			public function set skinFactory(value:Object):void{
+				if( value is IFactory){
+					this._skinFactory = IFactory(value);
+				} else if(value is Class){
+					this._skinFactory = new ClassFactory(Class(value));
+				} else if(!value){
+					this._skinFactory = null;
+				}
+				if(this._skinFactory){
+					this.skin = this._skinFactory.newInstance();
+				}
+			}
+			
+			private var _skin:UIComponent;
+			[Bindable]
+			public function get skin():UIComponent{return this._skin;}
+			public function set skin(value:UIComponent):void{
+				if(this._skin && this._skin!=value){
+					this.skinHolder.removeAllChildren();
+					this._skin.removeEventListener(ImageSkinEvent.NEXT_CLICK,this.nextImage);
+					this._skin.removeEventListener(ImageSkinEvent.PREVIOUS_CLICK,this.previousImage);
+				}
+				if(value && this._skin!=value){
+					this.skinHolder.addChild(value);
+					value.addEventListener(ImageSkinEvent.NEXT_CLICK,this.nextImage);
+					value.addEventListener(ImageSkinEvent.PREVIOUS_CLICK,this.previousImage);
+				}
+				this._skin = value;
+			}
+			
+			
+			
+			private var autoPlayer:Timer;
+			
+			
+			[Bindable]
+			public var autoPlay:Boolean = true;
+			public function play():void{
+				if(this.autoPlayer){
+					this.autoPlayer.start();
+				}
+			}
+			public function stop():void{
+				if(this.autoPlayer){
+					this.autoPlayer.stop();
+					this.autoPlayer.reset();
+				}
+			}
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					var imgs:XMLList = this._xml;
+					var img:XML = <img />
+					this._currentIndex = Math.floor(Math.random()*this._xml.li.length());
+					imgXML = XMLList(XML(this._xml.li[this._currentIndex]).img);
+					
+					if(this.autoPlayer && this.autoPlayer.running){
+						this.autoPlayer.stop();
+					}
+					this.autoPlayer = new Timer(7000,this._xml.li.length()-this._currentIndex);
+					this.autoPlayer.addEventListener(TimerEvent.TIMER,nextImage);
+					this.autoPlayer.addEventListener(TimerEvent.TIMER_COMPLETE,resetAutoPlay);
+					if(this.autoPlay && this._xml.li.length()>1){
+						this.autoPlayer.start();
+					}
+					this.xmlChanged = false;
+				} else if(this.xmlChanged){
+					this.autoPlayer.stop();
+					imgXML = null;
+				}
+				super.commitProperties();
+			}
+			private function resetAutoPlay(e:TimerEvent):void{
+				this.autoPlayer.reset();
+				this._currentIndex = 0;
+				this.autoPlayer = new Timer(7000,this._xml.li.length());
+				this.autoPlayer.addEventListener(TimerEvent.TIMER,nextImage);
+				this.autoPlayer.addEventListener(TimerEvent.TIMER_COMPLETE,resetAutoPlay);
+				this.image.xml = XMLList(XML(this._xml.li[0]).img);
+				this.autoPlayer.start();
+			}
+			private var _currentIndex:int = 0;
+			public function nextImage(e:Event=null):void{
+				if(!(e is TimerEvent)){
+					this.stop();
+				}
+				this._currentIndex = (e is TimerEvent) ? this.autoPlayer.currentCount : (this._currentIndex<this._xml.li.length()-1) ? this._currentIndex+1 : 0;
+				this.image.xml = XMLList(XML(this._xml.li[this._currentIndex]).img);
+			}
+			public function previousImage(e:Event=null):void{
+				this.stop();
+				this._currentIndex = (this._currentIndex>0) ? this._currentIndex-1 : this._xml.li.length()-1;
+				this.image.xml = XMLList(XML(this._xml.li[this._currentIndex]).img);
+			}
+		]]>
+	</mx:Script>
+	<mx:Boolean id="autoSize">false</mx:Boolean>
+	<mx:Boolean id="autoLoad">true</mx:Boolean>
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+		<images:MAImage autoSize="{this.autoSize}" id="image" autoLoad="{this.autoLoad}" xml="{this.imgXML}" width="100%" height="100%"/> 
+		<mx:Canvas id="skinHolder" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+		</mx:Canvas>	
+	</mx:Canvas>
+	
+	
+</mx:VBox>

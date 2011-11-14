@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas xmlns="com.hphant.modsite.site.modules.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:inventory="com.hphant.modsite.site.assets.inventory.*"
+ 	currentState="state0" clipContent="false"
+	backgroundAlpha="0" xmlns:inventory1="com.hphant.modsite.data.inventory.*" xmlns:data="com.hphant.modsite.site.assets.inventory.data.*" xmlns:components="com.hphant.components.*">
+	<mx:Metadata>
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeBegin",type="com.hphant.modsite.site.events.MAListEvent")]
+	</mx:Metadata>
+	<mx:VBox id="content" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off" autoLayout="true" width="100%" clipContent="false">
+		<inventory:MAInventoryHeader id="header" linkClicked="{this.changeInventoryDisplay(event)}" creationComplete="{setSortFields()}"/>
+		<components:GroupedVList expandClick="{this.handleExpand(event)}" colapseClick="{handleColapse(event)}"
+			linkClicked="{this.handleClick(event)}" 
+			sendEmail="{this.handleSendEmail(event)}"
+		    resizeBegin="{this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable))}"
+		    resizeComplete="{this.resizeCompleted(event)}"
+		    itemRenderer="{com.hphant.modsite.site.assets.inventory.MAInventoryItemRenderer}"
+		    evenStyleName="evenItemInventory"
+		    oddStyleName="oddItemInventory"
+		    groupHeaderStyle="inventoryGroupHeader"
+		    labelFunction="{this.groupLabelFunction}"
+		    maxGroupLength="12" selectedIndex="{this.selItm}"
+			 width="100%" id="items"/>
+	</mx:VBox>
+	<states>
+		<mx:State name="state0">
+			<mx:SetProperty target="{this}" name="height" value="0"/>
+			<mx:SetProperty target="{this}" name="width" value="0"/>
+		</mx:State>
+		<mx:State name="state1" basedOn="state0">
+			<mx:SetProperty target="{this}" name="height"/>
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+		</mx:State>
+		<mx:State name="state2" basedOn="state1">
+			<mx:SetProperty target="{header}" name="titleXML" value="{ttl}"/>
+		</mx:State>
+		<mx:State name="state3" basedOn="state2">
+			<mx:SetProperty target="{items}" name="dataProvider" value="{itemsArray}"/>
+		</mx:State>
+		<mx:State name="state4" basedOn="state3">
+			<mx:SetProperty target="{items}" name="selectedGroupIndex" value="{0}"/>
+		</mx:State>
+		<mx:State name="state5" basedOn="state4">
+			<mx:SetProperty target="{items}" name="selectedIndex" value="{this.selItm}"/>
+		</mx:State>
+	</states>
+	<transitions>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Resize target="{this}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state0">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+				<mx:SetPropertyAction target="{items}"/>
+				<mx:Resize target="{this}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction target="{header}" name="currentState" value="opened"/>
+				<mx:Pause duration="500" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction target="{header}" name="currentState" value="closed"/>
+				<mx:Pause duration="500" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state3">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state4">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state4" toState="state5">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence> 
+		</mx:Transition>
+		<mx:Transition fromState="state4" toState="state3">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state5" toState="state4">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Pause duration="1000" suspendBackgroundProcessing="false" />
+			</mx:Sequence>
+		</mx:Transition>
+	</transitions>
+	<mx:Array id="sortLables">
+		<mx:String>Select Sorting</mx:String>
+		<mx:String>Price Ascending</mx:String>
+		<mx:String>Price Descending</mx:String>
+		<mx:String>Mileage Ascending</mx:String>
+		<mx:String>Mileage Descending</mx:String>
+		<mx:String>Year Ascending</mx:String>
+		<mx:String>Year Descending</mx:String>
+		<mx:String>Color Ascending</mx:String>
+		<mx:String>Color Descending</mx:String>
+		<mx:String>Model Name Ascending</mx:String>
+		<mx:String>Model Name Descending</mx:String>
+	</mx:Array>
+	<mx:Array id="sortNames">
+		<mx:Array>
+			<mx:String>none</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>price</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>price</mx:String>
+			<mx:Boolean>false</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>mileage</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>mileage</mx:String>
+			<mx:Boolean>false</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>year</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>year</mx:String>
+			<mx:Boolean>false</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>color</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>color</mx:String>
+			<mx:Boolean>false</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>model</mx:String>
+			<mx:Boolean>true</mx:Boolean>
+		</mx:Array>
+		<mx:Array>
+			<mx:String>model</mx:String>
+			<mx:Boolean>false</mx:Boolean>
+		</mx:Array>
+	</mx:Array>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import com.hphant.modsite.data.inventory.BMCDModelList;
+			import com.hphant.modsite.system.URIManager;
+			import com.hphant.modsite.site.assets.inventory.MAInventoryItemFooter;
+			import mx.collections.XMLListCollection;
+			import com.hphant.components.VListGroup;
+			import com.hphant.modsite.site.assets.inventory.MAInventoryItemRenderer;
+			import com.hphant.modsite.data.inventory.BMCDInventoryItemData;
+			import mx.core.UIComponent;
+			import com.hphant.modsite.site.assets.inventory.MAInventoryItem;
+			import com.hphant.modsite.system.events.ViewStateChangeEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.site.style.CSSInstance;
+			import com.hphant.modsite.data.inventory.SuggestedItemsTranslator;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import mx.controls.ComboBox;
+			import mx.events.ListEvent;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.assets.inventory.data.MAInventoryModelData;
+			import com.hphant.modsite.site.assets.inventory.data.MAInventoryMakeData;
+			import com.hphant.modsite.site.assets.inventory.data.MAInventoryDataBase;
+			[Bindable]
+			private var hdr:XMLList;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var selItm:int;
+			[Bindable]
+			private var itms:XMLList;
+			[Bindable]
+			private var supl:XMLList;
+			[Bindable]
+			private var tmplts:XMLList;
+			[Bindable]
+			private var linksXML:XMLList;
+			[Bindable]
+			private var itemsArray:XMLListCollection = new XMLListCollection();
+			
+			[Bindable]
+			private var supplementalRequested:Boolean = false;
+			
+			[Bindable(event="groupLabelFunctionChanged")]
+			private function groupLabelFunction(item:Object,group:VListGroup):String{
+				return "Vehicles "+this.items.defaultLabelFunction(item,group)+" (of "+this.itemsArray.length+")";
+			}
+			private function initSelectedGroup():void{
+				
+			}
+			private function resizeCompleted(event:MAListEvent):void{
+				if(event.type==MAListEvent.RESIZE_COMPLETE && this.itms && (this.itemsArray.source==null || this.itemsArray.length==0)){
+					this.itemsArray.source=XMLList(itms.tbody.tr);
+					this.itemsArray.refresh();
+					this.setSelectedItem();
+				} else if(event.type==MAListEvent.RESIZE_COMPLETE){
+					
+				}
+				this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable));
+			}
+			private var _tempXML:XMLList;
+			
+			/* public override function set xml(value:XMLList):void{
+				super.xml = XMLList("<div class='ModInventory'/>");
+			}
+			public override function get xml():XMLList{
+				return super.xml;
+			} */
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					supl = this._xml.table.(String(@['class']).toLowerCase()=="supplemental");
+					if(supl && supl.length()>0){
+						BMCDInventoryItemData.supplemental = XMLList(this._suggestedTranslator.translate(XML(supl)));
+					}
+					
+					if(!this.supplementalRequested){
+						log("Set Header");
+						hdr = this._xml.div.(attribute("class")=="MAInventoryHeader");
+						log("Set Title");
+						ttl = hdr.children().(@['class']=='Title');
+						log("Set Items");
+						itms = this._xml.table.(String(@['class']).toLowerCase()=="inventory");
+						log("Set URL Templates");
+						tmplts = this._xml.div.(String(@['class']).toLowerCase()=="url_templates").ul;
+						if(this.currentState>"state2"){
+							this.header.titleXML = ttl;
+						}
+							
+						XMLUtility.insertBlankNode(ttl);
+						XMLUtility.insertBlankNode(hdr);
+						
+						log("Set Data Headers");
+						BMCDInventoryItemData.setHeader(itms.thead.tr.td);
+			   			BMCDInventoryItemData.urlTemplates = tmplts;
+						log("Set Model Header Index");
+			   			var hidx:int = BMCDInventoryItemData.getHeaderIndex(BMCDInventoryItemData.names.model);
+						log("Set Model List");
+						BMCDModelList.getInstance().xml = itms.tbody.tr.td.(childIndex()==hidx);
+						log("Set linksXML");
+			   			this.linksXML = BMCDModelList.getInstance().list;
+						log("Set itemsArray source");
+						this.itemsArray.source=XMLList(itms.tbody.tr);
+						
+						log("Set itemsArray filter function");
+						this.itemsArray.filterFunction = this.filterListFilterFunction;
+						log("Refreshing the items array");
+						this.itemsArray.refresh();
+						if(this.currentState>"state3"){
+							log("Refreshing the items display");
+							this.items.refreshItems();
+						}
+					} else {
+						this._xml = this._tempXML;
+						this.supplementalRequested = false;
+					}
+					setSelectedItem();
+					this.xmlChanged = false;
+				} else if(this.xmlChanged) {
+					ttl = null;
+					hdr = null;
+					this.xmlChanged = false;
+					this.itemsArray.filterFunction = emptyListFilterFunction;
+					this.itemsArray.source = null;
+					this.itemsArray.refresh();
+						if(this.currentState>"state3"){
+							this.items.refreshItems();
+						}
+					
+					linksXML = null;
+					this.itms = null;
+					setSelectedItem();
+				}
+				super.commitProperties();
+			}
+			private var selectedFilter:String="all";
+			private function filterListFilterFunction(item:Object):Boolean{
+				return (selectedFilter=="all") ? true : (item.td[BMCDInventoryItemData.getHeaderIndex(BMCDInventoryItemData.names.model)].toString().indexOf(selectedFilter)>=0);
+			}
+			private function emptyListFilterFunction(item:Object):Boolean{
+				return false;
+			}
+			private function setSelectedItem(forceNone:Boolean=false):void{
+				log("Setting the selected index.");
+				if(forceNone){
+					this.items.selectedGroupIndex = -1;
+					this.items.selectedIndex = -1;
+					return;
+				}
+				if(itms && itms.length()>0){
+					var itm:XMLList = itms.tbody.tr.(td[BMCDInventoryItemData.getHeaderIndex(BMCDInventoryItemData.names.url)].a.@href==URIManager(this.uriManager).current);
+					try{
+						this.selItm = (itm[0]) ? this.items.dataGrouping.getItemIndex(itm[0]) : -1; 
+					} catch(e:Error){
+						this.selItm = -1;
+					}
+				} else {
+					this.selItm = -1;
+				}
+				if(this.currentState>="state4"){
+					//this.items.selectedGroupIndex = (this.selItm==-1) ? 0 : Math.floor(this.selItm/this.items.maxGroupLength);
+				}
+				 if(this.currentState>="state4"){
+					this.items.selectedIndex = this.selItm;
+				} 
+			}
+			private function listTransitionCompleted(e:ViewStateChangeEvent):void{
+				this.dispatchTransitionCompleted();
+			}
+			private var allAdded:Boolean=false;
+			private var allCreated:Boolean=false;
+			private function continueToNextState(e:ViewStateChangeEvent):void{
+				this.dispatchStateReached();
+			}
+			
+			[Bindable]
+			public override function set suplimental(value:XMLList):void
+			{
+				super.suplimental = value;
+			}
+			
+			public override function get suplimental():XMLList
+			{
+				return super.suplimental;
+			}
+
+			
+		]]>
+	</mx:Script>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.managers.PopUpManager;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import mx.formatters.NumberFormatter;
+			import mx.formatters.CurrencyFormatter;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			private var _suggestedTranslator:SuggestedItemsTranslator = new SuggestedItemsTranslator();
+			private function handleClick(e:MALinkClickEvent):void{
+				var url:String;
+				if(!url){
+					url = XMLList(e.item).@href
+				}
+				if(XMLList(e.item).@['class']=="suggestion"){
+					this.setSelectedItem(true);
+				}
+				if(url==""){
+					log("Need to handle Click:"+e.item,1);
+				} else {
+					log("this.uriManager.goToURI('"+url+"')");
+					this.uriManager.goToURI(url);
+				} 
+			}
+			private function handleExpand(e:MAListItemEvent):void{
+				var di:BMCDInventoryItemData = new BMCDInventoryItemData();
+				di.row = XML(e.item);
+				var url:String = XML(di.url.data).@href;
+				this.supplementalRequested = true;
+				this._tempXML = this._xml;
+				this._xml = null;
+				if(url==""){
+					log("Need to handle Expand:"+e.item,1);
+				} else {
+					log("this.uriManager.goToURI('"+url+"')");
+					this.uriManager.goToURI(url);
+				}
+			}
+			private function handleColapse(e:MAListItemEvent):void{
+				log("colapsing item at "+this.items.selectedIndex);
+				this.items.selectedItem = null;
+			}
+			private function handleSendEmail(event:MAFormEvent):void{
+				var success:Boolean = true;
+				try{
+					success = ExternalInterface.call("submitFormData",event.formData);
+					submittedPopUp(event);
+				} catch(e:Error){
+					success = false;
+				}
+				if(!success){}
+			}
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.Application;
+			import com.hphant.modsite.site.forms.SubmittedPopUp;
+			private var applicationOvelrlayAlpha:Number = 0;
+			private function submittedPopUp(event:MAFormEvent):void{
+				var pop:IFlexDisplayObject;
+			   applicationOvelrlayAlpha = Application.application.getStyle('disabledOverlayAlpha');
+			   Application.application.setStyle('disabledOverlayAlpha',.25);
+			   Application.application.enabled = false;
+				pop = PopUpManager.createPopUp(this,com.hphant.modsite.site.forms.SubmittedPopUp);
+				SubmittedPopUp(pop).addEventListener(MAFormEvent.CANCEL,this.cancelPopup);
+				
+				this.centerPopUp(pop);
+			}
+			import com.hphant.managers.BrowserScrollManager;
+			private function centerPopUp(pop:IFlexDisplayObject):void{
+				pop.x = BrowserScrollManager.getInstance().horizontal+BrowserScrollManager.getInstance().width/2-pop.width/2;
+				pop.y = BrowserScrollManager.getInstance().vertical+BrowserScrollManager.getInstance().height/2-pop.height/2;
+			}
+			private function cancelPopup(event:MAFormEvent):void{
+				PopUpManager.removePopUp(IFlexDisplayObject(event.currentTarget));
+				Application.application.setStyle('disabledOverlayAlpha',this.applicationOvelrlayAlpha);
+				Application.application.enabled = true;
+			}
+			private function setSortFields():void{
+				this.header.sorts.dataProvider = this.sortLables;
+				this.header.sorts.addEventListener(ListEvent.CHANGE,doSort);
+			}
+			private function changeInventoryDisplay(event:MALinkClickEvent):void{
+						if(itms){
+							log(""+event.item); 
+							selectedFilter = event.item.@id;
+							this.itemsArray.refresh();
+							this.items.refreshItems();
+						}
+			}
+			private function trCompare(a:XML,b:XML,fields:Array=null):int{
+				var result:int = 0;
+	            var i:int = 0;
+	            var d:Object;
+	            var e:Object;
+	            var len:int = this._sortFields.length;
+	            var propName:String;
+	            var tdIndex:int;
+	            while (result == 0 && (i < len))
+	            {
+	                propName = SortField(this._sortFields[i]).name;
+	                tdIndex = BMCDInventoryItemData.getHeaderIndex(propName);
+	                e = (SortField(this._sortFields[i]).descending) ? (!b) ? b : b.td[tdIndex].children() : (!a) ? a : a.td[tdIndex].children();
+	                d = (SortField(this._sortFields[i]).descending) ? (!a) ? a : a.td[tdIndex].children() : (!b) ? b : b.td[tdIndex].children();
+	          		switch(propName){
+	          			case BMCDInventoryItemData.names.price:
+	          				var pf:CurrencyFormatter = new CurrencyFormatter();
+	          				pf.currencySymbol = "";
+	          				pf.useThousandsSeparator = false;
+	          				pf.useNegativeSign = false;
+	          				result = compareValues(Number(pf.format(d)), Number(pf.format(e)));
+	          			break;
+	          			case BMCDInventoryItemData.names.mileage:
+	          				var nf:NumberFormatter = new NumberFormatter();
+	          				nf.useThousandsSeparator = false;
+	          				nf.useNegativeSign = false;
+	          				result = compareValues(Number(nf.format(d)), Number(nf.format(e)));
+	          			break;
+	          			case BMCDInventoryItemData.names.year:
+	          			case BMCDInventoryItemData.names.stockNumber:
+	          			case BMCDInventoryItemData.names.vin:
+	          				result = compareValues(Number(d), Number(e));
+	          			break;
+	          			case BMCDInventoryItemData.names.model:
+	          			case BMCDInventoryItemData.names.make:
+	          			case BMCDInventoryItemData.names.color:
+	          				result = compareValues(String(d), String(e));
+	          			break;
+	          			case "selected":
+	          				e = (SortField(this._sortFields[i]).descending) ? b : a;
+	          				d = (SortField(this._sortFields[i]).descending) ? a : b;
+	          				result = compareValues(d, e);
+	          			break;
+	          			default:
+	          				result = compareValues(d, e);
+	          			break;
+	          		}
+	                i++;
+	            }
+	            return result;
+			}
+			
+			private function compareValues(a:Object, b:Object):int{
+	            return (a == null && b == null) ? 0 : (a == null) ? 1 : (b == null || a < b) ? -1 : (a > b) ? 1 : 0;
+	        }
+	        private var _sortFields:Array = [];
+	        private var _sort:Sort = new Sort();
+			private function doSort(e:ListEvent):void{
+				var i:uint = ComboBox(e.target).selectedIndex;
+				if(i>0){
+					_sortFields = [new SortField(BMCDInventoryItemData.names[this.sortNames[i][0]],false,this.sortNames[i][1])];
+				} else {
+					_sortFields = [];
+				}
+				this._sort.compareFunction = this.trCompare;
+				this._sort.fields = this._sortFields;
+				this.items.selectedItem = null;
+				this.itemsArray.sort = this._sort;
+				this.itemsArray.refresh();
+				this.items.refreshItems();
+			}
+			public override function duplicate():IModule{
+				var m:ModInventory = new ModInventory();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+</ModCanvas>

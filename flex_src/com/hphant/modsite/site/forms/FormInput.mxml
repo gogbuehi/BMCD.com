@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" disabledOverlayAlpha="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+	<mx:Label text="{label}" id="dataLabel" styleName="{labelStyleName}" width="100%" minWidth="10"/>
+	<mx:TextInput id="dataInput" styleName="{inputStyleName}" change="{this.formatText(event)}" editable="true" enabled="{this.enabled}" width="100%" minWidth="10"/>
+	<mx:String id="labelStyleName">emailFormLabel</mx:String>
+	<mx:String id="inputStyleName">emailFormInput</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import mx.formatters.PhoneFormatter;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+			import mx.formatters.Formatter;
+			import mx.validators.SocialSecurityValidator;
+			import mx.validators.DateValidator;
+			import mx.validators.CurrencyValidator;
+			import mx.validators.NumberValidator;
+			import mx.validators.CreditCardValidator;
+			import mx.validators.ZipCodeValidator;
+			import mx.validators.PhoneNumberValidator;
+			import mx.validators.StringValidator;
+			import mx.validators.Validator;
+			import mx.validators.EmailValidator;
+			import mx.validators.IValidatorListener;
+			private var _type:String = FormInputType.TEXT;
+			private var _typeChanged:Boolean = true;
+			private var _label:String = "label";
+			
+			
+			public function get text():String{
+				return this.dataInput.text;
+			}
+			public function set text(value:String):void{
+				this.dataInput.text = value;
+			}
+			private function formatText(event:Event):void{
+				switch (this.type){
+					case FormInputType.PHONE:
+						this.dataInput.text = this.correctFormatChars(this.dataInput.text,PhoneNumberValidator(this.validator).allowedFormatChars);
+					break;
+					default:
+					break;
+				}
+			}
+			
+			private function correctFormatChars(string:String,chars:String):String{
+				var newString:String = string;
+				var pf:PhoneFormatter = new PhoneFormatter();
+				for(var i:int = 0; i < chars.length; i++){
+					newString = newString.split(chars.charAt(i)).join("");
+				}
+				var f:String = pf.format(newString);
+				return (f!="") ? f : string;
+			}
+			
+			[Bindable]
+			[Inspectable(defaultValue="label",category="Common")]
+			public override function get label():String{ return this._label;}
+			public override function set label(value:String):void{
+				this._label = value;
+			}
+			
+			[Bindable]
+			[Inspectable(defaultValue="text",enumeration="text,email,name,phone,zip,creditCard",category="Common")]
+			public function get type():String{return this._type;}
+			public function set type(value:String):void{
+				if(value!=this._type){
+					switch(value){
+						case FormInputType.TEXT:
+						case FormInputType.NUMBER:
+						case FormInputType.CURRENCY:
+						case FormInputType.DATE:
+						case FormInputType.SOCIAL_SECURITY:
+						case FormInputType.EMAIL:
+						case FormInputType.NAME:
+						case FormInputType.PHONE:
+						case FormInputType.ZIP:
+						case FormInputType.CREDIT_CARD:
+							this._type = value;
+							this._typeChanged = true;
+							this.invalidateProperties();
+						break;
+						default:
+							this._type = FormInputType.TEXT;
+							this._typeChanged = true;
+							this.invalidateProperties();
+						break;
+					}
+				}
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._typeChanged){
+					this._typeChanged = false;
+					if(this.validator){
+						this.validator.enabled = false;
+					}
+					switch(this._type){
+						case FormInputType.TEXT:
+							this.validator = new StringValidator();
+						break;
+						case FormInputType.EMAIL:
+							this.validator = new EmailValidator();
+						break;
+						case FormInputType.NAME:
+							this.validator = new StringValidator();
+						break;
+						case FormInputType.PHONE:
+							this.validator = new PhoneNumberValidator();
+						break;
+						case FormInputType.ZIP:
+							this.validator = new ZipCodeValidator();
+						break;
+						case FormInputType.CREDIT_CARD:
+							this.validator = new CreditCardValidator();
+						break;
+						case FormInputType.NUMBER:
+							this.validator = new NumberValidator();
+						break;
+						case FormInputType.CURRENCY:
+							this.validator = new CurrencyValidator();
+						break;
+						case FormInputType.DATE:
+							this.validator = new DateValidator();
+						break;
+						case FormInputType.SOCIAL_SECURITY:
+							this.validator = new SocialSecurityValidator();
+						break;
+					}
+					this.validator.enabled = true;
+					this.validator.required = _reqired;
+					this.validator.source = this.dataInput;
+					this.validator.property = "text";
+					
+				}
+				if(this._requiredChanged && this.validator){
+					this.validator.required = _reqired;
+					this._requiredChanged = false;
+				}
+			}
+			private var validator:Validator;
+			public function validateData():Boolean{
+				return !(this.validator.validate().type==ValidationResultEvent.INVALID);
+			}
+			private var _reqired:Boolean = true;
+			private var _requiredChanged:Boolean = false;
+			[Inspectable]
+			public function get required():Boolean{return this._reqired;}
+			public function set required(value:Boolean):void{
+				this._requiredChanged = true;
+				this._reqired = value;
+				this.invalidateProperties();
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

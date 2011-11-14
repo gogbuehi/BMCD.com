@@ -1,0 +1,24 @@
+/* CSS font face file */
+@font-face {
+    src: url("fonts/AmericanaStd/AmericanaStd.otf");
+    fontFamily: SiteFont;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/AmericanaStd/AmericanaStd-Bold.otf");
+    fontFamily: SiteFont;
+    fontWeight: Bold;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/AmericanaStd/AmericanaStd-Italic.otf");
+    fontFamily: SiteFont;
+    fontStyle: Italic;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/AmericanaStd/AmericanaStd-ExtraBold.otf");
+    fontFamily: SiteFontExtra;
+    fontWeight: Bold;
+    advancedAntiAliasing: true;
+}

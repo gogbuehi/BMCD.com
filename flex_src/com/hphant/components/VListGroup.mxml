@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox width="984" xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{this.dataChangedListener()}" currentState="closed" xmlns:calendar="com.hphant.modsite.site.assets.calendar.*" xmlns:components="com.hphant.components.*" xmlns:buttons="com.hphant.components.buttons.*">
+<mx:Metadata>
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeBegin",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="resizeComplete",type="com.hphant.modsite.site.events.MAListEvent")]
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="groupExpandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="groupColapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Event(name="opened",type="com.hphant.components.events.ListGroupEvent")]
+		[Event(name="closed",type="com.hphant.components.events.ListGroupEvent")]
+		[Event(name="expanded",type="com.hphant.components.events.ListGroupEvent")]
+	</mx:Metadata>
+	<mx:String id="oddStyleName">oddItem</mx:String>
+	<mx:String id="evenStyleName">evenItem</mx:String>
+	<buttons:MultiLineButton skin="com.hphant.skins.FixedButtonSkin" id="topBar" height="0" minHeight="0" click="{this.dispatchClickEvent()}" label="{this.label}" styleName="{groupHeaderStyle}" width="100%"/>
+	<components:VList id="items" width="100%" itemRenderer="{this.itemRenderer}" oddStyleName="{this.oddStyleName}" evenStyleName="{this.evenStyleName}"
+	    linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item,event.bubbles,event.cancelable))}"
+		sendEmail="{this.dispatchEvent(new MAFormEvent(event.type,event.formData,event.bubbles,event.cancelable))}"
+	    resizeBegin="{this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable))}"
+	    resizeComplete="{this.dispatchEvent(new MAListEvent(event.type,event.bubbles,event.cancelable))}"
+	    colapseClick="{this.dispatchEvent(new MAListItemEvent(event.type,event.item,event.bubbles,event.cancelable))}"
+	    expandClick="{this.dispatchEvent(new MAListItemEvent(event.type,event.item,event.bubbles,event.cancelable))}"/>
+	<mx:String id="groupHeaderStyle">listGroupHeader</mx:String>
+	<mx:Number id="headerHeight">50</mx:Number>
+	<mx:Boolean id="doBuildout">false</mx:Boolean>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.components.events.ListGroupEvent;
+			import com.hphant.skins.FixedButtonSkin;
+			import mx.controls.listClasses.ListBase;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import com.hphant.modsite.site.assets.inventory.MAInventoryItemRenderer;
+			import mx.collections.IList;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.core.UIComponent;
+			import com.hphant.renderers.ExpandableItemRenderer;
+			import com.hphant.modsite.data.interfaces.ITableData;
+			import mx.skins.halo.AccordionHeaderSkin;
+			
+			private var _factory:IFactory = new ClassFactory(com.hphant.renderers.ExpandableItemRenderer);
+			
+			private var _labelFunction:Function;
+			
+			[Inspectable]
+			[Bindable]
+			public function get labelFunction():Function{return this._labelFunction;}
+			public function set labelFunction(value:Function):void{
+				this._labelFunction = value;
+			}
+			
+			[Inspectable]
+			[Bindable]
+			public function get itemRenderer():Object{return this._factory;}
+			public function set itemRenderer(value:Object):void{
+				if(value is String){
+					this._factory = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._factory = IFactory(value);
+				} else if(value is Class){
+					this._factory = new ClassFactory(Class(value));
+				}
+			}
+			private function dataChangedListener():void{
+				if(this.currentState=="expanded"){
+					this.items.dataProvider = IList(data);
+				}
+				if(this._labelFunction!=null){
+					this.label = this.labelFunction(data,this);
+				}
+			}
+			private function dispatchClickEvent():void{
+				if(this.currentState=="opened"){
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.GROUP_EXPAND_CLICK,this.data));
+				} else if(this.currentState=="expanded"){
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.GROUP_COLAPSE_CLICK,this.data));
+				}
+			}
+			
+			private var _selectedItem:Object;
+			private var _selectedItemChanged:Boolean = false;
+			public function get selectedItem():Object{
+				return this._selectedItem;
+			}
+			public function set selectedItem(value:Object):void{
+				//if(this._selectedItem != value){
+					this._selectedItem = value;
+					this._selectedItemChanged = true;
+					this.invalidateProperties();
+				//}
+			}
+			protected override function commitProperties():void{
+				if(this._selectedIndexChanged && this.items.dataProvider){
+					log("Setting VList selected index to "+this.selectedIndex);
+					this.items.selectedIndex = this.selectedIndex;
+					this._selectedItem = this.items.selectedItem;
+					this._selectedIndexChanged = false;
+				}
+				if(this._selectedItemChanged && this.items.dataProvider){
+					this.items.selectedItem = this.selectedItem;
+					this._selectedIndex = this.items.selectedIndex;
+					this._selectedItemChanged = false;
+				}
+			}
+			[Bindable]
+			private var _selectedIndex:int = -1;
+			private var _selectedIndexChanged:Boolean = false;
+			public function get selectedIndex():int{return _selectedIndex;}
+			public function set selectedIndex(value:int):void{
+				this._selectedIndex = value;
+				this._selectedIndexChanged = true;
+				this.invalidateProperties();
+			}
+			private function log(message:Object,level:int=0):void{
+				Logger.log("[GroupedVList] "+message,level);
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="closed">
+		</mx:State>
+		<mx:State name="opened" basedOn="closed">
+			<mx:SetProperty target="{topBar}" name="height"/>
+			<mx:SetProperty target="{topBar}" name="minHeight" value="{headerHeight}"/>
+		</mx:State>
+		<mx:State name="expanded" basedOn="opened">
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="closed" toState="opened">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.OPENED))}">
+				<mx:Resize target="{topBar}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="closed">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.CLOSED))}">
+				<mx:Resize target="{topBar}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="closed">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.CLOSED))}">
+				<mx:SetPropertyAction target="{items}" name="dataProvider" value="{null}"/>
+				<mx:SetPropertyAction target="{this}" name="selectedIndex" value="-1"/>
+				<mx:Pause duration="1000" />
+				<mx:Resize target="{topBar}" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="expanded">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.EXPANDED))}">
+				<mx:SetPropertyAction target="{items}" name="dataProvider" value="{IList(data)}"/>
+				<mx:Pause duration="1000" />
+				<mx:SetPropertyAction target="{items}" name="selectedIndex" value="{this._selectedIndex}"/>
+				<mx:Pause duration="1000" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="closed" toState="expanded">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.EXPANDED))}">
+				<mx:Resize target="{topBar}" />
+				<mx:SetPropertyAction target="{items}" name="dataProvider" value="{IList(data)}"/>
+				<mx:Pause duration="1000" />
+				<mx:SetPropertyAction target="{items}" name="selectedIndex" value="{this._selectedIndex}"/>
+				<mx:Pause duration="1000" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="opened">
+			<mx:Sequence effectEnd="{this.dispatchEvent(new ListGroupEvent(ListGroupEvent.OPENED))}">
+				<mx:SetPropertyAction target="{items}" name="dataProvider" value="{null}"/>
+				<mx:SetPropertyAction target="{this}" name="selectedIndex" value="-1"/>
+				<mx:Pause duration="1000" />
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+</mx:VBox>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas updateComplete="{drawMask();}" borderThickness="0" clipContent="true" styleName="emailFormPod" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:forms="com.hphant.modsite.site.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:Accordion headerStyleName="emailAccordion" height="100%" buttonMode="true" useHandCursor="true"  backgroundAlpha="0" borderStyle="none" id="accordian" width="100%" mask="{accordianMask}">
+		<mx:VBox styleName="dealerMessage" label="Description" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Text text="{BMCDInventoryItemData(data).dealerBlurb.data}" width="100%" height="100%"/>
+		</mx:VBox>
+		<mx:VBox label="Email Dealer" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailDealerForm id="dealer" sendEmail="{this.sendEmailData(event)}" />
+		</mx:VBox>
+		<mx:VBox label="Email Friend" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<forms:EmailFriendForm id="freind" sendEmail="{this.sendEmailData(event)}" />
+		</mx:VBox>
+	</mx:Accordion>
+	<mx:UIComponent id="accordianMask"/>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.formatters.CurrencyFormatter;
+			import com.hphant.modsite.data.forms.EmailDealerFormData;
+			import com.hphant.modsite.data.forms.EmailFriendFormData;
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.site.events.MAListEvent;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.data.inventory.BMCDInventoryItemData;
+			include "../interfaces/AssetIncludes.as";
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml){
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function drawMask():void{
+				var rc:Number = this.getStyle('cornerRadius');
+				var gr:Graphics = this.accordianMask.graphics;
+				gr.clear();
+				gr.beginFill(0x000000);
+				gr.drawRoundRect(0,0,this.width,this.height,rc*2,rc*2)
+				gr.endFill();
+			}
+			private function sendEmailData(event:MAFormEvent):void{
+				
+				if(event.formData is EmailFriendFormData){
+					var pf:CurrencyFormatter = new CurrencyFormatter();
+					pf.currencySymbol = "$";
+					pf.useThousandsSeparator = true;
+					EmailFriendFormData(event.formData).vehicleData = BMCDInventoryItemData(data).row.toXMLString();
+					EmailFriendFormData(event.formData).vehicleDescription = String(BMCDInventoryItemData(data).dealerBlurb.data);
+					EmailFriendFormData(event.formData).vehicleTitle = BMCDInventoryItemData(data).year.data+" "+BMCDInventoryItemData(data).model.data;
+					EmailFriendFormData(event.formData).price = pf.format(BMCDInventoryItemData(data).price.data);
+					EmailFriendFormData(event.formData).vehicleMainImage = String(BMCDInventoryItemData(data).photo.data.@src);
+					EmailFriendFormData(event.formData).linkToVehicle = EmailFriendFormData(event.formData).homepageLink+String(BMCDInventoryItemData(data).url.data.@href);
+					EmailFriendFormData(event.formData).vehicleMake = String(BMCDInventoryItemData(data).make.data);
+					
+				} else if(event.formData is EmailDealerFormData){
+					EmailDealerFormData(event.formData).vehicleData = BMCDInventoryItemData(data).row.toXMLString();
+					EmailDealerFormData(event.formData).linkToVehicle = EmailDealerFormData(event.formData).homepageLink+String(BMCDInventoryItemData(data).url.data.@href);
+					EmailDealerFormData(event.formData).vin = String(BMCDInventoryItemData(data).vin.data);
+					EmailDealerFormData(event.formData).stockNumber = String(BMCDInventoryItemData(data).stockNumber.data);
+				} else {
+					EmailFormData(event.formData).vehicleData = BMCDInventoryItemData(data).row.toXMLString();
+				}
+				event.currentTarget.currentState = "sent";
+				this.dispatchEvent(new MAFormEvent(event.type,event.formData))
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

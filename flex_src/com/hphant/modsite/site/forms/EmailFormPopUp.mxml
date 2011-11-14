@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" styleName="emailFormPod" direction="vertical"  minWidth="300" xmlns:text="com.hphant.modsite.site.assets.text.*">
+	<text:MAText xml="{XMLList(this.title)}" styleName="popUpTitle"/>
+	<mx:Button id="cancel" label="Cancel" click="{this.cancelEvent(event)}"/>
+	<mx:String id="title" />
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+		[Event(name="cancel",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import mx.core.IFlexDisplayObject;
+			private var _formFactory:IFactory;
+			[Inspectable]
+			public function get formFactory():Object{
+				return this._formFactory;
+			}
+			public function set formFactory(value:Object):void{ 
+				if(value is IFactory){
+					this._formFactory = IFactory(value);
+				} else if(value is Class){
+					this._formFactory = new ClassFactory(Class(value));
+				} else if(!value){
+					this._formFactory = null;
+				}
+				if(this._formFactory && !(this._form is ClassFactory(this._formFactory).generator)){
+					 if(this._form){
+						 this.removeFormEvents(this._form);
+						 this.removeChild(DisplayObject(this._form));
+					 }
+					 this._form = this._formFactory.newInstance();
+					 this.addFormEvents(this._form);
+					 this.addChildAt(DisplayObject(this._form),1); 
+				} else if(!this._formFactory){
+					if(this._form){
+						this.removeFormEvents(this._form);
+						this.removeChild(DisplayObject(this._form));
+						this._form = null;
+					}
+				}
+				
+			}
+			private var _form:IFlexDisplayObject;
+			
+			private function addFormEvents(form:IFlexDisplayObject):void{
+				form.addEventListener(MAFormEvent.SEND_EMAIL,this.sendEmail);
+			}
+			private function removeFormEvents(form:IFlexDisplayObject):void{
+				form.removeEventListener(MAFormEvent.SEND_EMAIL,this.sendEmail);
+			}
+			private function sendEmail(event:MAFormEvent):void{
+				//event.currentTarget.currentState = "sent";
+				this.dispatchEvent(new MAFormEvent(event.type,event.formData,event.bubbles,event.cancelable));
+			}
+			private function cancelEvent(event:MouseEvent):void{
+				this.dispatchEvent(new MAFormEvent(MAFormEvent.CANCEL,null));
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

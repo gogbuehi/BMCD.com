@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="{init()}" xmlns:ui="flash.ui.*">
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+    	<mx:Label text="Available Images:"/>
+		<mx:TileList id="availableList" rowCount="2" columnWidth="60" columnCount="15" rowHeight="45"
+			direction="horizontal" 
+		    dragEnabled="true"
+		    allowDragSelection="false"
+		    allowMultipleSelection="false"
+			dataProvider="{availableImages}">
+			<mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" source="{data.cropLocation}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+				</mx:Component>
+			</mx:itemRenderer>
+		</mx:TileList>
+    </mx:VBox>
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+    	<mx:Label text="Used Images:"/>
+		<mx:TileList id="usedList" dataProvider="{imageCollection}" updateComplete="{replaceObjectsInImageList()}"
+			direction="horizontal" change="{this.dispatchEvent(new Event(Event.CHANGE))}"
+		    rowCount="2" dragMoveEnabled="true" dragEnabled="true" dropEnabled="true"
+		    dragDrop="{this.dragDropListener(event)}"   
+		    columnWidth="60" columnCount="15" rowHeight="45">
+		    <mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray2}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" source="{data}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+				</mx:Component>
+			</mx:itemRenderer>
+		</mx:TileList>
+    </mx:VBox>
+    <mx:Binding destination="cmRemoveImage.enabled" source="Boolean(usedList.selectedItem)" />
+    <mx:Binding destination="imageCollection.source" source="images" />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.DragEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.contentlibrary.view.NewImageCropPallet;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			private var imageCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable('imagesChange')]
+			public function set images(value:Array):void{
+				_images = value;
+				if(!_origionalImages){
+					_origionalImages = _images;
+				}
+				replaceObjectsInImageList()
+				this.dispatchEvent(new Event('imagesChange'));
+			}
+			public function get images():Array{
+				return this._images;
+			}
+			
+			import com.hphant.contentlibrary.model.Crop;
+			import mx.events.FlexEvent;
+			
+			private var _origionalImages:Array;
+			
+			[Bindable]
+			private var _images:Array;
+			
+			[Bindable]
+			private var availableImages:ArrayCollection;
+			[Bindable('imageSizesChange')]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public function get imageSizes():Array{
+				return _imageSizes;
+			}
+			public function set imageSizes(value:Array):void{
+				_imageSizes = value;
+				getAvailableThumbs();
+				this.dispatchEvent(new Event('imageSizesChange'));
+			}
+			
+			
+			private var _imageSizes:Array;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			[Bindable]
+			private var _cmArray2:Array = new Array();
+			
+			private var cmNewImage:ContextMenuItem = new ContextMenuItem("New Image");
+			private var cmRemoveImage:ContextMenuItem = new ContextMenuItem("Remove Image");
+			
+			private function defineListeners():void{
+				this._cmArray.push(this.cmNewImage);
+				this.cmNewImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				this._cmArray2.push(this.cmRemoveImage);
+				this.cmRemoveImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				
+				ContentModelLocator.getInstance().addEventListener("cropsChanged",getAvailableThumbs);
+			}
+			
+			private function init():void{
+				defineListeners();
+				var event:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+				event.dispatch();
+			}
+			
+			private function getAvailableThumbs(event:Event = null):void{
+				if(this.imageSizes)
+					this.availableImages = ContentModelLocator.getInstance().getCropsOfDimension(Rectangle(this.imageSizes[0]).width,Rectangle(this.imageSizes[0]).height);
+			}
+			
+			private var newImagePallet:NewImageCropPallet;
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmRemoveImage:
+						log("Remove the selected image");
+						if(this.usedList.selectedItem){
+							ArrayCollection(this.imageCollection).removeItemAt(this.usedList.selectedIndex);
+							replaceObjectsInImageList();
+						}
+					break
+					case this.cmNewImage:
+						if(!this.newImagePallet){
+							this.newImagePallet = new NewImageCropPallet();
+						} else {
+							this.newImagePallet.reset();
+						}
+						this.newImagePallet.cropSizes = this.imageSizes;
+						PalletManager.openPallet(this.newImagePallet);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			private function dragDropListener(event:DragEvent):void{
+				this.usedList.selectedItem = event.dragSource.dataForFormat(event.dragSource.formats[0])[0];
+				this._selectedIndex = this.usedList.selectedIndex;
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			private var _selectedIndex:int = 0;
+			private function replaceObjectsInImageList():void{
+				var objectsFound:Boolean = false;
+				var newArray:Array = new Array();
+				if(this.usedList){
+					_selectedIndex = this.usedList.selectedIndex;
+				}
+				for each(var img:Object in images){
+					if(img is String && String(img).indexOf('http://')==0){
+						newArray.push(img);
+					} else if(img is Crop){
+						objectsFound = true;
+						newArray.push(Crop(img).cropLocation);
+					} else {
+						objectsFound = true;
+					}
+				}
+				if(objectsFound){
+					this._images = newArray;
+					this.dispatchEvent(new Event('imagesChange'));
+				}
+				if(this.usedList){
+					if(newArray.length<=_selectedIndex){
+						_selectedIndex = newArray.length-1;
+					}
+					this.usedList.selectedIndex = this._selectedIndex;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

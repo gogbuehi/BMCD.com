@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"  backgroundAlpha="0" dataChange="{applyData()}"
+		   verticalScrollPolicy="off" horizontalScrollPolicy="off" currentState="closed"
+		   width="984" xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:inventory="com.hphant.modsite.site.assets.inventory.*" xmlns:images="com.hphant.modsite.site.assets.images.*">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:VBox id="leftSide" width="640" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="25" height="0">
+		<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+			<text:MAText styleName="subTitle" xml="{dtls}" width="100%"/>
+		</mx:VBox>
+	</mx:VBox>
+	<mx:VBox id="rightSide" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="300" height="0">
+		<mx:Box width="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false">
+			<images:MASubtitledImage id="map" xml="{mp}" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item))}"/>
+		</mx:Box>
+		<text:MAText id="location" width="100%" xml="{lctn}" insertBreaks="false"/>
+	</mx:VBox>
+	<mx:states>
+		<mx:State name="colapsed">
+			<mx:SetProperty target="{rightSide}" name="height" value="0"/>
+			<mx:SetProperty target="{leftSide}" name="height" value="0"/>
+		</mx:State>
+		<mx:State name="expanded" basedOn="colapsed">
+			<mx:SetProperty target="{rightSide}" name="height"/>
+			<mx:SetProperty target="{leftSide}" name="height"/>
+			<mx:SetProperty target="{this}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="*" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize targets="{[this.rightSide,this.leftSide]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="*" toState="colapsed">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{map}" name="xml" value="{null}"/>
+				<mx:Resize targets="{[this.rightSide,this.leftSide]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.DataItem;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.utils.StringUtil;
+			import com.hphant.modsite.data.calendar.BMCDEventItemData;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var suggestionsStyleName:String;
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			private var dtls:XMLList;
+			[Bindable]
+			private var mp:XMLList;
+			[Bindable]
+			private var lctn:XMLList;
+			
+			[Inspectable]
+			[Bindable]
+			public function get suplimental():XMLList{
+				return BMCDEventItemData.supplemental;
+			}
+			public function set suplimental(value:XMLList):void{
+				this._suplimental = value;
+				if(this.currentState=="expanded"){
+					//this.suggestions.xml = this._suplimental;
+				}
+			}
+			private var _suplimental:XMLList;
+			
+			private function applyData():void{
+				if(this.data){
+					var ed:BMCDEventItemData = new BMCDEventItemData();
+					ed.row = XML(data);
+					this.lctn = XMLList('<p>'+ed.location.data+'</p><p>'+ed.street.data+'</p><p>'+ed.city.data+', '+ed.state.data+' '+ed.zip.data+'</p>');
+					this.mp = XMLList(ed.map.data);
+					this.dtls = XMLList(ed.description.data);
+				
+				} else {
+					this.lctn = null;
+					this.mp = null;
+					this.dtls = null;
+				}
+			}
+		]]>
+	</mx:Script>
+	<mx:resizeEffect>
+		<mx:Resize id="autoResizeEffect"/>
+	</mx:resizeEffect>
+</mx:HBox>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" label="Pallet"  click="{palletClicked(event)}"
+	verticalScrollPolicy="off" horizontalScrollPolicy="off"  
+ 	>
+	<mx:Metadata>
+		[Event(name="close",type="com.hphant.components.events.PalletEvent")]
+		[Event(name="startDrag",type="com.hphant.components.events.PalletEvent")]
+		[Event(name="stopDrag",type="com.hphant.components.events.PalletEvent")]
+		[Event(name="palletClick",type="com.hphant.components.events.PalletEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.skins.halo.ButtonBarButtonSkin;
+			import mx.controls.Label;
+			import mx.core.Container;
+			import com.hphant.utils.Logger;
+			import com.hphant.components.events.PalletEvent;
+			import mx.controls.Button;
+			import mx.containers.HBox;
+			import mx.core.UIComponent;
+			import mx.core.ScrollPolicy;
+			import flash.events.MouseEvent;
+			[Bindable]
+			[Inspectable]
+			public function get closeLabel():String{
+				return this._closeLabel;
+			}
+			public function set closeLabel(value:String):void{
+				this._closeLabel = value;
+				this.closeButton.label = value;
+			}
+			private var _closeLabel:String = "X";
+			[Bindable]
+			[Inspectable]
+			public function get closeEnabled():Boolean{
+				return this._closeEnabled;
+			}
+			public function set closeEnabled(value:Boolean):void{
+				this._closeEnabled = value;
+				this.closeButton.enabled = value;
+			}
+			private var _closeEnabled:Boolean = true;
+			[Bindable]
+			[Inspectable]
+			public function get dragEnabled():Boolean{
+				return this._dragEnabled;
+			}
+			public function set dragEnabled(value:Boolean):void{
+				this._dragEnabled = value;
+				//this.dragButton.enabled = value;
+			}
+			private var _dragEnabled:Boolean = true;
+			[Bindable]
+			[Inspectable]
+			public override function get label():String{
+				return super.label;
+			}
+			public override function set label(value:String):void{
+				super.label = value;
+				this.dragButton.label = value;
+			}
+			[Inspectable]
+			public function get topBar():Container{
+				return _topBar;
+			}
+			public function set topBar(value:Container):void{
+				if(value != this._topBar){
+					this.removeAllChildren();
+					this.createTop(value);
+				}
+			}
+			private var _topBar:Container;
+			private function createTop(top:Container=null):void{
+				if(!top){
+					_topBar = new HBox();
+					_topBar.styleName="topBarStyle";
+					_topBar.percentWidth = 100;
+					_topBar.verticalScrollPolicy = topBar.horizontalScrollPolicy = ScrollPolicy.OFF;
+					dragButton.setStyle('disabledColor',0x000000);
+					dragButton.setStyle('skin',mx.skins.halo.ButtonBarButtonSkin);
+					dragButton.enabled = false;
+					dragButton.percentWidth = 100;
+					dragButton.percentHeight = 100;
+					dragButton.buttonMode = true;
+					dragButton.useHandCursor = true;
+					dragButton.label = label;
+					//dragButton.enabled = this.dragEnabled;
+					dragButton.addEventListener(MouseEvent.MOUSE_DOWN,this.startMouseDrag);
+					dragButton.addEventListener(MouseEvent.MOUSE_UP,this.stopMouseDrag);
+					closeButton.label = this.closeLabel;
+					closeButton.setStyle('skin',mx.skins.halo.ButtonBarButtonSkin);
+					closeButton.enabled = this.closeEnabled;
+					closeButton.addEventListener(MouseEvent.CLICK,close);
+					_topBar.addChild(dragButton);
+					_topBar.addChild(closeButton);
+				} else {
+					this._topBar = top;
+				}
+				addChildAt(_topBar,0);
+				this.invalidateDisplayList();
+			}
+			[Inspectable]
+			public function get bottomBar():Container{
+				return _bottomBar;
+			}
+			public function set bottomBar(value:Container):void{
+				if(value != this._bottomBar){
+					this.removeAllChildren();
+					this.createBottom(value);
+				}
+			}
+			private var _bottomBar:Container;
+			
+			private function createBottom(bottom:Container=null):void{
+				if(!bottom){
+					_bottomBar = new HBox();
+					_bottomBar.percentWidth = 100;
+					_bottomBar.height = 0;
+					_bottomBar.verticalScrollPolicy = topBar.horizontalScrollPolicy = ScrollPolicy.OFF;
+					_bottomBar.setStyle('horizontalGap',0);
+				} else {
+					this._bottomBar = bottom;
+				}
+				addChildAt(bottomBar,this.numChildren ? this.numChildren-1 : 0);
+				this.invalidateDisplayList();
+			}
+			
+			
+			private var dragButton:Button = new Button();
+			private var closeButton:Button = new Button();
+			
+			[ArrayElementType("mx.core.UIComponent")]
+			private var content:Array;
+			
+			protected override function createChildren():void{
+				super.createChildren();
+				createTop(topBar);
+				createBottom(bottomBar);
+				this.draw();
+			}
+			private function positionHeaderAndFooter():void{
+				if(this.topBar && this.topBar.parent == this){
+					this.setChildIndex(this.topBar,0);
+				}
+				if(this.bottomBar && this.bottomBar.parent == this){
+					this.setChildIndex(this.bottomBar,this.numChildren ? this.numChildren-1 : 0);
+				}
+			}
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				positionHeaderAndFooter();
+			} 
+			public override function addChild(child:DisplayObject):DisplayObject{
+				var c:DisplayObject = super.addChild(child);
+				positionHeaderAndFooter();
+				return c;
+			}
+			protected function draw():void{
+				for each(var i:UIComponent in content)
+				{
+					this.addChild(i);
+				}
+				positionHeaderAndFooter();
+				this.invalidateDisplayList();
+			}
+			private function updateCloseLabel(event:Event):void{
+				closeButton.label = this.closeLabel;
+			}
+			private function updateDragLabel(event:Event):void{
+				dragButton.label = this.label;
+			}
+			private function updateDragEnabled(event:Event):void{
+				dragButton.enabled = this.dragEnabled;
+			}
+			private function updateCloseEnabled(event:Event):void{
+				closeButton.enabled = this.closeEnabled;
+			}
+			private function stopMouseDrag(event:MouseEvent):void{
+				if(this.dragEnabled){
+					this.stopDrag();
+					this.dispatchEvent(new PalletEvent(PalletEvent.STOP_DRAG));
+				}
+			}
+			private function palletClicked(event:MouseEvent):void{
+				if(!(event.target is Button)){
+					this.dispatchEvent(new PalletEvent(PalletEvent.PALLET_CLICK));
+				}
+			}
+			private function startMouseDrag(event:MouseEvent):void{
+				if(this.dragEnabled){
+					this.startDrag();
+					this.dispatchEvent(new PalletEvent(PalletEvent.START_DRAG));
+				}
+			}
+			protected function close(event:MouseEvent=null):void{
+				this.dispatchEvent(new PalletEvent(PalletEvent.CLOSE));
+			}
+			public function reset():void{
+				log("Pallet has been reset");
+				this.data = null;
+			}
+			
+			protected function log(message:Object,level:uint=0):void{
+				Logger.log("["+this.className+"] "+message,level);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

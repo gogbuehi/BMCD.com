@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas xmlns="com.hphant.modsite.site.modules.*" 
+		   xmlns:mx="http://www.adobe.com/2006/mxml" 
+		   xmlns:images="com.hphant.modsite.site.assets.video.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   backgroundAlpha="1"
+		   currentState="state0"
+	       width="984">
+	<mx:HBox id="showHolder" width="100%" horizontalAlign="center">
+		<images:MAVideoShow id="show" skin="swf/SkinOverPlayStopSeekMuteVol.swf" showText="false" linkClicked="{this.setText(event)}"/>
+		<text:MAShowcaseText id="text" width="300" height="100%"  linkClicked="{this.linkClickedEvent(event)}" >
+			<text:resizeEffect>
+				<mx:Resize />
+			</text:resizeEffect>
+		</text:MAShowcaseText>
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.effects.easing.Back;
+			[Bindable]
+			private var txt:XMLList;
+			[Bindable]
+			private var img:XMLList;
+			
+			private function linkClickedEvent(event:MALinkClickEvent):void{
+				log("Link Clicked : href='"+event.item.href+"'");
+				this.uriManager.goToURI(event.item.href);
+			}
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					txt = this._xml.(name()=="p"||name()=="h1");
+					img = this._xml.ul;
+					XMLUtility.insertBlankNode(txt);
+					XMLUtility.insertBlankNode(img.li.img);
+					XMLUtility.insertBlankNode(img.li.a.img);
+					XMLUtility.insertBlankNode(img.li.p);
+					
+					if(this.currentState>="state2"){
+						this.text.xml = txt;
+						this.show.xml = img;
+					}
+					this.xmlChanged = false;
+				} else if(this.xmlChanged){
+					txt = null;
+					img = null;
+					if(this.currentState>="state2"){
+						this.text.xml = txt;
+						this.show.xml = img;
+					}
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function setText(event:MALinkClickEvent):void{
+				txt = event.item.p;
+				if(this.currentState>"state2"){
+					log("Setting Showcase text to :" + txt+":");
+					this.text.xml = txt;
+				}
+			}
+			public override function duplicate():IModule{
+				var m:ModVideoShowcase = new ModVideoShowcase();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+	<states>
+		<mx:State name="state0" >
+			<mx:SetProperty target="{this}" name="height" value="0"/>
+			<mx:SetProperty target="{this}" name="width" value="0"/>
+			<mx:SetProperty target="{this.show}" name="visible" value="false" />
+			<mx:SetProperty target="{this.text}" name="visible" value="false" />
+		</mx:State>
+		<mx:State name="state1" basedOn="state0">
+			<mx:SetProperty target="{this}" name="height"/>
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+		</mx:State>
+		<mx:State name="state2" basedOn="state1">
+			<mx:SetProperty target="{this.show}" name="visible" value="true" />
+			<mx:SetProperty target="{this.text}" name="visible" value="true" />
+		</mx:State>
+		<mx:State name="state3" basedOn="state2">
+			<mx:SetProperty target="{this.show}" name="xml" value="{this.img}" />
+			<mx:SetProperty target="{this.text}" name="xml" value="{this.txt}" />
+		</mx:State>
+	</states>
+	
+	<transitions>
+   		<mx:Transition fromState="state0" toState="state3">
+   			<mx:Sequence>
+				<mx:SetPropertyAction target="{this.text}" name="xml" value="{this.txt}" />
+				<mx:SetPropertyAction target="{this.show}" name="visible" value="true" />
+				<mx:SetPropertyAction target="{this.text}" name="visible" value="true" />
+				<mx:SetPropertyAction target="{this.show}" name="alpha" value="1" />
+				<mx:SetPropertyAction target="{this.text}" name="alpha" value="1" />
+   				<mx:SetPropertyAction target="{this}" name="height"/>
+   				<mx:SetPropertyAction target="{this}" name="width" value="984"/>
+   				<mx:Pause duration="250" />
+				<mx:SetPropertyAction target="{this.show}" name="xml" value="{this.img}" />
+   			</mx:Sequence>
+   		</mx:Transition>
+   		<mx:Transition fromState="state3" toState="state0">
+   			<mx:Sequence>
+				<mx:SetPropertyAction target="{this.show}" name="visible" value="false" />
+				<mx:SetPropertyAction target="{this.text}" name="visible" value="false" />
+				<mx:SetPropertyAction target="{this.show}" name="alpha" value="0" />
+				<mx:SetPropertyAction target="{this.text}" name="alpha" value="0" />
+   				<mx:SetPropertyAction target="{this}" name="height" value="0"/>
+   				<mx:SetPropertyAction target="{this}" name="width" value="0"/>
+   			</mx:Sequence>
+   		</mx:Transition>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction targets="{[this.show,this.text]}" name="alpha" value="0" />
+				<mx:SetPropertyAction targets="{[this.show,this.text]}" name="visible" value="true" />
+   				<mx:Fade targets="{[this.show,this.text]}" alphaFrom="0" alphaTo="1"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state3">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+				<mx:SetPropertyAction targets="{[this.show,this.text]}" name="xml"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction targets="{[this.show,this.text]}" name="xml" value="{null}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+   				<mx:Fade targets="{[this.show,this.text]}" alphaFrom="1" alphaTo="0"/>
+   				<mx:SetPropertyAction targets="{[this.show,this.text]}" name="visible" value="false" />
+			</mx:Sequence>
+		</mx:Transition>
+   		<mx:Transition fromState="state1" toState="state0">
+   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+				<mx:Resize target="{this}" duration="500" />
+   			</mx:Sequence>
+   		</mx:Transition>
+	</transitions>
+</ModCanvas>

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet label="Product Information" xmlns="com.hphant.components.containers.*" implements="com.hphant.remoting.IResponder"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:components="com.hphant.components.*" 
+	xmlns:text="com.hphant.components.text.*" xmlns:buttons="com.hphant.components.buttons.*" dataChange="{handleData()}"
+    creationComplete="{init()}"
+	>
+	<mx:VBox width="100%" height="100%">
+	<text:SelfLabelTextInput label="Title:" width="100%" id="title" text="{CalendarRecord(data).title}" change="{changeListener(event)}"/>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="Location Name:" width="200" id="locationName" text="{CalendarRecord(data).locationName}" change="{changeListener(event)}"/>	
+		<text:SelfLabelTextInput label="Street:" width="200" id="street" text="{CalendarRecord(data).street}" change="{changeListener(event)}"/>
+		<text:SelfLabelTextInput label="Map URL:" width="200" id="map" text="{CalendarRecord(data).map}" change="{changeListener(event)}"/>
+	</mx:HBox>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:SelfLabelTextInput label="City:" width="200" id="city" text="{CalendarRecord(data).city}" change="{changeListener(event)}"/>	
+		<mx:ComboBox width="200" id="state" selectedItem="{selectedState}" change="{changeListener(event)}" dataProvider="{stateValues}" labelField="name">
+		</mx:ComboBox>
+		<text:SelfLabelTextInput label="ZIP:" width="200" id="zip" text="{CalendarRecord(data).zip}" change="{changeListener(event)}"/>
+	</mx:HBox>	
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Label text="Date:"/>
+		<mx:DateField id="date" selectedDate="{selectedDate}" width="200" change="{changeListener(event)}"/>
+		<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Label text="Start Time:"/>
+			<components:TimeSelector id="startTime" time="{CalendarRecord(data).startTime}" change="{changeListener(event)}"/>
+			</mx:HBox>
+			<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Label text="End Time:"/>
+			<components:TimeSelector id="endTime" time="{CalendarRecord(data).endTime}" change="{changeListener(event)}"/>
+			</mx:HBox>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+		<mx:CheckBox id="show" label="Visible:" labelPlacement="left" selected="{Boolean(CalendarRecord(data).visible)}" change="{changeListener(event)}"/>
+		<buttons:PalletButton id="thumbButton" label="Thumbnail" palletPosition="none" palletLabel="Select Thumbnail" pallet="{this.thumb}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="imagesButton" label="Images" palletPosition="none" palletLabel="Select Images" pallet="{this.images}">
+		</buttons:PalletButton>
+		<buttons:PalletButton id="seoButton" label="SEO Tools" palletPosition="bottom" pallet="{this.seo}">
+		</buttons:PalletButton>
+		
+	</mx:HBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+		<mx:Label text="Short Description"/>
+		<components:ExtendedRichTextEditor id="blurb" colorEnabled="false" htmlText="{CalendarRecord(data).blurb}" width="100%" height="75" displayTools="false" change="{changeListener(event)}"/>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0" width="100%">
+		<mx:Label text="Long Description"/>
+		<components:ExtendedRichTextEditor id="description" colorEnabled="false" htmlText="{CalendarRecord(data).description}" width="100%" height="225" displayTools="false" change="{changeListener(event)}"/>
+	</mx:VBox>
+	</mx:VBox>
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:Button label="Save" enabled="{changed}" click="{saveRecord()}"/>
+		<mx:Button label="New" click="{newRecord()}"/>
+		<mx:Button label="Duplicate" enabled="{Boolean(data)}" click="{duplicateRecord()}"/>
+		<mx:Button label="Remove" enabled="{Boolean(data)}" click="{removeRecord()}"/>
+	</mx:HBox>
+	<mx:Binding source="CalendarRecord(data).thumb" destination="thumb.source" />
+	<mx:Binding source="CalendarRecord(data).pageDescription" destination="seo.description" />
+	<mx:Binding source="CalendarRecord(data).pageKeywords" destination="seo.keywords" />
+	<mx:Binding source="CalendarRecord(data).images.length>0 ? CalendarRecord(data).images.split(',') : new Array()" destination="images.images" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.view.DataSEOPallet;
+			import mx.formatters.NumberFormatter;
+			import com.hphant.utils.StringUtils;
+			import com.hphant.constants.AddressConstants;
+			import com.hphant.components.containers.WordListCreator;
+			import com.hphant.components.events.AlertCloseEvent;
+			import mx.collections.ArrayCollection;
+			import com.hphant.components.AlertPallet;
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.remoting.IResponder;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.components.containers.ImagesSelector;
+			import com.hphant.data.control.event.CalendarEvent;
+			import com.hphant.data.model.CalendarRecord;
+			import com.hphant.components.containers.ThumbnailSelector;
+			[Bindable]
+			private var stateValues:Array = AddressConstants.STATES.concat([]);
+			
+			[Bindable]
+			private var selectedState:Object;
+			[Bindable]
+			private var selectedDate:Date;
+			
+			public function handleFault(event:GeneralEvent, fault:Fault):void{
+				AlertPallet.show(fault.message,"Error "+fault.errorID,
+								AlertPallet.OK,AlertPallet.OK);
+			}
+			public function handleResult(event:GeneralEvent, result:Object):void{
+				var action:String = event.type==CalendarEvent.UPDATE ? "y Saved" : event.type==CalendarEvent.REMOVE ? "y Removed" : "";
+				AlertPallet.show(CalendarRecord(data).title+" was successfull"+action+".","Success",
+								AlertPallet.OK,AlertPallet.OK);
+				var e:CalendarEvent = new CalendarEvent(CalendarEvent.GET_ALL);
+				e.dispatch();
+			}
+			private function changeListener(event:Event):void{
+				 changed = true;
+			}
+			[Bindable]
+			private var changed:Boolean = false;
+			[Bindable]
+			private var thumb:ThumbnailSelector = new ThumbnailSelector();
+			[Bindable]
+			private var images:ImagesSelector = new ImagesSelector();
+			[Bindable]
+			private var seo:DataSEOPallet = new DataSEOPallet();
+			
+			private function init():void{
+				stateValues.unshift({name:'State:',abr:''});
+				images.imageSizes = [new Rectangle(0,0,640,480)];
+				images.addEventListener(Event.CHANGE,changeListener);
+				thumb.addEventListener(Event.CHANGE,changeListener);
+				seo.addEventListener(Event.CHANGE,changeListener);
+			}
+			public override function reset():void{
+				super.reset();
+				PalletManager.closePallet(images);
+				PalletManager.closePallet(thumb);
+				PalletManager.closePallet(seo);
+				this.data = null;
+			}
+			
+			private function saveRecord():void{
+				if(data){
+					CalendarRecord(data).thumb = thumb.source ? thumb.source : 'noImage';
+					CalendarRecord(data).images = images.images.join(",");
+					CalendarRecord(data).title = title.text;
+					CalendarRecord(data).blurb = blurb.htmlText;
+					CalendarRecord(data).description = description.htmlText;
+					CalendarRecord(data).startTime = startTime.time;
+					CalendarRecord(data).endTime = endTime.time;
+					CalendarRecord(data).date = dateToString(date.selectedDate);
+					CalendarRecord(data).map = map.text;
+					CalendarRecord(data).locationName = locationName.text;
+					CalendarRecord(data).pageDescription = seo.description;
+					CalendarRecord(data).pageKeywords = seo.keywords;
+					CalendarRecord(data).street = street.text;
+					CalendarRecord(data).city = city.text;
+					CalendarRecord(data).state = String(state.selectedItem?state.selectedItem.abr:stateValues[0].abr);
+					CalendarRecord(data).zip = zip.text;
+					var event:CalendarEvent = new CalendarEvent(isNew ? CalendarEvent.ADD_NEW : CalendarEvent.UPDATE);
+					event.data = data;
+					event.responder = this;
+					isNew = false;
+					event.dispatch();
+				}
+			}
+			private function dateToString(date:Date):String{
+				var m:String = ((date.month<9) ? ('0') : (''))+(date.month+1);
+				var d:String = ((date.date<10) ? ('0') : (''))+date.date;
+				return m+'/'+d+'/'+date.fullYear;
+			}
+			private var isNew:Boolean = false;
+			private function newRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createNewRecord();
+				}
+			}
+			private function removeRecord():void{
+				AlertPallet.show("Are you sure you want to remove the Item?","Remove Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,removeExistingRecord);
+			}
+			private function duplicateRecord():void{
+				if(isNew || changed){
+					AlertPallet.show("The current Item has not been saved. Are you sure you want to create a new Item based off of the current information?","New Item?",
+										AlertPallet.YES|AlertPallet.NO,AlertPallet.NO,createNewRecord);
+				} else {
+					createDuplicateRecord();
+				}
+			}
+			
+			private function createDuplicateRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					var nItem:CalendarRecord = new CalendarRecord();
+					
+					
+					
+					nItem.thumb = thumb.source ? thumb.source : 'noImage';
+					nItem.images = images.images.join(",");
+					nItem.title = title.text;
+					nItem.blurb = blurb.htmlText;
+					nItem.description = description.htmlText;
+					nItem.startTime = startTime.time;
+					nItem.endTime = endTime.time;
+					nItem.date = dateToString(date.selectedDate);
+					nItem.pageDescription = seo.description;
+					nItem.pageKeywords = seo.keywords;
+					nItem.map = map.text;
+					nItem.locationName = locationName.text;
+					nItem.street = street.text;
+					nItem.city = city.text;
+					nItem.state = String(state.selectedItem?state.selectedItem.abr:stateValues[0].abr);
+					nItem.zip = zip.text;
+					nItem.id = 0;
+					data = nItem;
+					changed = true;
+					
+					isNew = true;
+				}
+			}
+			
+			private function createNewRecord(event:AlertCloseEvent=null):void{
+				if(!event || event.detail == AlertPallet.YES){
+					data = new CalendarRecord();
+					isNew = true;
+				}
+			}
+			private function removeExistingRecord(event:AlertCloseEvent=null):void{
+				if(event.detail == AlertPallet.YES){
+					if(!isNew){
+						var e:CalendarEvent = new CalendarEvent(CalendarEvent.REMOVE);
+						e.data = data;
+						e.responder = this;
+						e.dispatch();
+					}
+					data = null;
+					blurb.htmlText = "";
+					description.htmlText = "";
+				}
+			}
+			private function handleData():void{
+				isNew=false;
+				if(data){
+					var value:Array = this.stateValues.filter(findStateValue);
+					this.selectedState = value.length ? value[0] : null;
+					this.selectedDate = CalendarRecord(data).date ? new Date(CalendarRecord(data).date) : new Date();
+				} else {
+					this.selectedState = null;
+					this.selectedDate = new Date();
+				}
+				changed = false;
+			}
+			private function findStateValue(item:*, index:int, array:Array):Boolean{
+				return CalendarRecord(data).state == item.abr;
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

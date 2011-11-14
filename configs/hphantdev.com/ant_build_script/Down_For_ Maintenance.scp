@@ -1,0 +1,16 @@
+TRACE Screen
+LOG Screen
+USER hphantdev
+PASS ftp!Jamarcus!41
+CONNECT ftp.hphantdev.com
+LCD F:/web/bmcd/
+CD httpdocs/
+DEL index.php
+PUT index.php
+CD ../subdomains/901/httpdocs/
+DEL index.php
+PUT index.php
+CD ../../../subdomains/999/httpdocs/
+DEL index.php
+PUT index.php
+CLOSE

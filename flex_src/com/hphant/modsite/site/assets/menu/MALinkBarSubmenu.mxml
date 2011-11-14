@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+  	       implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="1"
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   xmlns:components="com.hphant.components.*" 
+		   
+		   verticalScrollPolicy="off"
+		   currentState="state0"
+		   horizontalScrollPolicy="off">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+   <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom" height="100%" width="100%">
+   		<mx:HBox verticalAlign="middle"  verticalScrollPolicy="off" horizontalScrollPolicy="off" autoLayout="true" id="sorts" width="100%">
+			<text:MAText id="itemTypesLabel"/>
+			<components:HMLinkBar  height="25" itemClick="{this.linkClicked(event)}" linkButtonStyleName="{linkButtonStyleName}" id="itemTypes" dataProvider="{lbViewStack}"/>
+		</mx:HBox>
+   </mx:VBox>
+	<mx:String id="linkButtonStyleName"/>	
+	<mx:ViewStack id="lbViewStack" visible="false" selectedIndex="{sidx}"/>
+	
+   <mx:states>
+   		<mx:State name="state0">
+   			<mx:RemoveChild target="{lbViewStack}"/>
+   		</mx:State>
+   </mx:states>
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.Canvas;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.events.ItemClickEvent;
+			import mx.controls.LinkBar;
+			include "../interfaces/AssetIncludes.as";
+			import mx.controls.LinkButton;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			
+			[Bindable]
+			private var sidx:int = -1;
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					var label:XMLList = this._xml.p.(@['class'].toLowerCase()=="types");
+					if(label.length() > 0){
+						this.itemTypesLabel.xml = label;
+					} else {
+						this.itemTypesLabel.width=0;
+					}
+					itemTypes.selectedIndex = -1;
+					sidx = -1;
+					this.lbViewStack.removeAllChildren();
+					var ss:XMLList = this._xml.li.(@['class'].toLowerCase()=="subsection");
+					for each(var li:XML in ss){
+						var l:Canvas;
+						l = new Canvas();
+						this.lbViewStack.addChild(l);
+						l.percentWidth = 100;
+						l.label = li.a.children();
+						l.data = li;
+						if(li==this.data){
+							sidx = li.childIndex();
+							itemTypes.selectedIndex = sidx;
+						}
+					}
+					this.invalidateSize();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function linkClicked(e:ItemClickEvent):void{
+				var c:Canvas = Canvas(this.lbViewStack.getChildAt(e.index));
+				log("Link Clicked : "+c.data);
+				if(c.data && c.data.a.length()>0){
+					this.data = c.data;
+					//log("Link Clicked : "+XML(c.data).toXMLString());
+					this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,c.data));
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

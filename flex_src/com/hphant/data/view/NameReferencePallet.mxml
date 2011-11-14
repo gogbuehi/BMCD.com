@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{init();}" verticalGap="0" implements="com.hphant.remoting.IResponder"
+	label="Boutique Data" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*">
+	
+	<text:SelfLabelTextInput label="Name:" id="nameText" change="{addEnable = nameText.text.length>0;}" width="100%"/>
+	<mx:Button label="Add" id="changeOrder" enabled="{addEnable}" click="{addNewName()}" width="100%"/>
+	<mx:List id="dataList" height="500" labelField="name" selectable="false" dataProvider="{DataModelLocator.getInstance().names}" dropEnabled="false" dragMoveEnabled="false"
+		allowMultipleSelection="false" dragEnabled="true" width="100%">
+	</mx:List>
+	<mx:Metadata>
+		[Event(name='change',type='flash.events.Event')]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.remoting.GeneralEvent;
+			import mx.rpc.Fault;
+			import com.hphant.components.AlertPallet;
+			import com.hphant.data.model.NameReferenceRecord;
+			import mx.collections.ArrayCollection;
+			import com.hphant.data.control.event.NameReferenceEvent;
+			import com.hphant.components.events.PalletEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.data.control.DataModelLocator;
+			[Bindable]
+			private var addEnable:Boolean = false;
+			private var getAllEvent:NameReferenceEvent;
+		
+			private function addNewName():void{
+				var n:NameReferenceRecord = new NameReferenceRecord();
+				data = n;
+				n.name = nameText.text;
+				n.name_string = nameText.text.toLowerCase().split(' ').join('_').split('.').join('_').split('/').join('_').split('\\').join('_');
+				for each(var ref:NameReferenceRecord in DataModelLocator.getInstance().names){
+					if(ref.name == n.name){
+						AlertPallet.show('"'+n.name+'" already exists in the list and must not be added again.',
+										 '"'+n.name+'" Already Exists!', AlertPallet.OK,AlertPallet.OK);
+						return;
+					}
+				}
+				var e:NameReferenceEvent = new NameReferenceEvent(NameReferenceEvent.ADD_NEW);
+				e.data = n;
+				e.responder = this;
+				e.dispatch();
+			}
+			
+			private function init():void{
+		
+				this.getAllEvent = new NameReferenceEvent(NameReferenceEvent.GET_ALL);
+				this.getAllEvent.dispatch();
+			}
+			public function handleFault(event:GeneralEvent, fault:Fault):void{
+				AlertPallet.show(fault.message,"Error "+fault.errorID,
+								AlertPallet.OK,AlertPallet.OK);
+			}
+			public function handleResult(event:GeneralEvent, result:Object):void{
+				var action:String = event.type==NameReferenceEvent.ADD_NEW ? "y Added" : event.type==NameReferenceEvent.REMOVE ? "y Removed" : "";
+				AlertPallet.show("Name \""+NameReferenceRecord(data).name+"\" was successfull"+action+".","Success",
+								AlertPallet.OK,AlertPallet.OK);
+				var e:NameReferenceEvent = new NameReferenceEvent(NameReferenceEvent.GET_ALL);
+				e.dispatch();
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			
+			
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:mx="http://www.adobe.com/2006/mxml" implements="com.hphant.modsite.site.assets.interfaces.IMAsset" xmlns:images="com.hphant.modsite.site.assets.images.*" xmlns:utils="flash.utils.*">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.effects.easing.Circular;
+			import mx.effects.easing.Exponential;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			private var autoPlayer:Timer;
+			[Bindable]
+			public var autoPlay:Boolean = true;
+			public function play():void{
+				if(this.autoPlayer){
+					this.autoPlayer.start();
+				}
+			}
+			public function stop():void{
+				if(this.autoPlayer){
+					this.autoPlayer.stop();
+					this.autoPlayer.reset();
+				}
+			}
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml && this.imageList && this.image){
+					var imgs:XMLList = this._xml;
+					var img:XML = <img />
+					img.@src = (XMLList(this._xml.li).length()>0 && XML(this._xml.li[0]).a.@href!="") ? XML(this._xml.li[0]).a.@href : "no_image_logo.swf";
+					this.image.xml = XMLList(img);
+					if(this.autoPlayer && this.autoPlayer.running){
+						this.autoPlayer.stop();
+					}
+					this.autoPlayer = new Timer(7000,this._xml.li.length());
+					this.autoPlayer.addEventListener(TimerEvent.TIMER,nextImage);
+					this.autoPlayer.addEventListener(TimerEvent.TIMER_COMPLETE,resetAutoPlay);
+					this.imageList.sizeImages = true;
+					this.imageList.loadImages = true;
+					this.imageList.xml = imgs;
+					if(this.autoPlay && this._xml.li.length()>1){
+						this.autoPlayer.start();
+					}
+					this.xmlChanged = false;
+				} else if(this.xmlChanged && this.imageList && this.autoPlayer){
+					this.autoPlayer.stop();
+					this.imageList.xml = null;
+					this.image.xml = null;
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function resetAutoPlay(e:TimerEvent):void{
+				this.autoPlayer.reset();
+				var img:XML = <img />
+				img.@src = (XML(this._xml.li[0]).a.@href!="") ? XML(this._xml.li[0]).a.@href : "no_image_logo.swf";
+				this.image.xml = XMLList(img);
+				this.autoPlayer.start();
+			}
+			private function nextImage(e:TimerEvent):void{
+				var img:XML = <img />
+				img.@src = (XML(this._xml.li[this.autoPlayer.currentCount]).a.@href!="") ? XML(this._xml.li[this.autoPlayer.currentCount]).a.@href : "no_image_logo.swf";
+				this.image.xml = XMLList(img);
+			}
+			private function changeImage(e:MALinkClickEvent):void{
+				this.stop();
+				var img:XML = <img />
+				img.@src = XML(e.item).a.@href;
+				this.image.xml = XMLList(img);
+				this.dispatchEvent(new MALinkClickEvent(e.type,e.item,e.bubbles,e.cancelable));
+			}
+			private function scrollImages(e:MouseEvent):void{
+				
+				this.scrollEffect.toValue = this.imageList.mouseX-93;
+				
+				if(!this.scrollEffect.isPlaying){
+					this.scrollEffect.play();
+				}
+			}
+			private function drawSideFade():void{
+				this.lsfw = this.sideFadeWidth;//(this.imageList.horizontalScrollPosition > this.sideFadeWidth) ? this.sideFadeWidth : this.horizontalScrollPosition;
+				this.rsfw = this.sideFadeWidth;//(this.imageList.horizontalScrollPosition < this.imageList.width - this.sideFadeWidth) ? this.sideFadeWidth : this.imageList.width - this.horizontalScrollPosition;
+				
+				
+				
+				var lm:Matrix = new Matrix;
+				lm.createGradientBox(sideFadeWidth,this.imageList.height,0);
+				var rm:Matrix = new Matrix;
+				rm.createGradientBox(sideFadeWidth,this.imageList.height,Math.PI);
+				this.leftFade.graphics.beginGradientFill(GradientType.LINEAR,[0x000000,0x000000],[0,1],[0,255],lm);
+				this.leftFade.graphics.drawRect(0,0,this.sideFadeWidth,this.imageList.height);
+				this.leftFade.graphics.endFill();
+				this.rightFade.graphics.beginGradientFill(GradientType.LINEAR,[0x000000,0x000000],[0,1],[0,255],rm);
+				this.rightFade.graphics.drawRect(0,0,this.sideFadeWidth,this.imageList.height);
+				this.rightFade.graphics.endFill();
+				
+			}
+			[Bindable]
+			private var lsfw:Number;
+			
+			[Bindable]
+			private var rsfw:Number;
+		]]>
+	</mx:Script>
+	<mx:Boolean id="showText">true</mx:Boolean>
+	<mx:AnimateProperty id="scrollEffect" target="{this.imageList}" property="horizontalScrollPosition"/>
+	<images:MAImage autoSize="false" width="640" height="480" id="image"/> 
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" width="{imageList.width}" height="{imageList.height}" >
+		<images:MAImageSelectorH cacheAsBitmap="true" showText="{this.showText}" mask="{selectorMask}" updateComplete="{drawSideFade()}" mouseMove="{scrollImages(event)}" styleName="imageShow" verticalScrollPolicy="off" width="{this.image.width}" id="imageList" imageWidth="93" imageHeight="70" linkClicked="{changeImage(event)}">
+			
+		</images:MAImageSelectorH>
+		<mx:HBox cacheAsBitmap="true" id="selectorMask" width="100%" height="100%" horizontalGap="0" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Canvas id="leftFade" width="{sideFadeWidth}" backgroundAlpha="0" height="100%"/>
+			<mx:Canvas id="centerMask" width="{this.imageList.width-sideFadeWidth*2}" height="100%" backgroundAlpha="1" backgroundColor="#000000"/>
+			<mx:Canvas id="rightFade" width="{sideFadeWidth}" backgroundAlpha="0" height="100%"/>
+		</mx:HBox>
+	</mx:Canvas>
+	<mx:Number id="sideFadeWidth">100</mx:Number>
+</mx:VBox>

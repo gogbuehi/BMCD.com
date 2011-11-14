@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ServiceLocator xmlns="com.adobe.cairngorm.business.*" xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:RemoteObject id="mastersManager" destination="PHPservices" source="MastersService"/>
+	<mx:RemoteObject id="cropsManager"   destination="PHPservices" source="CropsService"/>
+	<mx:RemoteObject id="videoManager"   destination="PHPservices" source="VideoService"/>
+	<mx:RemoteObject id="pdfManager"   destination="PHPservices" source="PDFService"/>
+	<!--
+	-->
+	<mx:RemoteObject id="inventoryManager" destination="PHPservices" source="InventoryService"/>
+	<mx:RemoteObject id="modelManager"   destination="PHPservices" source="ModelService"/>
+	<mx:RemoteObject id="storeManager"   destination="PHPservices" source="StoreService"/>
+	<mx:RemoteObject id="calendarManager"   destination="PHPservices" source="CalendarService"/>
+	<mx:RemoteObject id="suggestionManager"   destination="PHPservices" source="SuggestionsService"/>
+	<mx:RemoteObject id="nameReferenceManager"   destination="PHPservices" source="NameReferenceService"/>
+	<mx:RemoteObject id="dataFilterManager"   destination="PHPservices" source="DataFilterService"/>
+	
+</ServiceLocator>
+

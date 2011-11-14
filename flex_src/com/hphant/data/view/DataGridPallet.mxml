@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="com.hphant.remoting.IResponder" width="{PalletManager.getInstance().warehouse.width}"
+    creationComplete="{buildContextMenu()}"
+	xmlns:view="com.hphant.data.view.*" xmlns:ui="flash.ui.*">
+	<mx:DataGrid dragEnabled="true" draggableColumns="false" dragMoveEnabled="false" lockedColumnCount="1" horizontalScrollPolicy="on" id="grid" width="100%" dataProvider="{dataProvider}" allowMultipleSelection="false" toolTip="{gridToolTip}" columns="{columns}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+		</mx:contextMenu>
+	</mx:DataGrid>
+	<mx:Metadata>
+		[Exclude(name="grid",kind="property")]
+	</mx:Metadata>
+	<mx:Binding destination="cmRemove.enabled" source="Boolean(grid.selectedItem)" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.events.AlertCloseEvent;
+			import com.hphant.components.AlertPallet;
+			import mx.events.CloseEvent;
+			import com.hphant.managers.PalletManager;
+			import mx.core.Application;
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("com.hphant.data.view.DataRecordColumn")]
+			public function set columns(value:Array):void{
+				this._columns = value;
+			}
+			public function get columns():Array{
+				return this._columns;
+			}
+			public var _columns:Array;
+			[Bindable]
+			[Inspectable]
+			public var dataProvider:ArrayCollection;
+			[Bindable]
+			[Inspectable]
+			public var gridToolTip:String = "Double-click to edit cell";
+			
+			[Bindable]
+			[Inspectable]
+			public var removeEvent:GeneralEvent;
+			[Bindable]
+			[Inspectable]
+			public var getAllEvent:GeneralEvent;
+			[Bindable]
+			[Inspectable]
+			public var addEvent:GeneralEvent;
+			[Bindable]
+			[Inspectable]
+			public var dataClass:Class;
+			[Bindable]
+			[Inspectable]
+			public var eventClass:Class;
+			
+			private var dataFactory:ClassFactory;
+			private var eventFactory:ClassFactory;
+			
+			[Bindable]
+			[ArrayElementType("flash.ui.ContextMenuItem")]
+			private var _cmArray:Array = [];
+			protected var cmRemove:ContextMenuItem = new ContextMenuItem("Remove Selected");
+			protected var cmAdd:ContextMenuItem = new ContextMenuItem("Add");
+			private function buildContextMenu():void{
+				this._cmArray.push(this.cmAdd);
+				this._cmArray.push(this.cmRemove);
+				this.cmRemove.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.cmRemoveClicked);
+				this.cmAdd.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.cmAddClicked);
+			}
+			private function cmRemoveClicked(event:ContextMenuEvent):void{
+				if(this.eventClass){
+					AlertPallet.show("Are you suere that you want to remove this record?",
+									 "Remove Record",
+									 AlertPallet.YES | AlertPallet.NO,
+									 AlertPallet.NO,
+									 removeAlertClosed);
+				}
+			}
+			private function removeAlertClosed(event:AlertCloseEvent):void{
+				switch(event.detail){
+					case AlertPallet.YES:
+						this.grid.enabled = false;
+						this.removeEvent = GeneralEvent(new this.eventClass(this.eventClass.REMOVE));
+						log("Created event: "+this.removeEvent);
+						this.removeEvent.data = grid.selectedItem;
+						this.removeEvent.responder = this;
+						this.removeEvent.dispatch();
+					break;
+					default:
+					
+					break;
+				}
+			}
+			private function cmAddClicked(event:ContextMenuEvent):void{
+				if(this.dataClass && this.eventClass){
+					this.grid.enabled = false;
+					this.addEvent = GeneralEvent(new this.eventClass(this.eventClass.ADD_NEW));
+					log("Created event: "+this.addEvent);
+					this.addEvent.data = new dataClass();
+					this.addEvent.responder = this;
+					this.addEvent.dispatch();
+				}
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				log("Service Result type = "+event.type);
+				switch(event){
+					case addEvent:
+					case removeEvent:
+						if(this.eventClass){
+							this.getAllEvent = GeneralEvent(new this.eventClass(this.eventClass.GET_ALL));
+							this.getAllEvent.responder = this;
+							this.getAllEvent.dispatch();
+						}
+					break;
+					default:
+						this.grid.enabled = true;
+						
+					break;
+				}
+				
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log("Service Result type = "+event.type,2);
+				this.grid.enabled = true;
+				log(fault,2);
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:video="com.hphant.contentlibrary.view.video.*"
+	label="Content Library: Video"
+	>
+		
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			
+	        
+			private function handlerSelectVideoFileEvent():void 
+			{
+				this.currentState = "step2";
+			}
+			
+			private function handlerSaveVideoThumbnail():void 
+			{
+				//	TODO
+			}
+
+			private function handlerCancelVideoThumbnailCreation():void 
+			{
+				this.currentState = "step1";
+				this.tabs.selectedChild = viewAddVideo1;
+			}
+			
+		]]>
+	</mx:Script>
+
+		
+	<mx:Accordion id="tabs" width="100%" height="100%">
+	
+		<video:VideoLib id="viewVideoLib" label="Video Library" 
+			width="100%" height="100%"
+			/>
+				
+		<video:AddVideo1 id="viewAddVideo1" label="Add Video from FTP" 
+			width="100%" height="100%"
+			selectVideoFileEvent="handlerSelectVideoFileEvent()"
+			/>
+			
+	</mx:Accordion>
+		
+<!--		
+	<mx:states>
+		<mx:State name="step1">
+		</mx:State>
+
+		<mx:State name="step2">
+			<mx:RemoveChild target="{viewAddVideo1}"/>
+			
+			<mx:AddChild relativeTo="{viewVideoLib}" position="after">
+				<video:AddVideo2 id="viewAddVideo2" label="Add Video from FTP" 
+					width="100%" height="100%"
+					cancelEvent="handlerCancelVideoThumbnailCreation()"
+					/>
+			</mx:AddChild> 
+			<mx:SetProperty target="{tabs}" name="selectedChild" value="{viewAddVideo2}"/>
+			
+		</mx:State>
+		
+	</mx:states>
+
+-->
+</mx:Canvas>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas implements="com.hphant.modsite.site.assets.interfaces.IMAsset" 
+			 verticalScrollPolicy="off" 
+			 horizontalScrollPolicy="off"
+			 xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.modsite.site.assets.text.*">
+	<mx:Box id="box" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:MASimpleTextArea id="textArea" autoSize="{this.autoSize}" width="100%"/>
+	</mx:Box>
+		
+	<mx:Script>
+		<![CDATA[
+			include "../interfaces/AssetIncludes.as";
+			import flash.text.TextFieldAutoSize;
+			
+			[Bindable]
+			public var autoSize:String = TextFieldAutoSize.LEFT;
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+					this.xmlChanged = true;
+				}
+				if(this.xmlChanged){
+					this.textArea.xml = this._xml;
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

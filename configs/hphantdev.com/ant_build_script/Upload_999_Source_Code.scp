@@ -1,0 +1,15 @@
+TRACE Screen
+LOG Screen
+USER hphantdev
+PASS ftp!Jamarcus!41
+CONNECT ftp.hphantdev.com
+LCD F:/web/bmcd
+CD /subdomains/999/httpdocs/
+RDEL pages
+CD /subdomains/999/httpdocs/
+RDEL styles
+CD /subdomains/999/httpdocs/
+RDEL swf
+CD /subdomains/999/httpdocs/
+RPUT 999
+CLOSE

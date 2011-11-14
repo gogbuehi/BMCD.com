@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{init();}" verticalGap="0" 
+	label="Boutique Data" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:List id="dataList" height="500" change="{this.selectedIndex = dataList.selectedIndex}" dataProvider="{DataModelLocator.getInstance().models}" dropEnabled="{this._allowOrder}" dragMoveEnabled="{_allowOrder}"
+		allowMultipleSelection="false" dragEnabled="true">
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="{Boolean(data.visible)?0:.8}" backgroundColor="#FF0000" >
+					<mx:Image source="{image}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+					<mx:Label text="{data.model+' '+data.submodel}" width="200" selectable="false"/>
+					<mx:Label text="{data.make}" width="200" selectable="false"/>
+					<mx:Script>
+						<![CDATA[
+							[Bindable('dataChange')]
+							private function get image():String{
+								return data ? String(String(data.images).split(',')[0]) : '';
+							}
+						]]>
+					</mx:Script>
+				</mx:HBox>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:List>
+	<mx:Button label="Change Order" id="changeOrder" selected="{this._allowOrder}" click="{toggleOrder()}" width="100%"/>
+	<mx:Button label="Item Details" id="formToggle" selected="{_formToggle}" click="{showForm()}" width="100%"/>
+	<mx:Binding destination="form.data" source="dataList.selectedItem"/>
+	<mx:Binding destination="orderManager.data" source="DataModelLocator.getInstance().models"/>
+	<mx:Binding destination="form.makes" source="makes"/>
+	<mx:Binding destination="form.models" source="models"/>
+	<mx:Binding destination="form.submodels" source="submodels"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.model.NameReferenceRecord;
+			import mx.collections.ArrayCollection;
+			import com.hphant.data.control.event.NameReferenceEvent;
+			import com.hphant.data.control.DataOrderChanger;
+			import mx.events.ResizeEvent;
+			import com.hphant.components.events.PalletEvent;
+			import mx.events.MoveEvent;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.data.view.Forms.ModelRecordForm;
+			import com.hphant.data.model.ModelRecord;
+			import com.hphant.data.control.event.ModelEvent;
+			import com.hphant.data.control.DataModelLocator;
+			
+			[Bindable]
+			private var selectedIndex:int;
+			
+			private var form:ModelRecordForm;
+			private var getAllEvent:ModelEvent;
+			private var orderManager:DataOrderChanger = new DataOrderChanger();
+			
+			[Bindable]
+			private var makes:ArrayCollection = new ArrayCollection(['Make:']);
+			[Bindable]
+			private var models:ArrayCollection = new ArrayCollection(['Model:']);
+			[Bindable]
+			private var submodels:ArrayCollection = new ArrayCollection(['Sub-model:']);
+			
+			
+			private function init():void{
+				this.form = new ModelRecordForm();
+				moveForm(null);
+				this.addEventListener(MoveEvent.MOVE,moveForm);
+				this.addEventListener(ResizeEvent.RESIZE,moveForm);
+				this.addEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.addEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.addEventListener(PalletEvent.CLOSE,this.setFormToggle);
+				/* this.dataClass = StoreRecord;
+				this.eventClass = StoreEvent; */
+				DataModelLocator.getInstance().addEventListener('modelsChanged',setSelectedIndex);
+				DataModelLocator.getInstance().addEventListener('namesChanged',populateNames);
+				this.getAllEvent = new ModelEvent(ModelEvent.GET_ALL);
+				this.getAllEvent.dispatch();
+				var namesEvent:NameReferenceEvent = new NameReferenceEvent(NameReferenceEvent.GET_ALL);
+				namesEvent.dispatch();
+			}
+			private function setSelectedIndex(event:Event):void{
+				if(this.dataList){
+					if(this.selectedIndex<DataModelLocator.getInstance().models.length){
+						this.dataList.selectedIndex = this.selectedIndex;
+						this.dataList.scrollToIndex(this.selectedIndex);
+					} else {
+						this.selectedIndex = this.dataList.selectedIndex;
+					}
+				}
+			}
+			private function populateNames(event:Event):void{
+				makes = new ArrayCollection(['Make:']);
+				models = new ArrayCollection(['Model:']);
+				submodels = new ArrayCollection(['Sub-model:']);
+				for each(var name:NameReferenceRecord in DataModelLocator.getInstance().names){
+					if(name.logo){
+						makes.addItem(name.name);
+					} else {
+						models.addItem(name.name);
+						submodels.addItem(name.name);
+					}
+				}
+			}
+			
+			private function moveThis(event:MoveEvent):void{
+				this.x = this.form.x-this.width;
+				this.y = this.form.y;
+			}
+			private function moveForm(event:Event):void{
+				this.form.x = this.x+this.width;
+				this.form.y = this.y;
+			}
+			private function removeMoveListeners(event:PalletEvent):void{
+				this.removeEventListener(MoveEvent.MOVE,moveForm);
+				this.removeEventListener(ResizeEvent.RESIZE,moveForm);
+				this.removeEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.removeEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+			}
+			private function showForm():void{
+				_formToggle = ! _formToggle;
+				formToggle.label = _formToggle ? "Hide Details" : "Show Details";
+				if(_formToggle)
+				PalletManager.openPallet(this.form);
+				else
+				PalletManager.closePallet(this.form);
+			}
+			private function setFormToggle(event:PalletEvent):void{
+				_formToggle = false;
+				formToggle.label = _formToggle ? "Hide Details" : "Show Details";
+				formToggle.selected = false;
+			}
+			private function toggleOrder():void{
+				_allowOrder = !_allowOrder;
+				changeOrder.label = _allowOrder ? "Save Order" : "Change Order";
+				if(!_allowOrder){
+					orderManager.applyOrder();
+					for each(var item:ModelRecord in orderManager.changedItems){
+						var event:ModelEvent = new ModelEvent(ModelEvent.UPDATE);
+						event.data = item;
+						event.dispatch();
+					}
+				}
+			}
+			[Bindable]
+			private var _formToggle:Boolean = false;
+			[Bindable]
+			private var _allowOrder:Boolean = false;
+			
+			public override function reset():void{
+				super.reset();
+				if(_formToggle)
+					showForm();
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

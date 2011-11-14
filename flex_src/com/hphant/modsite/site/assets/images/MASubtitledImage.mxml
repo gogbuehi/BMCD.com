@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" direction="horizontal"  
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" verticalAlign="middle"
+		   xmlns:text="com.hphant.modsite.site.assets.text.*" height="100%" horizontalAlign="center" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+
+		<images:MAImage id="image" height="100%" width="100%" linkClicked="{this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,event.item))}" />
+		<text:MAText id="text" width="100%" insertBreaks="false"/>
+
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			
+			import flash.text.TextFieldAutoSize;
+			
+			[Bindable]
+			public var autoSize:Boolean = true;
+			
+			protected override function commitProperties():void{
+				if(this.cssChanged && this.text && this.image){
+					this.text.css = this._css;
+					this.image.css = this._css;
+					this.cssChanged = true;
+				}
+				if(this.xmlChanged && this._xml && this.text && this.image){
+					this.text.insertBreaks = false;
+					this.text.xml = this._xml.p;
+					this.image.xml = this._xml.children().(name()=="a"||name()=="img");
+				}
+				super.commitProperties();
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

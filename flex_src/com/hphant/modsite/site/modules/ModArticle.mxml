@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas width="0" xmlns="com.hphant.modsite.site.modules.*"  height="0"
+	       xmlns:mx="http://www.adobe.com/2006/mxml" 
+	       xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       currentState="state0"
+	       backgroundAlpha="1">
+	<mx:VBox id="vbox" autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<text:MAText id="title" link="{this.sendLink(event)}" styleName="articleTitle" textAlign="center" width="100%"/>
+		<text:MAText id="text" link="{this.sendLink(event)}" styleName="articleText" width="100%">
+			<text:resizeEffect>
+				<mx:Resize  effectEnd="{resizeEnd()}"/>
+			</text:resizeEffect>
+		</text:MAText>
+	</mx:VBox>
+	<states>
+	   		<mx:State name="state0">
+	   			<!--<mx:RemoveChild target="{vbox}" />-->
+	   		</mx:State>
+	   		<mx:State name="state1" basedOn="state0">
+	   			<mx:SetProperty target="{this}" name="width" value="984"/>
+	   			<mx:SetProperty target="{this}" name="height" value="{ht}"/>
+	   		</mx:State>
+	   		<mx:State name="state2" basedOn="state1">
+	   			<mx:SetProperty target="{this.title}" name="xml" value="{ttl}"/>
+	   			<mx:SetProperty target="{this.text}" name="xml" value="{txt}"/>
+	   		</mx:State>
+	   		<mx:State name="state3" basedOn="state2">
+	   			<!--<mx:AddChild target="{vbox}"/>-->
+	   		</mx:State>
+	   </states>
+	   <transitions>
+	   				
+	   		<mx:Transition fromState="state0" toState="state1">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+					<mx:Resize target="{this}"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state2" toState="state1">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state1" toState="state2">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:SetPropertyAction target="{this.title}"/>
+	   				<mx:SetPropertyAction target="{this.text}"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state2" toState="state3">
+	   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+	   				<!--<mx:AddChildAction target="{this.vbox}"/>-->
+	   				<mx:Fade target="{this.vbox}" alphaFrom="0" alphaTo="1"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state3" toState="state2">
+	   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+	   				<mx:Fade target="{this.vbox}" alphaFrom="1" alphaTo="0"/>
+	   				<!--<mx:RemoveChildAction target="{this.vbox}"/>-->
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state1" toState="state0">
+	   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+	   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+					<mx:Resize target="{this}" duration="500" />
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state0" toState="state3">
+	   			<mx:Sequence>
+	   				<mx:SetPropertyAction target="{this.title}" name="xml" value="{this.ttl}"/>
+	   				<mx:SetPropertyAction target="{this.text}" name="xml" value="{this.txt}"/>
+	   				
+	   				<mx:SetPropertyAction target="{this}" name="height"/>
+	   				<mx:SetPropertyAction target="{this}" name="width" value="984"/>
+	   				
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   		<mx:Transition fromState="state3" toState="state0">
+	   			<mx:Sequence>
+	   				<mx:SetPropertyAction target="{this.vbox}" name="alpha" value="0"/>
+	   				<!--<mx:RemoveChildAction target="{this.vbox}"/>-->
+	   				<mx:SetPropertyAction target="{this}" name="height" value="0"/>
+	   				<mx:SetPropertyAction target="{this}" name="width" value="0"/>
+	   			</mx:Sequence>
+	   		</mx:Transition>
+	   </transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import mx.effects.easing.Exponential;
+			import mx.effects.easing.Back;
+		[Bindable]
+		private var ttl:XMLList;
+		[Bindable]
+		private var txt:XMLList;
+		
+		[Bindable]
+		private var ht:Number;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+		public override function duplicate():IModule{
+			var m:ModArticle = new ModArticle();
+			m.xml = this.xml;
+			m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+			m.validateNow();
+			return m;
+		}
+		protected override function commitProperties():void{
+			if(this.cssChanged){
+			}
+			if(this.xmlChanged && this.title && this.text){
+				//log(this._xml.toXMLString());
+				ttl = this._xml.h1.(attribute("class").toLowerCase()=="title");
+				XMLUtility.insertBlankNode(ttl);
+				if(ttl && ttl.length()>0){
+					if(!this.title.parent){
+						this.vbox.addChildAt(this.title,0);
+					}
+				} else {
+					if(this.title.parent){
+						this.vbox.removeChild(this.title);
+					}
+				}
+				txt = this._xml.p.(attribute("class").toLowerCase()=="body");
+				XMLUtility.insertBlankNode(txt);
+				if(this.currentState>="state2"){
+					this.text.xml = txt;
+					this.title.xml = ttl;
+				}
+				//ht = Number(XML(this._xml).@height);
+				this.xmlChanged = false;
+			}
+			super.commitProperties();
+		}
+		private function sendLink(event:TextEvent):void{
+			this.uriManager.goToURI(event.text);
+		}
+		import com.hphant.utils.SWFResizer;
+		private function resizeEnd():void{
+			SWFResizer.resizeFunction();
+		}
+		]]>
+	</mx:Script>
+</ModCanvas>

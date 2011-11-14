@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas xmlns="com.hphant.modsite.site.modules.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	       currentState="state0"
+	       direction="vertical" xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:forms="com.hphant.modsite.site.forms.*">
+	<text:MAText id="title" link="{this.sendLink(event)}" styleName="articleTitle" textAlign="center" width="100%" xml="{ttl}"/>
+	<text:MAText id="text" link="{this.sendLink(event)}" styleName="articleText" width="100%" xml="{txt}"/>
+	<mx:HBox width="100%">
+		<!--<mx:ButtonBar id="tabs" direction="vertical" itemClick="{tabClick(event)}" dataProvider="{frms}" labelField="a"/>-->
+		<mx:ViewStack width="100%" id="formStack" selectedIndex="{sidx}">
+			<mx:Canvas id="blankForm">
+			</mx:Canvas>
+			<mx:Box width="100%" horizontalAlign="center">
+				<forms:QuickQuoteForm sendEmail="{this.sendFormData(event)}" id="quickQuote"/>
+			</mx:Box>
+			<mx:Box width="100%" horizontalAlign="center">
+				<forms:PartsRequestForm sendEmail="{this.sendFormData(event)}" id="partsRequest"/>
+			</mx:Box>
+			<mx:Box width="100%" horizontalAlign="center">
+				<forms:ServiceRequestForm sendEmail="{this.sendFormData(event)}" id="serviceRequest"/>
+			</mx:Box>
+		</mx:ViewStack>
+	</mx:HBox>
+	<text:MAText id="disclaimer" styleName="articleText" width="100%" xml="{dsc}"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.controls.Alert;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			import mx.core.Container;
+			import com.hphant.modsite.site.events.MAFormEvent;
+		import mx.effects.easing.Exponential;
+		import mx.effects.easing.Back;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var sidx:int = 0;
+			[Bindable]
+			private var txt:XMLList;
+			[Bindable]
+			private var dsc:XMLList;
+			[Bindable]
+			private var frms:XMLList;
+			private function sendLink(event:TextEvent):void{
+				this.uriManager.goToURI(event.text);
+			}
+			private function tabClick(event:ItemClickEvent):void{
+				this.uriManager.goToURI(event.item.a.@href);
+			}
+			private function sendFormData(event:MAFormEvent):void{
+				var success:Boolean = true;
+				//var cicx:int = this.formStack.selectedIndex;
+				//this.formStack.selectedIndex = 0;
+				try{
+					success = ExternalInterface.call("submitFormData",event.formData);
+					//this.txt = XMLList("<p>Form Submitted Successfully</p>");
+					event.currentTarget.currentState="sent";
+					submittedPopUp(event);
+				} catch(e:Error){
+					//this.txt = XMLList("<p>There was a problem communicating with the server.</p><p>Please try to resubmit your form.</p>");
+					//this.formStack.selectedIndex = cicx;
+				}
+				
+			}
+			
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import mx.core.Application;
+			import com.hphant.modsite.site.forms.SubmittedPopUp;
+			private var applicationOvelrlayAlpha:Number = 0;
+			private function submittedPopUp(event:MAFormEvent):void{
+				var pop:IFlexDisplayObject;
+			   applicationOvelrlayAlpha = Application.application.getStyle('disabledOverlayAlpha');
+			   Application.application.setStyle('disabledOverlayAlpha',.25);
+			   Application.application.enabled = false;
+				pop = PopUpManager.createPopUp(this,com.hphant.modsite.site.forms.SubmittedPopUp);
+				SubmittedPopUp(pop).addEventListener(MAFormEvent.CANCEL,this.cancelPopup);
+			
+				this.centerPopUp(pop);
+			}
+			import com.hphant.managers.BrowserScrollManager;
+			private function centerPopUp(pop:IFlexDisplayObject):void{
+				pop.x = BrowserScrollManager.getInstance().horizontal+BrowserScrollManager.getInstance().width/2-pop.width/2;
+				pop.y = BrowserScrollManager.getInstance().vertical+BrowserScrollManager.getInstance().height/2-pop.height/2;
+			}
+			private function cancelPopup(event:MAFormEvent):void{
+				PopUpManager.removePopUp(IFlexDisplayObject(event.currentTarget));
+				Application.application.setStyle('disabledOverlayAlpha',this.applicationOvelrlayAlpha);
+				Application.application.enabled = true;
+			}
+			public override function set xml(xml:XMLList):void{
+				super.xml = xml;
+				this.xmlChanged = true;
+				this.invalidateProperties();
+			}
+			public override function get xml():XMLList{
+				return super.xml;
+			}
+			protected override function commitProperties():void{
+				if(this.xmlChanged){
+					sidx = 0;
+					ttl = (this._xml) ? this._xml.h1.(attribute("class").toLowerCase()=="title") : null;
+					txt = (this._xml) ? this._xml.p.(attribute("class").toLowerCase()=="body") : null;
+					dsc = (this._xml) ? this._xml.p.(attribute("class").toLowerCase()=="disclaimer") : null;
+					frms = (this._xml) ? this._xml.ul.li : null;
+						XMLUtility.insertBlankNode(ttl);
+						XMLUtility.insertBlankNode(this._xml.p);
+						XMLUtility.insertBlankNode(frms);
+					for each(var frm:XML in frms){
+						if(frm.@selected=="selected"){
+							sidx = frm.childIndex()+1;
+							break;
+						}
+					}
+					if(this.currentState>="state2"){
+						this.text.xml = txt;
+						this.title.xml = ttl;
+						this.formStack.selectedIndex = sidx;
+						/* this.tabs.dataProvider = frms; */
+					}
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			public override function duplicate():IModule{
+				var m:ModForm = new ModForm();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+	<states>
+		<mx:State name="state0"/>
+		<mx:State name="state1">
+			<mx:SetProperty target="{this}" name="height"/>
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+		</mx:State>
+		<!--<mx:State name="state2"/>-->
+	</states>
+	<transitions>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+   		<mx:Transition fromState="state1" toState="state0">
+   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+				<mx:Resize target="{this}" duration="500" />
+   			</mx:Sequence>
+   		</mx:Transition>
+   		<!--<mx:Transition fromState="state1" toState="state2">
+   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Pause />
+   			</mx:Sequence>
+   		</mx:Transition>
+   		<mx:Transition fromState="state2" toState="state1">
+   			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+   				<mx:Pause />
+   			</mx:Sequence>
+   		</mx:Transition>-->
+	</transitions>
+</ModCanvas>

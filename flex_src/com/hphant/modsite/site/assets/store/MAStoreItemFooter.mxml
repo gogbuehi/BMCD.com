@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="984" 
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   backgroundAlpha="0" currentState="colapsed" dataChange="{dataChanged()}"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" visible="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" height="0">
+	       <mx:Metadata>
+				[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+			</mx:Metadata>
+	       <!--<mx:VBox id="vb" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" alpha="1">-->
+	       	<text:MAText id="title" styleName="title" xml="{this.titleXML}" width="100%" />
+	       	<images:MAImageSelectorH imageWidth="180" clipContent="false" imageHeight="135" sizeImages="true" loadImages="true"  horizontalAlign="center" xml="{this.suplimental}" id="items" width="100%" linkClicked="{this.dispatchEvent(new MALinkClickEvent(event.type,event.item,event.bubbles,event.cancelable))}"/>
+	       <!--</mx:VBox>-->
+	       <mx:states>
+	       	    <mx:State name="colapsed">
+	       	    </mx:State>
+	       	    <mx:State name="expanded" basedOn="colapsed">
+	       	        <mx:SetProperty name="height"/>
+	       	    </mx:State>
+	       </mx:states>
+	       <mx:transitions>
+		<mx:Transition fromState="colapsed" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="colapsed">
+			<mx:Sequence>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	       
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.data.store.BMCDStoreItemData;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			private var titleXML:XMLList;
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			private function dataChanged():void{
+				if(data){
+					var di:BMCDStoreItemData = new BMCDStoreItemData();
+					di.row = XML(data);
+					titleXML = XMLList("Featured Items");
+				} else {
+					titleXML = null;
+				}
+			}
+			
+			[Inspectable]
+			[Bindable]
+			public function get suplimental():XMLList{
+				return BMCDStoreItemData.supplemental;
+			}
+			public function set suplimental(value:XMLList):void{
+				
+			}
+			private var _suplimental:XMLList;
+		]]>
+	</mx:Script>
+</mx:VBox>

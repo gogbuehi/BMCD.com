@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet closeEnabled="{!isNew}" xmlns="com.hphant.components.containers.*" implements="com.hphant.remoting.IResponder" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" label="PDF Info" xmlns:text="com.hphant.components.text.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0">
+		<text:SelfLabelTextInput id="title" label="Title:" text="{PDF(data).title}" width="400" change="{saveEnabled = true}"/>
+		<mx:Button label="Save" enabled="{saveEnabled}" click="{savePDF()}" />
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.Fault;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.components.AlertPallet;
+			import com.hphant.contentlibrary.model.PDF;
+			import com.hphant.contentlibrary.control.event.PDFEvent;
+			[Bindable]
+			private var saveEnabled:Boolean = false;
+			
+			private function savePDF():void{
+				PDF(data).title = this.title.text;
+				var evt:PDFEvent = new PDFEvent(isNew ? PDFEvent.ADD_PDF : PDFEvent.UPDATE_PDF);
+				evt.responder = this;
+				evt.data = data;
+				evt.dispatch();
+			}
+			[Bindable]
+			public var isNew:Boolean = false;
+			
+			public override function reset():void{
+				this.saveEnabled = false;
+				this.data = null;
+				isNew = false;
+				super.reset();
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				switch(event.type){
+					case PDFEvent.ADD_PDF:
+						AlertPallet.show("PDF Successfully Uploaded.","Success",AlertPallet.OK,AlertPallet.OK);
+						this.isNew = false;
+					break;
+					case PDFEvent.UPDATE_PDF:
+						AlertPallet.show("PDF Successfully Updated.","Success",AlertPallet.OK,AlertPallet.OK);
+					break;
+					default:
+						log("Service Result type = "+event.type);
+					break;
+				}
+				saveEnabled = false;
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				AlertPallet.show("PDF Failed.\n"+fault,"Error",AlertPallet.OK,AlertPallet.OK);
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TextArea implements="com.hphant.modsite.site.assets.interfaces.IMAsset" 
+			 verticalScrollPolicy="off" 
+			 horizontalScrollPolicy="off" 
+			 wordWrap="true" 
+			 borderStyle="none" 
+			 backgroundAlpha="0" 
+			 focusThickness="0"
+			 condenseWhite="true"
+			 xmlns:mx="http://www.adobe.com/2006/mxml"
+			 updateComplete="{this.doFinalCheckOnSize()}">
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			include "../interfaces/AssetIncludes.as";
+			import flash.text.TextFieldAutoSize;
+			
+			[Bindable]
+			public var autoSize:String = TextFieldAutoSize.LEFT;
+			
+			private var heightChanged:Boolean = false;
+			private function doFinalCheckOnSize():void{
+				if(this.autoSize != TextFieldAutoSize.NONE && this.height != Math.ceil(this.textField.height)){
+					this.height = Math.ceil(this.textField.height)
+				}
+			}
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.styleSheet = this._css;
+					this.heightChanged = true;
+					this.cssChanged = false;
+					this.xmlChanged = true;
+				}
+				if(this.xmlChanged){
+					this.heightChanged = true;
+					if(this._xml){
+						XML.ignoreWhitespace = true;
+						if(this._xml is XML && this._xml.name()=="div"){
+							this.htmlText = this._xml.children().toXMLString();
+						} else {
+							this.htmlText = this._xml.toXMLString();
+						}
+						//this.validateNow();
+					}
+				}
+				this.invalidateDisplayList();
+				super.commitProperties();
+			}
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				//this.textField.embedFonts = true;
+				this.textField.autoSize = this.autoSize; 
+			}
+		]]>
+	</mx:Script>
+</mx:TextArea>

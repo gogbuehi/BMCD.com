@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="800" height="700"
+	borderStyle="outset" backgroundColor="#E2DCDC"
+	>
+
+	<mx:TextArea x="196" y="155" width="195" height="181" text="Thumbnail
+Photo brought into area and
+placed in center.
+Variable 90 x Variable 70
+Based upon constraints
+provided in Request Event."/>
+ 
+	
+	<mx:TextArea x="27" y="470" width="464" height="55" text="Opaque layer goes over entire video with exception to small box in middle, which is the selection area for the thumb nail."/>
+	
+</mx:Canvas>

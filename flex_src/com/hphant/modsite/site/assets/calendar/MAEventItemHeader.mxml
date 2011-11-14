@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="984" height="180" backgroundAlpha="0"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*"
+	       currentState="colapsed"
+	       dataChange="{dataChanged()}"
+	       verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:text1="flash.text.*">
+	<mx:Metadata>
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	
+	<mx:Box clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="209" height="100%" minHeight="200" y="0" x="10" verticalAlign="middle" horizontalAlign="center" >
+		<images:MAImage autoSize="false" click="{this.swapState()}" id="thumb" xml="{thmb}" width="200" height="150" buttonMode="true" useHandCursor="true"/>
+	</mx:Box>
+	<mx:VBox id="title" verticalGap="0" x="229" y="10" width="840" clipContent="false" >
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:VBox width="580" horizontalAlign="left" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+				<text:MAText styleName="title" xml="{this.ttl}" bottom="0"/>
+				<text:MAText styleName="subTitle" xml="{this.time}" bottom="0"/>
+			</mx:VBox>
+			<mx:VBox id="mileageText" width="140" horizontalAlign="left" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+				<text:MAText styleName="title" xml="{this.dte}" bottom="0"/>
+				
+				
+			</mx:VBox>
+		</mx:HBox>
+		<mx:resizeEffect>
+			<mx:Resize />
+		</mx:resizeEffect>
+	</mx:VBox>
+		<mx:HBox id="specText" verticalScrollPolicy="off" horizontalScrollPolicy="off" x="229" y="75">
+			<mx:VBox verticalGap="0" width="580" horizontalAlign="left" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<text:MAText styleName="subTitle" xml="{this.blrb}" bottom="0"/>
+			</mx:VBox>
+		</mx:HBox>
+	<mx:Button click="{this.swapState()}" id="detailsBtn" label="+" paddingLeft="0" paddingRight="0" width="25"  x="950" y="{this.height-this.detailsBtn.height-10}" buttonMode="true" useHandCursor="true"/>
+	<mx:states>
+		<mx:State name="colapsed">
+		</mx:State>
+		<mx:State name="expanded">
+			<mx:SetProperty target="{thumb}" name="width" value="0"/>
+			<mx:SetProperty target="{thumb}" name="height" value="0"/>
+			<mx:SetProperty target="{this}" name="height" value="80"/>
+			<mx:SetProperty target="{this.title}" name="x" value="10"/>
+			<mx:SetProperty target="{this.detailsBtn}" name="label" value="-"/>
+			<mx:RemoveChild target="{this.specText}"/>
+			<!--<mx:RemoveChild target="{this.mileageText}"/>-->
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="colapsed" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize target="{thumb}" easingFunction="{mx.effects.easing.Exponential.easeIn}"/>
+				<mx:Fade targets="{[this.specText]}" alphaFrom="1" alphaTo="0" />
+				<mx:RemoveChildAction targets="{[thumb,this.specText]}" />
+				<mx:Parallel>
+					<mx:Move target="{title}" />
+					<mx:Resize target="{this}"/>
+				</mx:Parallel>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="colapsed">
+			<mx:Sequence>
+				<mx:Parallel>
+					<mx:Move target="{title}" />
+					<mx:Resize target="{this}"/>
+				</mx:Parallel>
+				<mx:SetPropertyAction targets="{[this.specText]}" name="alpha" value="0"/>
+				<mx:AddChildAction targets="{[thumb,this.specText]}" />
+				<mx:Fade targets="{[this.specText]}" alphaFrom="0" alphaTo="1" />
+				<mx:Resize target="{thumb}" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.calendar.BMCDEventItemData;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.effects.easing.Back;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import mx.effects.easing.Exponential;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var blrb:XMLList;
+			[Bindable]
+			private var dte:XMLList;
+			[Bindable]
+			private var thmb:XMLList;
+			[Bindable]
+			private var time:XMLList;
+			
+			
+			private function swapState():void{
+				log("Details button clicked : "+((this.currentState=="expanded") ? "colapse" : "expand"));
+				if(this.currentState=="expanded"){
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.COLAPSE_CLICK,this.data));
+				} else if(this.currentState=="colapsed") {
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.EXPAND_CLICK,this.data));
+				}
+			}
+			protected function dataChanged():void{
+				if(this.data){
+					var ed:BMCDEventItemData = new BMCDEventItemData();
+					ed.row = XML(data);
+					this.setBulletImage(ed);
+					this.setTitle(ed);
+					this.setBlurb(ed);
+					this.setDate(ed);
+					this.setTime(ed);
+					
+				} else {
+					ttl = null;
+					blrb = null;
+					dte = null;
+					thmb = null;
+					time = null;
+				}
+			}
+			private function setBulletImage(ed:BMCDEventItemData):void{
+				var s:String = XMLList(ed.thumb.data).toXMLString();
+				thmb = XMLList(s);
+			}
+			protected function setTitle(ed:BMCDEventItemData):void{
+				ttl = XMLList("<p>"+ed.title.data+"</p>");
+			}
+			protected function setTime(ed:BMCDEventItemData):void{
+				time = XMLList("<p>Time: "+ed.start.data+" - "+ed.end.data+"</p>");
+			}
+			protected function setBlurb(ed:BMCDEventItemData):void{
+				blrb = XMLList("<p>"+ed.blurb.data+"</p>");
+			}
+			protected function setDate(ed:BMCDEventItemData):void{
+				dte = XMLList(ed.date.data);
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

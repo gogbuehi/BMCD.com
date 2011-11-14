@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Module xmlns:mx="http://www.adobe.com/2006/mxml" enabled="{UIComponent(site).enabled}" width="100%" height="100%" initialize="{init()}" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+	layout="absolute" implements="com.hphant.modsite.admin.IAdminManager">
+	<mx:Canvas id="pageLayer" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" creationComplete="{AdminManager.getInstance().pageHolder=pageLayer}"/>
+	<mx:Canvas id="moduleLayer" width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" creationComplete="{AdminManager.getInstance().moduleHolder=moduleLayer}"/>
+	<mx:Canvas id="controllsLayer" width="100%" height="{BrowserScrollManager.getInstance().height}" verticalScrollPolicy="off" horizontalScrollPolicy="off" creationComplete="{PalletManager.getInstance().warehouse = this.controllsLayer;AdminManager.getInstance().controllsHolder=controllsLayer}">
+		<!--<mx:moveEffect>
+			<mx:Move />
+		</mx:moveEffect>-->
+	</mx:Canvas>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import com.hphant.utils.Logger;
+			import com.hphant.components.AlertPallet;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import mx.effects.Move;
+			import mx.effects.Effect;
+			import com.hphant.managers.BrowserScrollManager;
+			import com.hphant.events.BrowserScrollEvent;
+			import com.hphant.managers.PalletManager;
+			import mx.containers.Canvas;
+			import mx.core.ScrollPolicy;
+			import com.hphant.modsite.site.modules.interfaces.IModuleLibrary;
+			import mx.core.Container;
+			import com.hphant.modsite.IModsite;
+			import mx.core.UIComponent;
+			import com.hphant.modsite.admin.AdminManager;
+			import com.hphant.modsite.admin.events.AdminManagerEvent;
+			[Bindable]
+			public function set site(value:IModsite):void{
+				AdminManager.getInstance().site = value;
+				AdminManager.getInstance().page = value.pageBody;
+				AdminManager.getInstance().moduleLibrary = value.moduleLibrary;
+			}
+			public function get site():IModsite{
+				return AdminManager.getInstance().site;
+			}
+			public function set moduleLibrary(value:IModuleLibrary):void{
+				AdminManager.getInstance().moduleLibrary = value;
+			}
+			public function start():void{
+				AdminManager.getInstance().start();
+			}
+			private function init():void{
+				/* this.initCanvas(this.pageLayer);
+				this.initCanvas(this.moduleLayer);
+				this.initCanvas(this.controllsLayer);
+				 */
+				
+				AdminManager.getInstance();
+				AdminManager.getInstance().pageHolder = this.pageLayer;
+				AdminManager.getInstance().moduleHolder = this.moduleLayer;
+				AdminManager.getInstance().controllsHolder = this.controllsLayer;
+				
+				AdminManager.getInstance().addEventListener(AdminManagerEvent.END_ADMIN,this.handleAdminEnd);
+				AdminManager.getInstance().addEventListener(AdminManagerEvent.START_PAGE_EDIT,this.handlePageStart);
+				AdminManager.getInstance().addEventListener(AdminManagerEvent.END_PAGE_EDIT,this.handlePageEnd);
+				AdminManager.getInstance().addEventListener(AdminManagerEvent.END_MODULE_EDIT,this.handleModEnd);
+				AdminManager.getInstance().addEventListener(AdminManagerEvent.START_MODULE_EDIT,this.handleModStart);
+				BrowserScrollManager.getInstance().addEventListener(BrowserScrollEvent.CHANGE,this.resizeAndPositionControllsLayer);
+				
+			}
+			private function handleAdminEnd(event:AdminManagerEvent):void{
+				callLaterHandler();
+			}
+			private function callLaterHandler():void{
+				AdminManager.getInstance().site.uriManager.enabled =true;
+				AdminManager.getInstance().site.endAdmin();
+			}
+			private function handlePageStart(event:AdminManagerEvent):void{
+				AdminManager.getInstance().site.uriManager.enabled =false;
+				for each (var mod:UIComponent in Container(AdminManager.getInstance().site.pageBody).getChildren()){
+					mod.addEventListener(MouseEvent.ROLL_OVER,AdminManager.getInstance().moduleRollOver);
+					mod.addEventListener(MouseEvent.ROLL_OUT,AdminManager.getInstance().moduleRollOut);
+					mod.addEventListener(MouseEvent.CLICK,AdminManager.getInstance().moduleClick);
+				}
+			}
+			private function handleModEnd(event:AdminManagerEvent):void{
+				AdminManager.getInstance().site.uriManager.enabled =false;
+				for each (var mod:UIComponent in Container(AdminManager.getInstance().site.pageBody).getChildren()){
+					mod.addEventListener(MouseEvent.ROLL_OVER,AdminManager.getInstance().moduleRollOver);
+					mod.addEventListener(MouseEvent.ROLL_OUT,AdminManager.getInstance().moduleRollOut);
+					mod.addEventListener(MouseEvent.CLICK,AdminManager.getInstance().moduleClick);
+				}
+			}
+			private function handleModStart(event:AdminManagerEvent):void{
+				AdminManager.getInstance().site.uriManager.enabled =false;
+				XML.ignoreWhitespace = false;
+				for each (var mod:UIComponent in Container(AdminManager.getInstance().site.pageBody).getChildren()){
+					mod.removeEventListener(MouseEvent.ROLL_OVER,AdminManager.getInstance().moduleRollOver);
+					mod.removeEventListener(MouseEvent.ROLL_OUT,AdminManager.getInstance().moduleRollOut);
+					mod.removeEventListener(MouseEvent.CLICK,AdminManager.getInstance().moduleClick);
+				}
+			}
+			private function handlePageEnd(event:AdminManagerEvent):void{
+				AdminManager.getInstance().site.uriManager.enabled =true;
+				for each (var mod:UIComponent in Container(AdminManager.getInstance().site.pageBody).getChildren()){
+					mod.removeEventListener(MouseEvent.ROLL_OVER,AdminManager.getInstance().moduleRollOver);
+					mod.removeEventListener(MouseEvent.ROLL_OUT,AdminManager.getInstance().moduleRollOut);
+					mod.removeEventListener(MouseEvent.CLICK,AdminManager.getInstance().moduleClick);
+				}
+			}
+			private var controllsMove:Move;
+			private function resizeAndPositionControllsLayer(event:BrowserScrollEvent):void{
+				if(this.controllsLayer){
+					if(!controllsMove){
+						controllsMove = new Move(this.controllsLayer);
+					}
+					if(controllsMove.isPlaying){
+						controllsMove.stop();
+					}
+				//	this.controllsLayer.width = event.width;
+				//	this.controllsLayer.height = event.height;
+					controllsMove.xTo = event.horizontal;
+					controllsMove.yTo = event.vertical;
+					controllsMove.captureStartValues();
+					controllsMove.play();
+					/* this.controllsLayer.x = event.horizontal;
+					this.controllsLayer.y = event.vertical; */
+				}
+				
+			}
+			private function log(message:Object,level:uint=0):void{
+				Logger.log("["+this.className+"] "+message,level);
+			}
+		]]>
+	</mx:Script>
+</mx:Module>

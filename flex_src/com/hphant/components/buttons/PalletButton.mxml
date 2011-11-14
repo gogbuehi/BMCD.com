@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Button xmlns:mx="http://www.adobe.com/2006/mxml" click="{this.clickListener()}" initialize="{initPalletListeners()}">
+	<mx:Metadata>
+		[Event(name="open", type="")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.events.PalletEvent;
+			import com.hphant.managers.BrowserScrollManager;
+			import com.hphant.constants.PalletPosition;
+			import com.hphant.events.PalletManagerEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.components.containers.Pallet;
+			private var _palletFactory:IFactory = new ClassFactory(Pallet);
+			private var _palletClass:Class = Pallet;
+			[Inspectable]
+			public function get palletClass():Class{
+				return this._palletClass;
+			}
+			[Bindable]
+			[Inspectable]
+			public function get palletLabel():String{
+				return (this._palletLabel) ? this._palletLabel : (this.pallet) ? this.pallet.label : "";
+			}
+			public function set palletLabel(value:String):void{
+				this._palletLabel = value;
+				this.pallet.label = value;
+			}
+			private var _palletLabel:String;
+			public function set palletClass(value:Class):void{
+				this._palletFactory = new ClassFactory(value);
+				if(this._pallet && this._opened){
+					PalletManager.closePallet(this._pallet);
+					this._opened = false;
+				}
+				this._pallet = null;
+				this._palletClass = value;
+			}
+			private var _opened:Boolean = false;
+			[Bindable]
+			[Inspectable]
+			public function get opened():Boolean{
+				return this._opened;
+			}
+			public function set opened(value:Boolean):void{
+				if(value!=this._opened){
+					this.clickListener();
+				}
+			}
+			private var _pallet:Pallet;
+			[Bindable]
+			[Inspectable]
+			public function get pallet():Pallet{
+				if(!_pallet){
+					_pallet = this._palletFactory.newInstance();
+					_pallet.addEventListener(PalletEvent.START_DRAG,this.startDragListener);
+					if(this._palletLabel){_pallet.label = this._palletLabel;}
+				}
+				return this._pallet;
+			}
+			public function set pallet(value:Pallet):void{
+				if(this._pallet){
+					_pallet.removeEventListener(PalletEvent.START_DRAG,this.startDragListener);
+				}
+				this._pallet = value;
+				_pallet.addEventListener(PalletEvent.START_DRAG,this.startDragListener);
+				if(this._palletLabel){_pallet.label = this._palletLabel;}
+			}
+			private function clickListener():void{
+				if(this._opened){
+					PalletManager.closePallet(this.pallet);
+					this._opened = false;
+					this.dispatchEvent(new PalletEvent(PalletEvent.CLOSE));
+				} else {
+					PalletManager.openPallet(this.pallet);
+					positionPallet();
+					this._opened = true;
+					this.dispatchEvent(new PalletEvent(PalletEvent.OPEN));
+				}
+			}
+			private function initPalletListeners():void{
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,this.palletClosed);
+			}
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet == this._pallet){
+					this._opened = false;
+					this._pallet.reset();
+				}
+			}
+			[Bindable]
+			[Inspectable(enumeration="bottom,left,right,top,none",defultValue="right")]
+			public var palletPosition:String = PalletPosition.RIGHT;
+			private function positionPallet():void{
+				if(PalletPosition.NONE!=palletPosition){
+					var p:Point = new Point(this.x,this.y);
+					switch(palletPosition){
+						case PalletPosition.RIGHT:
+							p.x = this.x+this.width;
+						break;
+						case PalletPosition.TOP:
+							p.y = this.y - pallet.height;
+						break;
+						case PalletPosition.BOTTOM:
+							p.y = this.y + this.height;
+						break;
+						case PalletPosition.LEFT:
+							p.x = this.x - pallet.width;
+						break;
+						case PalletPosition.NONE:
+						default:
+						break;
+					}
+					p = this.parent.localToGlobal(p);
+					PalletManager.getInstance().warehouse.globalToLocal(p);
+					pallet.x = p.x - BrowserScrollManager.getInstance().horizontal;
+					pallet.y = p.y - BrowserScrollManager.getInstance().vertical;
+				}
+			}
+			private function startDragListener(event:PalletEvent):void{
+				this.palletPosition = PalletPosition.NONE;
+			}
+		]]>
+	</mx:Script>
+</mx:Button>

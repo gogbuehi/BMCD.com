@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:buttons="com.hphant.components.buttons.*" 
+	xmlns:components="com.hphant.components.*"  xmlns:text="com.hphant.components.text.*" xmlns:ui="flash.ui.*">
+	<mx:Label text="Available Videos" />
+	<mx:TileList rowCount="1" columnWidth="50" columnCount="15" rowHeight="50"
+		direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on" 
+	    dragEnabled="true"
+	    allowDragSelection="true"
+	    allowMultipleSelection="false"
+		dataProvider="{availableVideos}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" toolTip="{data.title}" source="{data.source}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	<mx:HBox width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Box width="300" height="300" verticalScrollPolicy="off" verticalAlign="middle" horizontalAlign="center" horizontalScrollPolicy="off" borderColor="#FFFFFF" borderThickness="2">
+	
+		<components:FLVPlaybackFlexComp id="video" source="{videoXML.source}" toolTip="{videoXML.source}" 
+				width="300"
+				height="300"
+			    volume="0"
+			 	autoPlay="true" 
+			    skinAutoHide="true"
+			    skinBackgroundAlpha=".15"
+				scaleMode="maintainAspectRatio"
+			 	skin="swf/SkinOverPlayStopSeekMuteVol.swf"
+				dragEnter="{this.dragEnterListener(event)}"
+				dragComplete="{this.dragCompleteListener(event)}"
+				dragDrop="{this.dragDropListener(event)}" 
+				dragExit="{this.dragExitListener(event)}"
+				dragOver="{this.dragOverListener(event)}" 
+			 	/>
+		 </mx:Box>
+		<mx:VBox width="100%" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	 		<text:LinkEditor label="Link:" id="link" width="500" text="{videoXML.link}"/>
+			<mx:HRule width="100%" />
+			<components:ExtendedRichTextEditor label="Text:" id="text" width="100%" htmlText="{videoXML.text}"/>
+	 	</mx:VBox>
+	</mx:HBox>
+	<mx:Binding destination="videoXML.link" source="link.text" />
+	<mx:Binding destination="videoXML.text" source="text.htmlText" />
+	<mx:Script>
+		<![CDATA[
+			import mx.core.IUIComponent;
+			import mx.core.UIComponent;
+			import com.hphant.contentlibrary.view.EditVideoPallet;
+			import com.hphant.managers.PalletManager;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.modsite.admin.model.VideoXML;
+			[Bindable]
+			[Inspectable]
+			public var videoXML:VideoXML = new VideoXML();
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("com.hphant.modsite.admin.model.VideoXML")]
+			public var availableVideos:Array;
+			
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public var videoSizes:Array;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var cmNewVideo:ContextMenuItem = new ContextMenuItem("New Video");
+			
+			private function defineListeners():void{
+				//this._cmArray.push(this.cmNewVideo);
+				this.cmNewVideo.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+			}
+			
+			private function dragOverListener(event:DragEvent):void{
+				DragManager.showFeedback(DragManager.MOVE);
+			}
+			private function dragDropListener(event:DragEvent):void{
+				var vidXML:VideoXML = VideoXML(event.dragSource.dataForFormat(event.dragSource.formats[0])[0]);
+				videoXML.parse(XMLList(vidXML.toXMLString()));
+			}
+			private function dragEnterListener(event:DragEvent):void{
+				DragManager.acceptDragDrop(IUIComponent(this.video));
+			}
+			private function dragCompleteListener(event:DragEvent):void{
+			
+			}
+			
+			private function dragExitListener(event:DragEvent):void{
+				
+			}
+			private function linkChange():void{
+				videoXML.link = this.link.text;
+			}
+			private function textChange():void{
+				videoXML.text = this.text.htmlText;
+			}
+			public override function reset():void{
+				super.reset();
+				this.link.text = "";
+				this.text.text = "";
+				//this.imageXML = new ImageXML();
+			}
+			
+			
+			private var newVideoPallet:EditVideoPallet;
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmNewVideo:
+						if(!this.newVideoPallet){
+							this.newVideoPallet = new EditVideoPallet();
+						} else {
+							this.newVideoPallet.reset();
+						}
+						//this.newVideoPallet.cropSizes = this.imageSizes;
+						PalletManager.openPallet(this.newVideoPallet);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:comp	="com.hphant.components.*"
+	xmlns:viewer="com.hphant.components.imagePreview.*"
+	implements="com.hphant.contentlibrary.control.IResponder"
+	width="100%"
+	paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+	>
+
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.model.Master;
+			import com.hphant.contentlibrary.model.Crop;
+			import mx.events.ListEvent;
+			import mx.controls.Alert;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import mx.core.Application;
+			import com.hphant.contentlibrary.control.event.ContentLibraryEvent;
+			import com.adobe.cairngorm.control.CairngormEvent;
+			import com.hphant.contentlibrary.control.ImageConstants;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.control.GeneralEvent;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+
+
+			/**
+			 * 	TODO:
+			 * 
+			 * 	Implement Storylines:
+			 *
+			 * 	[Edit Thumb]	
+			 * 	[Edit Crop]
+			 * 	[Edit Text In Description Box]
+			 * 
+			 */
+
+		
+            [Bindable]
+            private var modelLocator : ContentModelLocator = ContentModelLocator.getInstance();
+            
+            private var _parentMaster: Master;
+            
+            //	for object rollback in case remote service's fault
+            //private var _originalMaster	: Master;
+
+		
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	UI events handlers.
+			 */
+			private function fireEditThumbEvent():void 
+			{
+				//	TODO
+				/*
+ 				var event : CairngormEvent = new CairngormEvent("eventEditThumb");
+				event.data = createMasterInfo( modelLocator.selectedMaster, "thumb" );
+				dispatchEvent( event );
+				*/
+			}
+			
+			private function fireEditCropEvent():void 
+			{
+				//	TODO
+				
+			}
+			
+			private function fireCancellationEvent():void 
+			{
+				/*
+				//	Usecase
+				
+					[Cancel and Return] button pressed
+					ContentLibrary.dispatchEvent(ContentLibrartyEvent.IMAGE_CANCELED)
+					Content Library Closes
+				*/
+				var e:ContentLibraryEvent = new ContentLibraryEvent( ContentLibraryEvent.IMAGE_CANCELED );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				Application.application.dispatchEvent( e );
+			}
+			
+			private function fireSelectionEvent():void 
+			{
+				/*
+				//	Usecase
+				
+					[Select and Return] button pressed
+					If (Image Loaded In Prevew Area)
+						ContentLibrary.dispatchEvent(ContentLibrartyEvent.IMAGE_SELECTED)
+						Content Library Closes
+					else
+						alert("Please select and image from the table above by double clicking on its row");				
+				*/
+				
+				if (!modelLocator.selectedCrop) {
+					Alert.show( "Please select an image from the table above by double clicking on its row.", "Info" );
+					return;
+				}
+
+				var e:ContentLibraryEvent = new ContentLibraryEvent( ContentLibraryEvent.IMAGE_SELECTED );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				Application.application.dispatchEvent( e );
+			}
+			 
+			private function handlerCropPicked( e : ListEvent ):void {
+				/*
+					Usecase:
+
+					[Double Click on table row]
+						descriptionEditor.reset();
+						getMasterByID(masterID);
+						set preview area with crop and thumb images (thumb comes from Master).
+						Crop Loads into Preview Area
+						Thumb loads into Preview Area				
+				*/
+				
+				//	Mark selected Master and populate view
+				modelLocator.selectedCrop = Crop( e.itemRenderer.data );
+				//	to populate screen
+				loadData( modelLocator.selectedCrop );
+			}
+			 
+			 	
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Functionality & Helper methods.
+			 */
+			 
+			private function loadData( crop:Crop ):void {
+				
+				//	TODO
+				//	Finalize.
+				
+				//	loading images
+				var cropUrl : String = crop.cropLocation;
+				//var thumbUrl : String;
+				
+				//cropUrl = Constants.CONTENT_STORAGE_URL_IMAGES + crop.cropLocation; 
+				//cropUrl = "http://content.hphantdev.com/images/" + crop.cropLocation;
+				 
+				viewerImage.loadImage( cropUrl );
+				//viewerImage.loadImage( "http://content.hphantdev.com/images/" + crop.cropLocation );
+				
+				trace("Selected Crop: cropLocation = " + crop.cropLocation + "  masterId = " + crop.masterId );
+				trace("Selected Crop: cropUrl = " + cropUrl );// + "  thumbUrl = " + thumbUrl );
+				
+				//	getting Thumb by fetching related Master
+				var e : ImageEvent = new ImageEvent( ImageEvent.GET_MASTER_BY_ID );
+				e.data = crop.masterId;//27;//
+				e.responder = this;
+				e.dispatch();
+				
+				
+				//	this supposes Description will be accessible regardless images' accessibility
+				valueEditor.value = crop.shortDescription;
+				valueEditor.enabled = true;
+				
+				//	enable navigation buttons
+				btnEditCrop.enabled = true;
+				btnEditThumb.enabled = true;
+				btnEnlarge.enabled = true;
+			}
+			
+			public function refreshData( cropID : int ):void {
+				
+				//	TODO
+				//	Implement.
+				
+				/*
+					//	Makes sense: ??
+					
+					get all "Suggested Crops" - by MasterID ??
+					find & select in datagrid new crop with cropID
+					load that crop's data (image & description)
+					find Master with id = crop.masterId & load thumb 
+				*/
+				
+				
+				/*
+					//	from Storylines:
+					
+					User brought to Suggested Images
+					Crop.getCropByID(CropID);
+					Master.getCropByID(cropID);
+					Data update, New thumb loads into thumb preview area.
+				*/
+				
+				
+				/*
+				viewerThumb.loadImage( "" );
+				setControlsEnabled( false );
+				
+				trace();
+				trace("GET master by id: started.");
+				var e : ImageEvent = new ImageEvent( ImageEvent.GET_MASTER_BY_ID );
+				e.data = master.id;
+				e.responder = this;
+				e.dispatch();
+				*/
+				
+			}
+			
+			private function updateDescription( event : CairngormEvent ):void {
+				//	TODO
+				/*
+				//	make data update
+				if (!modelLocator.selectedMaster) {
+					trace("ERROR: in ["+this+"]");
+					trace("ERROR: can't update description for selectedMaster = "+modelLocator.selectedMaster);
+					//	Rollback valueEditor
+					valueEditor.reset();
+					return;
+				}
+				trace("UPDATE master: started.");
+				//	storing original value in case remote update fails
+				_originalMaster = modelLocator.selectedMaster.clone();
+				
+				modelLocator.selectedMaster.shortDescription = event.data;
+				var e : ImageEvent = new ImageEvent( ImageEvent.UPDATE_MASTER_IMAGE );
+				e.data = modelLocator.selectedMaster;
+				e.responder = this;
+				e.dispatch();
+				*/
+			}
+			
+			private function labelFunction(item:Object, column:DataGridColumn):String {
+				var res : String = "";
+				switch(column)
+				{
+				    case colSize:
+				    	res = item.dimensionWidth + "x" + item.dimensionHeight;
+				        break;
+				        
+				    case colDate:
+				    	var dt : Date = new Date( item.dt * 1000 ); 
+				    	res = dt.toDateString();
+				        break;
+				        
+				    default:
+				        trace("ERROR: ["+this+"].labelFunction(): Can't determine column !");
+				        break;
+				}
+				return res;
+			}
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Callbacks.
+			 */	
+			public function handleResult(event:GeneralEvent, result:Object)	: void 
+			{
+				switch (event.type) 
+				{
+				    case CropEvent.GET_SUGGESTED_CROPS:
+						trace("GET suggested crops: completed.");
+				        break;
+				        
+				    case ImageEvent.GET_MASTER_BY_ID:
+						trace("GET master by id: completed.");
+						
+						//	store Master object
+						//	load thumb
+						_parentMaster = Master( result );
+						viewerThumb.loadImage( _parentMaster.thumbnailLocation );
+						trace("thumbnailLocation: "+_parentMaster.thumbnailLocation);
+						
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+			}
+			
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void
+			{
+				trace("FAULT: in ["+this+"] : event.type="+event.type+"; fault="+fault);
+				
+				var operation:String = "";
+				switch (event.type) 
+				{
+				    case CropEvent.GET_SUGGESTED_CROPS:
+				    	//	nothing..
+				    	operation = "Data Retrieval";
+				        break;
+				        
+				    case ImageEvent.GET_MASTER_BY_ID:
+				    	
+				    	//	TODO
+				    	operation = "Determining parent Master for Crop " + modelLocator.selectedCrop;
+				    	
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+ 				Alert.show( "Operation: "+operation+"\nhas not been completed due to remote service fault:\n\n"+fault.message, "Error");
+ 				
+			}
+		]]>
+	</mx:Script>
+
+	<mx:HBox width="100%">
+		<mx:VBox height="100%" verticalAlign="top">
+			<mx:Label text="Suggested Crops" fontWeight="bold" fontSize="19"/>
+		</mx:VBox>
+		<mx:Spacer width="50"/>
+		<mx:VBox height="100%" width="100%">
+			<mx:Label text="Search" fontWeight="bold"/>
+			<mx:TextInput width="100%"/>
+		</mx:VBox>
+	</mx:HBox>
+	
+	<mx:Spacer height="20"/>
+	
+	<!--
+	<mx:Button label="Testing: Update data" color="red" click="updateData();"/>
+	-->
+		
+	<mx:DataGrid id="dgSuggestedImages" width="100%" height="150"
+		dataProvider="{modelLocator.suggestedCrops}"
+		doubleClickEnabled="true" itemDoubleClick="handlerCropPicked(event);"
+		>
+		<!--
+		<mx:columns>
+			<mx:DataGridColumn headerText="Short Description" dataField="col1"/>
+			<mx:DataGridColumn headerText="Size" dataField="col2"/>
+			<mx:DataGridColumn headerText="Date Added" dataField="col3"/>
+		</mx:columns>
+		-->
+		<mx:columns>
+			<mx:DataGridColumn headerText="ID" width="35" dataField="id"/>
+			<mx:DataGridColumn headerText="Short Description" dataField="shortDescription"/>
+			<mx:DataGridColumn headerText="Size" width="200" id="colSize" labelFunction="labelFunction"/>
+			<mx:DataGridColumn headerText="Date Added" width="200" 
+				id="colDate"
+				labelFunction="labelFunction"
+				/>
+		</mx:columns>
+		<!--
+		-->
+	</mx:DataGrid>
+
+	<mx:Spacer height="20"/>
+	
+	<mx:HBox width="100%">
+		<mx:VBox width="50%" horizontalAlign="center">
+			<mx:Button id="btnEnlarge" label="Click to View Full Size Image" 
+				enabled="false"
+				/>
+			<mx:Button id="btnEditCrop" label="Edit Crop"
+				enabled="false"
+				click="fireEditCropEvent()"
+				/>
+			
+			<viewer:ImagePreviewArea id="viewerImage" 
+				areaWidth="{ImageConstants.MASTER_WIDTH / 2}"
+				areaHeight="{ImageConstants.MASTER_HEIGHT / 2}"
+				/>
+				
+			<mx:Label text="scaled to 50% of actual size" fontWeight="bold"/>
+		</mx:VBox>
+		<mx:VBox width="50%" horizontalAlign="center">
+
+			<mx:Button visible="false" label="stub..."/>
+			<mx:Button visible="false" label="stub..."/>
+			
+			<comp:ValueEditor id="valueEditor" width="100%" borderStyle="solid"
+				enabled="false"
+				valueMaxLength="{ImageConstants.MASTER_IMAGE_DESCRIPTION_MAX_LENGHT}"
+				valueChanged="updateDescription(event)"
+				/>
+				<!--
+				value="{dgMasterImages.selectedItem.shortDescription}"
+				-->
+			
+			<mx:Spacer height="30"/>
+
+			<viewer:ImagePreviewArea id="viewerThumb" 
+				areaWidth="{ImageConstants.THUMB_WIDTH}"
+				areaHeight="{ImageConstants.THUMB_HEIGHT}"
+				progressIndicatorSize="{ImagePreviewArea.PROGRESS_INDICATOR_SIZE_SMALL}"
+				shortErrorMessage="true"
+				/>
+				
+			<mx:Button id="btnEditThumb" label="Edit Thumb" 
+				enabled="false"
+				click="fireEditThumbEvent()"
+				/>
+		
+		</mx:VBox>
+	</mx:HBox>
+	
+	<mx:HBox width="100%" horizontalAlign="right">
+		<mx:Button label="Cancel and Return" click="fireCancellationEvent()"/>
+		<mx:Button label="Select and Return" click="fireSelectionEvent()"/>
+	</mx:HBox>
+	
+	<!--	
+	-->
+	
+</mx:VBox>

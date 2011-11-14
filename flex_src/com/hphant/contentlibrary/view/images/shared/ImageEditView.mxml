@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:ic="com.hphant.components.imageCropper.*"
+	implements="com.hphant.contentlibrary.control.IResponder"
+	width="100%" 
+	paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+	horizontalAlign="center"
+	>
+	<!--
+	height="100%"
+	xmlns:shared="com.hphant.contentlibrary.view.images.shared.*"
+	-->
+	
+	<mx:Metadata>
+		[Event(name = "eventReturn")] 
+		[Event(name = "eventThumbUpdated", type="com.adobe.cairngorm.control.CairngormEvent")]
+		[Event(name = "eventCropCreated", type="com.adobe.cairngorm.control.CairngormEvent")]
+	</mx:Metadata>
+
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.model.Crop;
+			import mx.core.Application;
+			import com.hphant.contentlibrary.control.event.MAImageAdminEvent;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.control.GeneralEvent;
+			import com.hphant.contentlibrary.model.Master;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.components.imageCropper.ImageCropperManager;
+			import com.hphant.contentlibrary.control.ImageConstants;
+			import mx.controls.Alert;
+			import com.adobe.cairngorm.control.CairngormEvent;
+
+			
+        	 
+			[Bindable]
+        	public var mode					: String = ImageConstants.EDIT_MODE_THUMB; 
+			[Bindable]
+        	public var labelHeader			: String = ""; 
+			[Bindable]
+        	public var labelCancel			: String = "Cancel"; 
+			[Bindable]
+        	public var labelSave			: String = "Save Edit"; 
+			[Bindable]
+        	public var editableDescription	: Boolean = false; 
+			[Bindable]
+        	public var master				: Master;
+        	
+        	private var _masterUpdate	: Master;
+        	private var manIC			: ImageCropperManager;
+
+
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Functionality & Helper methods.
+			 */
+			 	
+			private function save():void {
+ 				
+				trace("SAVE for mode = "+mode);
+				switch (mode) 
+				{
+				    case ImageConstants.EDIT_MODE_THUMB:
+						
+		 				//------------------------------------------------------------------
+		 				//	Usecase #1: [Edit Thumb]
+		 				
+							/*
+							[Save Edit]
+								imageCropper.commitCrop()
+									ImageCropperEvent.CONTENT_READY;
+									
+								URLLoader.load(/imgdir/upload.php?s=sessionkey) type post.
+									returns file name.
+									
+								Masters.updateMaster(update:Master)
+									
+								User brought to Suggested Images
+								Master.masterLookupByID()
+								Data update, New thumb loads into thumb preview area.
+							*/
+
+						
+						setControlsEnabled( false );
+			    		if (!manIC) {
+			    			manIC = new ImageCropperManager( this.imageCropper, handlerThumbUploadComplete );
+			    		}
+						this.imageCropper.commitCrop();
+						//	manIC already contains callback on ImageCropperEvent.CONTENT_READY,
+						//	manIC will upload image and will get back to callback,
+						//	then  Masters.updateMaster(update:Master).
+						
+				        break;
+		 				//------------------------------------------------------------------
+				        
+				        
+				    case ImageConstants.EDIT_MODE_CUSTOM_CROP:
+				    
+		 				//------------------------------------------------------------------
+		 				//	Usecase #2: [Select Master]
+		 				
+		 					/*
+							[Save Crop]
+								imageCropper.commitCrop()
+									ImageCropperEvent.CONTENT_READY;
+									
+								URLLoader.load(/imgdir/upload.php?s=sessionkey)	type post.
+									returns file name.
+									
+								Crop.addCrop(crop:Crop) Note crop.id = -1;
+									returns cropID or Error Exception.
+									
+								User brought to Suggested Images
+								Crop.getCropByID(CropID);
+								Master.getCropByID(cropID);
+								Data update, New thumb loads into thumb preview area.
+		 					*/ 
+						
+						
+						if (txtDescription.text.length == 0) {
+							Alert.show("Please enter a text description for the Crop.", "Info");
+							return;
+						}
+		 				
+						setControlsEnabled( false );
+			    		if (!manIC) {
+			    			manIC = new ImageCropperManager( this.imageCropper, handlerCropUploadComplete );
+			    		}
+						this.imageCropper.commitCrop();
+		 				
+				        break;
+		 				//------------------------------------------------------------------
+
+				        
+				    case ImageConstants.EDIT_MODE_CROP:
+						
+						//	TODO
+						
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine edit mode: " + mode);
+				}
+			}
+			
+			
+			private function fireReturnEvent():void {
+ 				var event : CairngormEvent = new CairngormEvent( "eventReturn" );
+				dispatchEvent( event );
+			}
+			
+			private function fireThumbUpdatedEvent():void {
+ 				var event : CairngormEvent = new CairngormEvent( "eventThumbUpdated" );
+				event.data = _masterUpdate;
+				dispatchEvent( event );
+			}
+
+			private function fireCropCreatedEvent( cropID:int ):void {
+ 				var event : CairngormEvent = new CairngormEvent( "eventCropCreated" );
+				event.data = cropID;
+				dispatchEvent( event );
+			}
+			
+			private function setControlsEnabled( v:Boolean ):void {
+				btnSave.enabled = v;
+				btnCancel.enabled = v;
+				imageCropper.enabled = v;
+			}
+			
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Callbacks.
+			 */	
+
+			/**
+			 *	Handler for Event.COMPLETE - on succesful completion of Thumb uploading.
+			 */
+			private function handlerThumbUploadComplete(e:Event):void
+			{
+				trace("THUMB upload complete");
+				//trace("Loader Data: " + URLLoader(e.currentTarget).data);
+				
+				//	getting imageCropperInfo
+				var info : Object = this.imageCropper.lastImageCropperEvent.imageCropperInfo;
+				
+	            //	Parse event.data for actual image URL.
+	            var xml:XML = new XML( URLLoader(e.currentTarget).data );
+	            //	error-detecting
+	            if (xml.error[0].toString().length > 0) {
+	            	Alert.show( "Error occured during image uploading:\n"+xml.error[0], "Error" );
+	            	return;
+	            }
+	            var location:String = xml.value[0];//"http://";
+				trace("location: " + location);
+ 				
+				trace();
+				trace("UPDATE master: started.");
+				
+				_masterUpdate = this.master.clone();
+				//	populating master with new properties
+				/*
+				this.master.thumbnailLocation	= location;
+				this.master.offsetX				= info.offsetX;
+				this.master.offsetY				= info.offsetY;
+				this.master.scale				= info.scale;
+				this.master.rotation			= info.rotation;
+				*/
+				
+				//_masterUpdate.id 				= 555;	//	for error stress
+				
+				_masterUpdate.thumbnailLocation	= location;
+				_masterUpdate.offsetX			= info.offsetX;
+				_masterUpdate.offsetY			= info.offsetY;
+				_masterUpdate.scale				= info.scale;
+				_masterUpdate.rotation			= info.rotation;
+ 				
+				var event : ImageEvent = new ImageEvent( ImageEvent.UPDATE_MASTER_IMAGE );
+				//	better to pass a cloned object instead of optimistic changes applied  
+				//event.data = this.master;
+				event.data = _masterUpdate;
+				event.responder = this;
+				event.dispatch();
+
+			}
+			
+ 
+			/**
+			 *	Handler for Event.COMPLETE - on succesful completion of Crop uploading.
+			 */
+			private function handlerCropUploadComplete(e:Event):void
+			{
+				trace("CROP upload complete");
+				
+				//	getting imageCropperInfo
+				var info : Object = this.imageCropper.lastImageCropperEvent.imageCropperInfo;
+				
+	            //	Parse event.data for actual image URL.
+	            var xml:XML = new XML( URLLoader(e.currentTarget).data );
+	            //	error-detecting
+	            if (xml.error[0].toString().length > 0) {
+	            	Alert.show( "Error occured during image uploading:\n"+xml.error[0], "Error" );
+	            	return;
+	            }
+	            var location:String = xml.value[0];
+				trace("location: " + location);
+ 				
+				trace();
+				trace("CREATE crop: started.");
+				
+				
+				var crop : Crop = new Crop();
+				crop.cropLocation		= location;
+				crop.shortDescription	= txtDescription.text;
+				crop.dimensionWidth 	= info.imageData.width;
+				crop.dimensionHeight 	= info.imageData.height;
+				crop.scale 		= info.scale;
+				crop.rotation 	= info.rotation;
+				crop.offsetX 	= info.offsetX;
+				crop.offsetY 	= info.offsetY;
+				crop.masterId 	= this.master.id;  
+				
+				
+				var event : CropEvent = new CropEvent( CropEvent.ADD_CROP );
+				event.data = crop;
+				event.responder = this;
+				event.dispatch();
+
+			}
+			
+			public function handleResult(event:GeneralEvent, result:Object)	: void 
+			{
+				switch (event.type) 
+				{
+				    case ImageEvent.UPDATE_MASTER_IMAGE:
+						trace("UPDATE master: completed.");
+						
+						/*
+							//	Usecase: other components implement this.
+							
+							User brought to "Suggested Images"?? - "Masters Library" seems to be more appropriate  
+							Master.masterLookupByID()
+							Data update, New thumb loads into thumb preview area.
+						*/
+						
+						setControlsEnabled( true );
+						fireThumbUpdatedEvent();
+						
+				        break;
+				        
+				    case CropEvent.ADD_CROP:
+						trace("CREATE crop: completed.");
+						
+						/*
+							//	TODO - finalize this Usecase
+							
+							//	Usecase: other components implement this.
+							
+							User brought to Suggested Images
+							Crop.getCropByID(CropID);
+							Master.getCropByID(cropID);
+							Data update, New thumb loads into thumb preview area.
+						*/
+
+						setControlsEnabled( true );
+						//	result should contain created crop's ID  
+						fireCropCreatedEvent( int(result) );
+						
+				        break;
+						
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+			}
+			
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void
+			{
+				trace("FAULT: in ["+this+"] : event.type="+event.type+"; fault="+fault);
+				var operation:String = "";
+ 				
+				switch (event.type) 
+				{
+				    case ImageEvent.UPDATE_MASTER_IMAGE:
+				    	operation = "Master's Update";
+				    	
+				    	//	enabling controls again
+				    	setControlsEnabled( true );
+						
+						//	No Rollback required, because cloned Master object used for updates.
+						//	'Pessimistic' approach, application's data will be updated in case of successful
+						//		sequence of actions *only*.  
+						
+				        break;
+				        
+				    case CropEvent.ADD_CROP:
+				    	operation = "Crop's Creation";
+				    	
+				    	//	enabling controls again
+				    	setControlsEnabled( true );
+				    	
+				        break;
+				        
+				    default:
+				        trace("ERROR: Can't determine action on event=" + event.type);
+				}
+				trace();
+ 				Alert.show( "Operation: "+operation+" has not been completed due to remote service fault:\n\n"+fault.message, "Error");
+ 				
+			}
+			
+		]]>
+	</mx:Script>
+
+
+	<mx:HBox width="100%">
+		<mx:Label id="lblHeader" text="{labelHeader}" fontWeight="bold" fontSize="19"/>
+	</mx:HBox>
+
+	<mx:HBox width="100%">
+	
+		<mx:VBox width="70%" horizontalAlign="left">
+				
+			<mx:HBox width="100%">
+				<mx:Label text="Description:" fontWeight="bold"/>
+				<mx:TextInput id="txtDescription" 
+					width="100%" 
+					editable="{editableDescription}"
+					text="{master.shortDescription}"
+					maxChars="{ImageConstants.MASTER_IMAGE_DESCRIPTION_MAX_LENGHT}"
+					/>
+			</mx:HBox>
+		</mx:VBox>
+		
+		<mx:VBox width="30%" horizontalAlign="left">
+			<mx:HBox id="blockButtons" width="100%" horizontalAlign="right">
+				
+				<mx:Button id="btnCancel" label="{labelCancel}" width="90"
+					click="fireReturnEvent()"
+					/>
+					
+				<mx:Spacer width="15"/>
+					
+				<mx:Button id="btnSave" label="{labelSave}" width="90" 
+					click="save();"
+					/>
+					<!--
+					-->
+					
+						
+			</mx:HBox>
+			
+			<mx:Label id="lblTip" text="Scale and Align your Image" fontWeight="bold" fontSize="14" width="100%" textAlign="right"/>
+			
+		</mx:VBox>
+		
+	</mx:HBox>
+
+	
+	<!--
+	<shared:ImageCropperWrapper id="wrapperIC"/>
+	-->
+	<ic:ImageCropper id="imageCropper" 
+		/>
+	
+	
+	
+</mx:VBox>

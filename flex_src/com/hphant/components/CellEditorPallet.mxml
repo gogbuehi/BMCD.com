@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AlertPallet xmlns="com.hphant.components.*" xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" updateComplete="{positionOnParent();}">
+	<topBar>
+		<mx:Box id="editorBox" paddingLeft="5" paddingBottom="5" paddingRight="5" paddingTop="5" verticalScrollPolicy="off" horizontalScrollPolicy="off" creationComplete="{addEditor();}"/>
+	</topBar>
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.events.MoveEvent;
+			import com.hphant.managers.PalletManager;
+			import mx.core.UIComponent;
+			public static function show(editor:UIComponent,parent:UIComponent=null):CellEditorPallet{
+				var cell:CellEditorPallet = new CellEditorPallet();
+				cell.label = "";
+				cell.text = "";
+				cell.editor = editor;
+				cell.buttonFlags = AlertPallet.CANCEL | AlertPallet.OK;
+				cell.defaultButtonFlag = AlertPallet.OK;
+				PalletManager.openPallet(cell);
+				if(parent){
+					cell._parent = parent;
+					cell.positionOnParent();
+				} else {
+					PalletManager.centerPallet(cell);
+				}
+				return cell;
+			}
+			private var _parent:UIComponent;
+			private function positionOnParent():void{
+				if(_parent){
+					var p:Point = new Point();
+					p = _parent.localToGlobal(p);
+					p = PalletManager.getInstance().warehouse.globalToLocal(p);
+					this.x = (p.x<PalletManager.getInstance().warehouse.width-this.width) ? (p.x<0) ? 0 : p.x : PalletManager.getInstance().warehouse.width-this.width;
+					this.y = (p.y<PalletManager.getInstance().warehouse.height-this.height) ? (p.y<0) ? 0 : p.y : PalletManager.getInstance().warehouse.height-this.height;
+				}
+			}
+			private var _editor:UIComponent;
+			private var _editorChanged:Boolean;
+			public function set editor(value:UIComponent):void{
+				_editorChanged = (_editor != value);
+				_editor = value;
+				this.invalidateProperties();
+			}
+			private function addEditor():void{
+				if(this.editorBox){
+					this.editorBox.removeAllChildren();
+					if(_editor){
+						this.editorBox.addChild(_editor);
+					}
+				}
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(_editorChanged){
+					this.addEditor();
+					this._editorChanged = false;
+				}
+			}
+		]]>
+	</mx:Script>
+</AlertPallet>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" disabledOverlayAlpha="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="0" borderThickness="0" horizontalAlign="left" verticalGap="0">
+	<mx:Label text="{label}" id="dataLabel" styleName="{labelStyleName}"/>
+	<mx:HBox horizontalScrollPolicy="off" verticalScrollPolicy="off">
+		<mx:ComboBox id="hour" selectedIndex="{this._hourIndex}" styleName="{inputStyleName}" creationComplete="{this.initHourValidator()}" enabled="{this.enabled}" change="{checkLimmits()}">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:Number>0</mx:Number>
+					<mx:Number>1</mx:Number>
+					<mx:Number>2</mx:Number>
+					<mx:Number>3</mx:Number>
+					<mx:Number>4</mx:Number>
+					<mx:Number>5</mx:Number>
+					<mx:Number>6</mx:Number>
+					<mx:Number>7</mx:Number>
+					<mx:Number>8</mx:Number>
+					<mx:Number>9</mx:Number>
+					<mx:Number>10</mx:Number>
+					<mx:Number>11</mx:Number>
+					<mx:Number>12</mx:Number>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+		<mx:Text text=":" styleName="{inputStyleName}"/>
+		<mx:ComboBox id="minute" styleName="{inputStyleName}" selectedIndex="{this._minuteIndex}" creationComplete="{this.initMinuteValidator()}" enabled="{this.enabled}" change="{checkLimmits()}">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:String>00</mx:String>
+					<mx:String>15</mx:String>
+					<mx:String>30</mx:String>
+					<mx:String>45</mx:String>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+		<mx:ComboBox id="ampm" styleName="{inputStyleName}" selectedIndex="{this._ampmIndex}" creationComplete="{this.initAMPMValidator()}" enabled="{this.enabled}" change="{checkLimmits()}">
+			<mx:dataProvider>
+				<mx:Array>
+					<mx:String>AM</mx:String>
+					<mx:String>PM</mx:String>
+				</mx:Array>
+			</mx:dataProvider>
+		</mx:ComboBox>
+	</mx:HBox>
+	<mx:String id="labelStyleName">emailFormLabel</mx:String>
+	<mx:String id="inputStyleName">emailFormInput</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import mx.accessibility.TitleWindowAccImpl;
+			import com.hphant.modsite.data.Time;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.NumberValidator;
+			
+			import mx.validators.DateValidator;
+			
+			private var _label:String = "label";
+			[Bindable]
+			[Inspectable(defaultValue="label",category="Common")]
+			public override function get label():String{ return this._label;}
+			public override function set label(value:String):void{
+				this._label = value;
+			}
+			private function initHourValidator():void{
+				this.hour_validator = new NumberValidator();
+				this.hour_validator.enabled = true;
+				this.hour_validator.required = _reqired;
+				this.hour_validator.source = this.hour;
+				this.hour_validator.property = "selectedIndex";
+				this.hour_validator.minValue = 1;
+				
+			}
+			private function initMinuteValidator():void{
+				this.monute_validator = new NumberValidator();
+				this.monute_validator.enabled = true;
+				this.monute_validator.required = _reqired;
+				this.monute_validator.source = this.minute;
+				this.monute_validator.property = "selectedIndex";
+				this.monute_validator.minValue = 0;
+				
+			}
+			private function initAMPMValidator():void{	
+				this.ampm_validator = new NumberValidator();
+				this.ampm_validator.enabled = true;
+				this.ampm_validator.required = _reqired;
+				this.ampm_validator.source = this.ampm;
+				this.ampm_validator.property = "selectedIndex";
+				this.ampm_validator.minValue = 0;
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._requiredChanged && this.hour_validator && this.monute_validator && this.ampm_validator){
+					this.hour_validator.required = _reqired;
+					this.monute_validator.required = _reqired;
+					this.ampm_validator.required = _reqired;
+					this._requiredChanged = false;
+				}
+			}
+			private var hour_validator:NumberValidator;
+			private var monute_validator:NumberValidator;
+			private var ampm_validator:NumberValidator;
+			public function validateData():Boolean{
+				return !(this.ampm_validator.validate().type==ValidationResultEvent.INVALID || this.monute_validator.validate().type==ValidationResultEvent.INVALID || this.hour_validator.validate().type==ValidationResultEvent.INVALID);
+			}
+			private var _reqired:Boolean = true;
+			private var _requiredChanged:Boolean = false;
+			[Inspectable]
+			public function get required():Boolean{return this._reqired;}
+			public function set required(value:Boolean):void{
+				this._requiredChanged = true;
+				this._reqired = value;
+				this.invalidateProperties();
+			}
+			public function get text():String{
+				return ((this.hour) ? this.hour.selectedItem : "00")+":"+
+						((this.minute) ? this.minute.selectedItem : "00")+" "+
+						((this.ampm) ? this.ampm.selectedItem : "AM");
+			}
+			[Bindable]
+			private var _hourIndex:int = 0;
+			[Bindable]
+			private var _minuteIndex:int = 0;
+			[Bindable]
+			private var _ampmIndex:int = 0;
+			public function set time(value:Time):void{
+				_hourIndex = (value) ? int((value.hour < 13) ? value.hour : value.hour - 12) : 0;
+				_minuteIndex = (value) ? int(Math.round(value.minute/15)) : 0;
+				_ampmIndex = (value) ? (value.hour<12) ? 0 : 1 : 0;
+			}
+			public function get time():Time{
+				var t:Time = new Time();
+				t.usTime = this.text;
+				return t;
+			}
+			public function reset():void{
+				this.time = null;
+			}
+			
+			private var _maxTime:Time = new Time(23,59,59);
+			public function get maxTime():Time{return this._maxTime;}
+			private var _minTime:Time = new Time();
+			public function get minTime():Time{return this._minTime;}
+			
+			public function set maxUSTime(value:String):void{
+				this._maxTime.usTime = value;
+				checkLimmits();
+			}
+			public function get maxUSTime():String{
+				return this._maxTime.usTime;
+			}
+			
+			public function set minUSTime(value:String):void{
+				this._minTime.usTime = value;
+				checkLimmits();
+			}
+			public function get minUSTime():String{
+				return this._minTime.usTime;
+			}
+			
+			private function checkLimmits():void{
+				this._hourIndex = (this.hour) ? this.hour.selectedIndex : _hourIndex;
+				this._minuteIndex = (this.minute) ? this.minute.selectedIndex : _minuteIndex;
+				this._ampmIndex = (this.ampm) ? this.ampm.selectedIndex : _ampmIndex;
+				
+				if(this.time.toNumber() > this.maxTime.toNumber()){
+					this.time = this.maxTime;
+				} else if(this.time.toNumber() < this.minTime.toNumber()){
+					this.time = this.minTime;
+				}
+			}
+			private function log(message:Object,level:uint=0):void{
+				Logger.log("["+this.className+"] "+message,level);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

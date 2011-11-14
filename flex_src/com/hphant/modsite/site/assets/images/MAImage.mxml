@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas autoLayout="true"
+     toolTipCreate="{repositionToolTip()}"
+     toolTipShow="{repositionToolTip()}"
+     mouseMove="{repositionToolTip()}"
+     resize="{refreshNoImage(event)}"
+	click="{this.imageClicked()}" 
+	rollOver="this.rollOutImage();" 
+	rollOut="this.rollOutImage();"
+    verticalScrollPolicy="off"
+    horizontalScrollPolicy="off"
+    borderThickness="0"
+    clipContent="true"
+    creationComplete="{bgc=this.getStyle('backgroundColor')}"
+    updateComplete="{setMaskCorners();}"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:components="com.hphant.components.*">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Style(name="noImage",type="Class",inherit="no")]
+		[Style(name="noImageBackgroundColor",type="uint",format="Color",inherit="no")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import mx.events.ResizeEvent;
+			import mx.core.IToolTip;
+			import mx.managers.ToolTipManager;
+			import mx.controls.ToolTip;
+			import mx.effects.easing.Sine;
+			import mx.effects.easing.Back;
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			
+			
+
+			[Bindable]
+			private var bgc:uint = 0x000000;
+			private var _href:String = "";
+			[Bindable]
+			public var autoSize:Boolean = true;
+			[Bindable]
+			public var imgNode:XMLList;
+			[Bindable]
+			private var p:XMLList;
+			private var _autoLoad:Boolean = true;
+			[Inspectable]
+			public function get autoLoad():Boolean{return this._autoLoad;}
+			public function set autoLoad(value:Boolean):void{
+				this._autoLoad = value;
+				this.applyXMLtoImage();
+			}
+			public function load():void{
+				this.applyXMLtoImage();
+			}
+			public function unload():void{
+				this.img1.source = null;
+			}
+			
+			private function repositionToolTip():void{
+				var p:Point = new Point(this.mouseX,this.mouseY);
+				p = this.localToGlobal(p);
+				var tt:IToolTip = ToolTipManager.currentToolTip;
+				if(tt){
+					tt.x = p.x;
+					tt.y = p.y- tt.height;
+				}
+			}
+			
+			private var tagSize:Object = new Object();
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml && this._xml.length()>0 && this.stage){
+					var name:String = String(XML(this._xml).name());
+					//log('Image XML Changed to:'+this._xml.toXMLString());
+					switch(name){
+						case "a":
+							if(this._xml.img){
+								this.imgNode = this._xml.img;
+							}
+							this._href = String(XML(this._xml).@href);
+							this.useHandCursor = true;
+							if(this.currentState=="text"){
+								this.currentState="notext";
+							}
+						break;
+						case "li":
+						case "div":
+							if(this._xml.a.length()==1){
+								if(this._xml.a.img.length()==1){
+									this.imgNode = this._xml.a.img;
+								}
+								this.useHandCursor = true;
+							 	this._href = String(XML(this._xml.a).@href);
+							} else if(this._xml.img){
+								this.useHandCursor = false;
+								this.imgNode = this._xml.img;
+							}
+							this.p=this._xml.p;
+							if(this._xml.p.length()>0 && this.showText){
+								this.currentState = "text";
+							} else if(this.currentState=="text"){
+								this.currentState="notext";
+							}
+							
+						break;
+						case "img":
+							this.imgNode = this._xml;
+							this.useHandCursor = false;
+							if(this.currentState=="text"){
+								this.currentState="notext";
+							}
+						break;
+					}
+					XMLUtility.insertBlankNode(this.imgNode);
+					this.buttonMode = this.useHandCursor;
+					this.tagSize.width = imgNode ? Number(imgNode.@width) : 0;
+					this.tagSize.height = imgNode ? Number(imgNode.@height) : 0;
+					if(this.tagSize.width && this.tagSize.height){
+						//this.autoSize=false;
+					}
+					if(this._autoLoad){
+						
+						this.applyXMLtoImage();
+					} else {
+						// this.img.visible = false;
+					}
+					this.xmlChanged = false;
+				} else if(this.xmlChanged && !this._xml){
+					this.imgNode = null;
+					this.xmlChanged = false;
+					this.applyXMLtoImage();
+				}
+				super.commitProperties();
+			}
+			private function imageClicked():void{
+				if(this._href != ""){
+					log("Image Clicked : ["+this._xml.toXMLString()+"]"+this);
+					this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,this._xml));
+				}
+			}
+			private function rollOverImage():void{
+				if(this._href != ""){
+					this.useHandCursor = true;
+				}
+			}
+			private function rollOutImage():void{
+				if(this._href != ""){
+					this.useHandCursor = false;
+				}
+			}
+			private function getAutoWidth():Number{
+				if(!this.autoSize || !this.img1){
+					return this.width;
+				} else if(this.tagSize.width>0){
+					this.width = this.tagSize.width;
+					return this.tagSize.width;
+				} else if(this.currentImage) {
+					this.width = this.currentImage.contentWidth;
+					return this.currentImage.contentWidth;
+				} else {
+					return this.width
+				}
+			}
+			private function getAutoHeight():Number{
+				if(!this.autoSize || !this.img1){
+					return this.height;
+				} else if(this.tagSize.height>0){
+					this.height = this.tagSize.height;
+					return this.tagSize.height;
+				} else if(this.currentImage) {
+					this.height = this.currentImage.contentHeight;
+					return this.currentImage.contentHeight;
+				} else {
+					return this.height;
+				}
+			}
+			private function resizeImage():void{
+				if(!this.imagesHolder.visible){
+					this.imagesHolder.visible = true;
+				}
+				if(!this.autoSize || (this.tagSize.width && this.tagSize.height && this.width == this.tagSize.width && this.tagSize.height == this.height)){
+					//this.resizeEnded();
+				} else {
+					this.getAutoHeight();
+					this.getAutoWidth();
+				}
+				repositionImages()
+			}
+			private function repositionImages():void{
+				if(this.currentImage==this.img1){
+					this.img1.x = 0;
+				} else if (this.currentImage==this.img2) {
+					this.img1.x = -this.getAutoWidth();
+				}
+			}
+			[Bindable]
+			private var img1src:String = null;
+			[Bindable]
+			private var img2src:String = null;
+			private function applyXMLtoImage():void{
+				if(this.imgNode && this.imgNode.length()>0){
+					
+					//log("Loading Image: source='"+this.imgNode.@src+"'");
+					//if(!this.currentImage || this.currentImage.source!==this.imgNode.@src){
+						//this.currentImage = (this.currentImage==this.img1) ? this.img2 : this.img1;
+						if(img1src==this.imgNode.@src){
+							this.currentImage = this.img1;
+							this.connectPreloader(this.img1);
+							this.preloader.visible = false;
+						} else if(img2src==this.imgNode.@src){
+							this.currentImage = this.img2;
+							this.connectPreloader(this.img2);
+							this.preloader.visible = false;
+						} else if(this.currentImage == this.img1){
+							this.currentImage = this.img2;
+							this.connectPreloader(this.img2);
+							img2src = this.imgNode.@src;
+							this.preloader.visible = true;
+						} else if(this.currentImage == this.img2 || !this.currentImage){
+							this.currentImage = this.img1;
+							this.connectPreloader(this.img1);
+							img1src = this.imgNode.@src;
+							this.preloader.visible = true;
+						}
+						repositionImages();
+						
+						 /* if(this.currentImage.loaderInfo.loader){
+							this.currentImage.loaderInfo.loader.unload();
+						} */
+						//var d:Date = new Date();
+						//this.currentImage.source = (this.currentImage.source == this.imgNode.@src) ? this.imgNode.@src+"?uniq="+d.hours+""+d.minutes+""+d.seconds+""+d.milliseconds : this.imgNode.@src;
+						
+					//}
+					if(this.toolTip!==this.imgNode.@title){
+						this.toolTip = this.imgNode.@title;
+					}
+				} else if(this.img1 && this.img2){
+					this.img2src = null;
+					this.img1src = null;
+					this.img1.x = 0;
+					this.currentImage = null;
+					this.imagesHolder.visible = false;
+				}
+			}
+			private function resizeEnded():void{
+				if(this.imgNode){
+					this.imagesHolder.visible = true;
+				}
+				repositionImages();
+			}
+			private function setMaskCorners():void{
+				var rc:Number = this.getStyle('cornerRadius');
+				if(this.textMask){
+					this.textMask.setStyle('cornerRadius',rc);
+				}
+				if(this.imageMask){
+					this.imageMask.setStyle('cornerRadius',rc);
+				}
+			}
+			private var currentImage:Image;
+			private function updatePreloader(e:ProgressEvent):void{
+				this.preloader.percent = 100*e.bytesLoaded/e.bytesTotal;
+			}
+			[Bindable]
+			private var useAR:Boolean = true;
+			private var useNoImage:Boolean = false;
+			private function startPreloaderTimer(e:IOErrorEvent):void{
+				log("Image IOError: source="+Image(e.currentTarget).source+", message='"+e.text+"'");
+				Image(e.currentTarget).source=this.getStyle('noImage');
+				useAR=true;
+				this.useNoImage = true;
+				this.setStyle('backgroundColor',this.getStyle('noImageBackgroundColor'));
+				this.preloader.stop();
+				this.preloader.visible = false;
+				this.showCurrentImage();
+			}
+			private function hidePreloader(e:Event):void{
+				log("Image loaded: source="+Image(e.currentTarget).source);
+				useAR=true;
+				this.useNoImage = false;
+				this.setStyle('backgroundColor',this.bgc);
+				this.preloader.stop();
+				this.preloader.visible = false;
+				this.showCurrentImage();
+			}
+			private function connectPreloader(image:Image):void{
+				if(this.currentImage){
+					this.currentImage.removeEventListener(ProgressEvent.PROGRESS,updatePreloader);
+					this.currentImage.removeEventListener(Event.COMPLETE,hidePreloader);
+					this.currentImage.removeEventListener(IOErrorEvent.IO_ERROR,startPreloaderTimer);
+				}
+				image.addEventListener(ProgressEvent.PROGRESS,updatePreloader);
+				image.addEventListener(Event.COMPLETE,hidePreloader);
+				image.addEventListener(IOErrorEvent.IO_ERROR,startPreloaderTimer);
+			}
+			private function showCurrentImage():void{
+				resizeImage();
+				if(!this.imagesHolder.visible){
+					this.imagesHolder.visible = true;
+				}
+			}
+			private function refreshNoImage(e:ResizeEvent):void{
+				 repositionImages();
+			}
+		]]>
+	</mx:Script>
+	<mx:Boolean id="showText">true</mx:Boolean>
+	<mx:Fade id="imageFadeIn" alphaTo="1"/>
+	<mx:Fade id="imageFadeOut" alphaTo="0" />
+	<mx:Canvas clipContent="false" visible="false" id="imagesHolder" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="{this.getStyle('backgroundAlpha')}" width="100%" height="100%" mask="{this.imageMask}" >
+		<mx:Image trustContent="false" source="{img1src}" maintainAspectRatio="{useAR}" scaleContent="true" width="{this.width}" height="{this.height}" id="img1" autoLoad="true" horizontalAlign="center" verticalAlign="middle">
+			<mx:moveEffect>
+				<mx:Move easingFunction="{mx.effects.easing.Sine.easeOut}" effectEnd="{this.repositionImages()}"/>
+			</mx:moveEffect>
+		</mx:Image>
+		<mx:Image trustContent="false" source="{img2src}" scaleContent="true" x="{img1.x+img1.width}" width="{this.width}" height="{this.height}" id="img2" autoLoad="true" horizontalAlign="center" verticalAlign="middle" />
+	</mx:Canvas>
+	<mx:Box width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+		<components:TimedWaitingCircle visible="false" id="preloader" radius="20" color="#FFFFFF">
+			<components:hideEffect>
+				<mx:Fade alphaTo="0"/>
+			</components:hideEffect>
+			<components:showEffect>
+				<mx:Fade alphaTo=".7"/>
+			</components:showEffect>
+		</components:TimedWaitingCircle>
+	</mx:Box>
+	<mx:Canvas id="imageMask" width="100%" height="100%" borderStyle="solid" backgroundColor="#000000" backgroundAlpha="1"/>
+	<mx:VBox id="textHolder" mask="{this.textMask}" width="{this.width}" height="{this.height}" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+		<mx:Box verticalScrollPolicy="off" styleName="imageOverlayText" horizontalScrollPolicy="off" id="textBG" width="100%"/>
+	</mx:VBox>
+	<mx:Canvas id="textMask" width="{this.width-4}" height="{this.height-4}" x="2" y="2" borderStyle="solid" backgroundColor="#000000" backgroundAlpha="1"/>
+	<mx:states>
+		<mx:State name="text">
+			<mx:AddChild relativeTo="{this.textBG}" position="lastChild">
+				<mx:target>
+					<text:MAText id="overlayText" insertBreaks="false" width="100%" xml="{this.p}"/>
+				</mx:target>
+			</mx:AddChild>
+		</mx:State>
+		<mx:State name="notext">
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="text" toState="notext">
+			<mx:Sequence target="{this.overlayText}">
+				<mx:RemoveChildAction/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="notext" toState="text">
+			<mx:Sequence target="{this.overlayText}">
+				<mx:AddChildAction/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+</mx:Canvas>

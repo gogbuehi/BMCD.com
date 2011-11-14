@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" clipContent="false" backgroundAlpha="0" borderThickness="0" verticalAlign="middle" horizontalAlign="center" xmlns:forms="com.hphant.modsite.site.forms.*">
+	<forms:EmailForm id="baseForm" formName="{formName}" sendEmail="{this.sendEmailEvent(event)}"/>
+	<mx:String id="formName">TestDriveEmailForm</mx:String>
+	<mx:String id="make"></mx:String>
+	<mx:String id="model"></mx:String>
+	<forms:EmailFormDataMap id="dataMap"/>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.TestDriveEmailFormData;
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function sendEmailEvent(event:MAFormEvent):void{
+				var fd:TestDriveEmailFormData = new TestDriveEmailFormData();
+				fd.comment = EmailFormData(event.formData).message;
+				fd.firstName = EmailFormData(event.formData).fromFirstName;
+				fd.lastName = EmailFormData(event.formData).fromLastName;
+				fd.phoneNumber = EmailFormData(event.formData).fromPhone;;
+				fd.email = EmailFormData(event.formData).fromEmail;
+				fd.vehicleMake = this.make;
+				fd.vehicleModel = this.model;
+				this.dispatchEvent(new MAFormEvent(event.type,fd));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

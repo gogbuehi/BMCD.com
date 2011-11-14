@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+			xmlns:comp="com.hphant.components.*"
+  	       implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   verticalAlign="top" 
+		   horizontalAlign="center" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*" 
+		   verticalScrollPolicy="off"
+		   horizontalScrollPolicy="off"
+		   autoLayout="true"
+		   currentState="state0"
+		   verticalGap="0"
+		   clipContent="false"
+		   updateComplete="{this.siteMapHolder.x = -this.siteMap.width/2}"
+		   >
+		   <mx:VBox id="siteMapHolder" verticalScrollPolicy="off" styleName="verticleLinkBar" horizontalScrollPolicy="off" autoLayout="true">
+		   	<comp:HMLinkBar updateComplete="{evaluateSelectedIndex()}" resizeEffect="{this.smResize}" itemClick="{this.linkClicked(event)}" id="siteMap" dataProvider="{lbViewStack}"  linkButtonStyleName="verticleLinks" direction="vertical" horizontalAlign="left">
+			   </comp:HMLinkBar>
+		   </mx:VBox>
+		   
+   <mx:ViewStack id="lbViewStack" visible="false" height="0" width="0"/>
+   <mx:Resize id="smResize"/>
+   <mx:states>
+   		<mx:State name="state0">
+   			<mx:RemoveChild target="{lbViewStack}"/>
+   		</mx:State>
+   </mx:states>
+	<mx:Script>
+		<![CDATA[
+			import mx.containers.Canvas;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.events.ItemClickEvent;
+			import mx.skins.halo.LinkSeparator;
+			import com.hphant.components.HMLinkBar;
+			include "../interfaces/AssetIncludes.as";
+			import mx.controls.LinkButton;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){;// = this.siteMap.selectedIndex = -1;
+					this.siteMap.selectedIndex = -1;
+					this.lbViewStack.removeAllChildren();
+					var l:Canvas;
+					var ss:XMLList = this._xml.li.(attribute("class").toLowerCase()=="subsection");
+					for(var j:uint=0;j<ss.length();j++){
+						l = new Canvas();
+						this.lbViewStack.addChild(l);
+						l.percentWidth = 100;
+						l.label = ss[j].a.children();
+						l.data = ss[j];
+						if(ss[j].@selected=="selected"){
+							log(l.data+" is selected");
+							this.siteMap.selectedIndex = j;
+						}
+					}
+					if(!l){
+						l = new Canvas();
+						this.lbViewStack.addChild(l);
+					}
+					this.invalidateSize();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function evaluateSelectedIndex():void{
+			}
+			private function linkClicked(e:ItemClickEvent):void{
+				var c:Canvas = Canvas(this.lbViewStack.getChildAt(e.index));
+				//log("Link Clicked : "+XML(c.data).toXMLString());
+				this.siteMap.selectedIndex = e.index;
+				this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,c.data));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

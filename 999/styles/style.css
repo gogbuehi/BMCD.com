@@ -1,0 +1,40 @@
+body {
+    display:inline;
+    background-color:#303030;
+}
+body,h1,h2,h3,p,li,a,span {
+	color:#FFFF00;
+	font-family:Arial;
+}
+
+
+h1 {
+	font-size:2em;
+	font-weight:bold;
+}
+h2 {
+	font-size:1em;
+	font-weight:bold;
+}
+h3 {
+	font-size:1em;
+	font-weight:normal;
+}
+.MAHeaderMenu, li ul, .Subsection, .Section a, .Section p {
+    display:inline;
+}
+.MAHeaderMenu li,.MAFooterMenu li {
+    padding:10px;
+}
+
+.Subsection {
+	border:black 1px solid;
+}
+td a, .url {
+	font-size:0.76em;
+	color:#0000FF;
+}
+
+tr.inventoryRow td {
+	/* figure out how to create fixed-sized table cells */
+}

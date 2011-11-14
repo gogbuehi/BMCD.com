@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:images="com.hphant.modsite.site.assets.images.*">
+	<text:MAText id="title" width="100%" styleName="suggestedTitle" xml="{ttl}"/>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="15" 
+		verticalAlign="middle" clipContent="true">
+		<mx:HRule id="hr1" width="100%" visible="true" height="1" styleName="{hRuleStyleName}" 
+			updateComplete="{drawHR1EndCircles()}" />
+	</mx:VBox>
+	
+	<images:MAImageSelectorV sizeImages="true" loadImages="true" xml="{itms}"
+		itemRenderer="{com.hphant.modsite.site.assets.inventory.MASuggestedItemRenderer}" 
+		paddingLeft="10" paddingRight="10" id="items" width="100%" styleName="suggestedText" 
+		linkClicked="{this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,event.item))}" 
+		horizontalAlign="center" />
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var imageWidth:Number;
+			[Bindable]
+			public var imageHeight:Number;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var itms:XMLList;
+			
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					ttl = this._xml.h1.(attribute("class").toLowerCase()=="title");
+					itms = this._xml.ul.(attribute("class").toLowerCase()=="maimageselectorv");
+					this.xmlChanged = false;
+				} else if(this.xmlChanged){
+					ttl = null;
+					itms = null;
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			
+			
+			 private function drawHR1EndCircles():void{
+				if(this.hr1.width>20){
+					this.hr1.graphics.beginFill(this.hr1.getStyle('strokeColor'),1);
+					//this.hr1.graphics.drawCircle(0,0,5);
+					this.hr1.graphics.moveTo(0,-5);
+					this.hr1.graphics.curveTo(5,-5,5,0);
+					this.hr1.graphics.curveTo(5,5,0,5);
+					this.hr1.graphics.lineTo(0,-5);
+					
+					this.hr1.graphics.moveTo(this.hr1.width,-5);
+					this.hr1.graphics.curveTo(this.hr1.width-5,-5,this.hr1.width-5,0);
+					this.hr1.graphics.curveTo(this.hr1.width-5,5,this.hr1.width,5);
+					this.hr1.graphics.lineTo(this.hr1.width,-5);
+					
+					//this.hr1.graphics.drawCircle(this.hr1.width,0,5);
+					this.hr1.graphics.endFill();
+				}
+			} 
+		]]>
+	</mx:Script>
+</mx:VBox>

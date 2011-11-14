@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*"
+	xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:buttons="com.hphant.components.buttons.*" 
+	xmlns:components="com.hphant.components.*" creationComplete="{defineListeners()}"  
+	xmlns:text="com.hphant.components.text.*" xmlns:ui="flash.ui.*">
+	<mx:Label text="Available Images" />
+	<mx:TileList rowCount="1" columnWidth="50" columnCount="15" rowHeight="50"
+		direction="vertical" verticalScrollPolicy="off" horizontalScrollPolicy="on" 
+	    dragEnabled="true"
+	    allowDragSelection="true"
+	    allowMultipleSelection="false"
+		dataProvider="{availableImages}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" toolTip="{data.title}" source="{data.source}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	  
+	<mx:HBox paddingLeft="5" paddingRight="5" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		
+		<mx:Box id="imageDrop" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+			dragEnter="{this.dragEnterListener(event)}"
+			dragComplete="{this.dragCompleteListener(event)}"
+			dragDrop="{this.dragDropListener(event)}" 
+			dragExit="{this.dragExitListener(event)}"
+			dragOver="{this.dragOverListener(event)}" 
+			width="200" height="200" backgroundAlpha="1" backgroundColor="#000000" borderThickness="1" borderStyle="solid" verticalAlign="middle" horizontalAlign="center">
+		<mx:Image id="image" source="{imageXML.source}" toolTip="{imageXML.source}" maxHeight="200" maxWidth="200"
+			 scaleContent="true" maintainAspectRatio="true" horizontalAlign="center" verticalAlign="middle"/>
+		</mx:Box>
+		
+		<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" >
+			<text:SelfLabelTextInput label="Title:" id="title" width="100%" text="{imageXML.title}"/>
+			<text:SelfLabelTextInput label="Alternate:" id="alt" width="100%" text="{imageXML.alternat}"/>
+			<text:LinkEditor label="Link:" id="link" width="500" text="{imageXML.link}"/>
+			<mx:HRule width="100%"/>
+			<components:ExtendedRichTextEditor backgroundColor="#FFFFFF" label="Text:" id="text" width="100%" htmlText="{imageXML.text}"/>
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Binding destination="imageXML.title" source="title.text" />
+	<mx:Binding destination="imageXML.alternat" source="alt.text" />
+	<mx:Binding destination="imageXML.link" source="link.text" />
+	<mx:Binding destination="imageXML.text" source="text.htmlText" />
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.view.NewImageCropPallet;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.modsite.admin.model.ImageXML;
+			import com.hphant.managers.PalletManager;
+			
+			import com.hphant.constants.ImageConstants;
+			
+			[Bindable]
+			[Inspectable]
+			public var imageXML:ImageXML = new ImageXML();
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("com.hphant.modsite.admin.model.ImageXML")]
+			public var availableImages:Array;
+			
+			[Bindable]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public var imageSizes:Array;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var cmNewImage:ContextMenuItem = new ContextMenuItem("New Image");
+			
+			private function defineListeners():void{
+				this._cmArray.push(this.cmNewImage);
+				this.cmNewImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+			}
+			
+			private function dragOverListener(event:DragEvent):void{
+				DragManager.showFeedback(DragManager.MOVE);
+			}
+			private function dragDropListener(event:DragEvent):void{
+				var imgXML:ImageXML = ImageXML(event.dragSource.dataForFormat(event.dragSource.formats[0])[0]);
+				imageXML.parse(XMLList(imgXML.toXMLString()));
+			}
+			private function dragEnterListener(event:DragEvent):void{
+				DragManager.acceptDragDrop(this.imageDrop);
+			}
+			private function dragCompleteListener(event:DragEvent):void{
+			
+			}
+			
+			private function dragExitListener(event:DragEvent):void{
+				log("dragExitListener("+event+")");
+				
+			}
+			private function linkChange():void{
+				imageXML.link = this.link.text;
+			}
+			
+			private function titleChange():void{
+				imageXML.title = this.title.text;
+			}
+			private function altChange():void{
+				imageXML.alternat = this.alt.text;
+			}
+			private function textChange():void{
+				imageXML.text = this.text.htmlText;
+			}
+			public override function reset():void{
+				super.reset();
+				this.link.text = "http://";
+				this.alt.text = "";
+				this.title.text = "";
+				this.text.htmlText = "";
+				//this.imageXML = new ImageXML();
+			}
+			
+			private var newImagePallet:NewImageCropPallet;
+			
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmNewImage:
+						if(!this.newImagePallet){
+							this.newImagePallet = new NewImageCropPallet();
+						} else {
+							this.newImagePallet.reset();
+						}
+						this.newImagePallet.cropSizes = this.imageSizes;
+						PalletManager.openPallet(this.newImagePallet);
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

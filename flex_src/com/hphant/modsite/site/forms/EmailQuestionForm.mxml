@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="186" clipContent="false" backgroundAlpha="0" borderThickness="0" verticalAlign="middle" horizontalAlign="center">
+		
+	
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off"  backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+		<mx:Label x="5" text="Name" id="nameLabel"/>
+		<mx:TextInput x="5" y="15" id="nameText" editable="true" enabled="true"  width="100%"/>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off"  backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+		<mx:Label x="5" text="Email" id="emailLabel"/>
+		<mx:TextInput x="5" y="15" id="email" editable="true" enabled="true"  width="100%"/>
+	</mx:VBox>
+	<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off"  backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+		<mx:Label x="5" text="Question" id="questionLabel"/>
+		<mx:TextArea x="5" y="15" id="question" height="112" wordWrap="true" editable="true" enabled="true" width="100%"/>
+	</mx:VBox>
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off"  backgroundAlpha="0" borderThickness="0" horizontalAlign="center" width="100%">
+		<mx:Button buttonMode="true" useHandCursor="true" click="this.sendEmail();" label="Send" width="75" id="send"/>
+		<mx:Button buttonMode="true" useHandCursor="true" click="this.clearForm();" label="Clear" width="75" id="clear"/>
+	</mx:HBox>
+	
+	
+	
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function sendEmail():void{
+				var valid:Boolean = true;
+				if(!this.validateEmailAddress(this.email.text)){
+					valid = false;
+					// Change label color
+				}
+				
+				if(valid){
+					var form:EmailFormData = new EmailFormData();
+					form.formName = "EmailQuestionForm";
+					form.fromEmail = email.text;
+					form.fromFirstName = this.nameText.text;
+					form.message = this.question.text;
+					this.dispatchEvent(new MAFormEvent(MAFormEvent.SEND_EMAIL,form));
+					this.clearForm();
+				}
+			}
+			private function clearForm():void{
+				this.nameText.text = "";
+				this.email.text = "";
+				this.question.text = "";
+			}
+			private function validateEmailAddress(address:String):Boolean{
+				var at:Array = address.split("@");
+				return (at.length==2 && String(at[0]).length>0 && String(at[1]).length>2 && String(at[1]).split(".").length>1);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

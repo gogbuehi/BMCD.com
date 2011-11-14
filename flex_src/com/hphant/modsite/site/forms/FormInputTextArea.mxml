@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" disabledOverlayAlpha="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="0" borderThickness="0" horizontalAlign="left" width="100%" verticalGap="0">
+	<mx:Label text="{label}" id="dataLabel" styleName="{labelStyleName}" width="100%" minWidth="10"/>
+	<mx:TextArea id="dataInput" styleName="{inputStyleName}" editable="true" enabled="{this.enabled}" height="100%" width="100%" minWidth="10"/>
+	<mx:String id="label">Label</mx:String>
+	<mx:String id="labelStyleName">emailFormLabel</mx:String>
+	<mx:String id="inputStyleName">emailFormInput</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+			import mx.validators.StringValidator;
+			import mx.validators.Validator;
+			private var _type:String = FormInputType.TEXT;
+			private var _typeChanged:Boolean = true;
+			
+			
+			public function get text():String{
+				return this.dataInput.text;
+			}
+			public function set text(value:String):void{
+				this.dataInput.text = value;
+			}
+			
+			
+			[Bindable]
+			[Inspectable(defaultValue="text",enumeration="text",category="Common")]
+			public function get type():String{return this._type;}	
+			public function set type(value:String):void{
+				if(value!=this._type){
+					switch(value){
+						default:
+							this._type = FormInputType.TEXT;
+							this._typeChanged = true;
+							this.invalidateProperties();
+						break;
+					}
+				}
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._typeChanged){
+					this._typeChanged = false;
+					if(this.validator){
+						this.validator.enabled = false;
+					}
+					switch(this._type){
+						case FormInputType.TEXT:
+							this.validator = new StringValidator();
+						break;
+					}
+					this.validator.enabled = true;
+					this.validator.required = _reqired;
+					this.validator.source = this.dataInput;
+					this.validator.property = "text";
+					
+				}
+				if(this._requiredChanged && this.validator){
+					this.validator.required = _reqired;
+					this._requiredChanged = false;
+				}
+			}
+			private var validator:Validator;
+			public function validateData():Boolean{
+				return !(this.validator.validate().type==ValidationResultEvent.INVALID);
+			}
+			private var _reqired:Boolean = true;
+			private var _requiredChanged:Boolean = false;
+			[Inspectable]
+			public function get required():Boolean{return this._reqired;}
+			public function set required(value:Boolean):void{
+				this._requiredChanged = true;
+				this._reqired = value;
+				this.invalidateProperties();
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

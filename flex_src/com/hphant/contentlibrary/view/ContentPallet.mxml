@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" 
+		xmlns:mx="http://www.adobe.com/2006/mxml" 
+		xmlns:buttons="com.hphant.components.buttons.*" implements="com.hphant.remoting.IResponder"
+	    label="Content" initialize="{defineListeners()}" xmlns:view="com.hphant.contentlibrary.view.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<buttons:PalletButton id="images" label="Images" palletPosition="bottom" click="{this.getMasters()}">
+			<buttons:pallet>
+				<view:MastersPallet id="mastersPallet" />
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton id="videos" label="Videos" palletPosition="bottom" palletLabel="Videos" click="{this.getVideos()}">
+			<buttons:pallet>
+				<view:VideosPallet id="videosPallet" />
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton id="pdf" label="PDFs" palletPosition="bottom" palletLabel="PDFs" click="{this.getPDFs()}">
+			<buttons:pallet>
+				<view:PDFPallet id="pdfPallet" />
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<!--<buttons:PalletButton id="crops" label="Crops" palletPosition="bottom"/>-->
+	</mx:HBox>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.contentlibrary.control.event.VideoEvent;
+			import mx.rpc.Fault;
+
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.contentlibrary.control.event.PDFEvent;
+			
+			import com.hphant.contentlibrary.view.MastersPallet;
+		
+			import com.hphant.managers.PalletManager;
+			import com.hphant.events.PalletManagerEvent;
+			private function palletClosed(event:PalletManagerEvent):void{
+				if(event.pallet==this){
+					PalletManager.closePallet(images.pallet);
+					PalletManager.closePallet(videos.pallet);
+					PalletManager.closePallet(pdf.pallet);
+					/* PalletManager.closePallet(crops.pallet); */
+				}
+			}
+			private function defineListeners():void{
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,palletClosed);
+			}
+			private function getMasters():void{
+				var masterEvent:ImageEvent = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+				masterEvent.responder = this;
+				masterEvent.dispatch();
+			}
+			private function getVideos():void{
+				var masterEvent:VideoEvent = new VideoEvent(VideoEvent.GET_ALL_VIDEOS);
+				masterEvent.responder = this;
+				masterEvent.dispatch();
+			}
+			private function getPDFs():void{
+				var masterEvent:PDFEvent = new PDFEvent(PDFEvent.GET_ALL_PDFS);
+				masterEvent.responder = this;
+				masterEvent.dispatch();
+			}
+			private function handleGetAllMasters(event:Event):void{
+				log(event);
+			}
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				if(event is ImageEvent){
+					switch(event.type){
+						case ImageEvent.GET_ALL_MASTERS:
+							mastersPallet.data = result;
+							log("Masters List set to = "+result);
+						break;
+						default:
+							log("Service Result type = "+event.type);
+						break;
+					}
+				}else if(event is VideoEvent){
+					switch(event.type){
+						case VideoEvent.GET_ALL_VIDEOS:
+							videosPallet.data = result;
+							log("Videos List set to = "+result);
+						break;
+						default:
+							log("Service Result type = "+event.type);
+						break;
+					}
+				} else if(event is PDFEvent){
+					switch(event.type){
+						case PDFEvent.GET_ALL_PDFS:
+							pdfPallet.data = result;
+							log("Videos List set to = "+result);
+						break;
+						default:
+							log("Service Result type = "+event.type);
+						break;
+					}
+				} else {
+					log("Service Result type = "+event.type);
+				}
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log("Service Result type = "+event.type,2);
+				log(fault,2);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="1024"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   backgroundAlpha="1"
+		   creationComplete="{this.items.addEventListener(MALinkClickEvent.LINK_CLICKED,this.itemClicked)}"
+		   clipContent="true"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:store="com.hphant.modsite.site.assets.store.*" xmlns:events="com.hphant.modsite.site.events.*">
+	       <!--<mx:VBox id="vb" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">-->
+	       		 <text:MAText id="title" width="100%" />
+	       		<images:MAImageSelectorH horizontalAlign="left" id="items" width="100%" />
+	       <!--</mx:VBox>-->
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			include "../interfaces/AssetIncludes.as";
+			
+			protected override function commitProperties():void{
+				if(this.cssChanged && this.title && this.items){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml && this.title && this.items){
+					this.title.xml = this._xml.(attribute("class").toLowerCase()=="title");
+					this.items.xml = this._xml.(attribute("class")=="MAImageSelectorH");
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function itemClicked(e:MALinkClickEvent):void{
+				for each (var li:XML in XML(this.items.xml).li){
+					li.@selected = "";
+				}
+				e.item.@selected="selected";
+				Logger.log("Changed the selected section : "+this.items.xml.toXMLString());
+				this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,e.item));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

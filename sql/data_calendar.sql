@@ -1,0 +1,30 @@
+DROP TABLE IF EXISTS `data_calendar`;
+CREATE TABLE IF NOT EXISTS `data_calendar` (
+`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+`title` VARCHAR( 100 ) NOT NULL DEFAULT '',
+`blurb` VARCHAR( 200 ) NOT NULL DEFAULT '',
+`description` MEDIUMTEXT NOT NULL DEFAULT '',
+`startTime` VARCHAR( 10 ) NOT NULL DEFAULT '08:00 AM',
+`endTime` VARCHAR( 10 ) NOT NULL DEFAULT '08:00 PM',
+`date` VARCHAR( 10 ) NOT NULL DEFAULT '01/01/2000',
+`map` VARCHAR( 500 ) NOT NULL DEFAULT '',
+`locationName` VARCHAR( 25 ) NOT NULL DEFAULT '',
+`street` VARCHAR( 100 ) NOT NULL DEFAULT '',
+`city` VARCHAR( 100 ) NOT NULL DEFAULT '',
+`state` VARCHAR( 2 ) NOT NULL DEFAULT '',
+`thumb` VARCHAR( 100 ) NOT NULL DEFAULT '',
+`images` MEDIUMTEXT NOT NULL DEFAULT '',
+`zip` VARCHAR( 5 ) NOT NULL DEFAULT '',
+`visible` BOOL NOT NULL DEFAULT  '1',
+`domain` ENUM(  'www.bmcd.com',  '901.bmcd.com',  '999.bmcd.com' ) NOT NULL ,
+`dt` DATETIME NOT NULL ,
+`blnvalid` BOOL NOT NULL DEFAULT  '1'
+) ENGINE = INNODB;
+
+
+-- UPDATE 5/18/2009
+ALTER TABLE  `data_calendar` ADD  `pageDescription` MEDIUMTEXT NOT NULL AFTER  `zip`;
+ALTER TABLE  `data_calendar` ADD  `pageKeywords` MEDIUMTEXT NOT NULL AFTER  `pageDescription`;
+
+-- UPDATE 5/24/2009
+ALTER TABLE  `data_calendar` MODIFY `blurb` VARCHAR( 500 ) NOT NULL DEFAULT '';

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" label="New Image" 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:imageCropper="com.hphant.components.imageCropper.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:managers="com.hphant.managers.*" xmlns:view="com.hphant.contentlibrary.view.*">
+	
+	<view:EditMediaPallet id="media" process="{process}" cropSizes="{cropSizes}" html="{html}">
+		<view:imageCrop>
+			<imageCropper:ImageCropper />
+		</view:imageCrop>
+	</view:EditMediaPallet>
+	<mx:Binding destination="media.data" source="data" />
+	<mx:Script>
+		<![CDATA[
+			[Bindable]
+			[Inspectable]
+			public function get cropSizes():Array{return _cropSizes;}
+			public function set cropSizes(value:Array):void{
+				this._cropSizes = value;
+			}
+			
+			private var _cropSizes:Array;
+			
+			
+			import com.hphant.contentlibrary.process.IImageProcess;
+			[Bindable]
+			[Inspectable]
+			public function get process():IImageProcess{
+				return this._process;
+			}
+			private var _process:IImageProcess;
+			public function set process(value:IImageProcess):void{
+				this._process = value;
+			}
+			
+			public override function reset():void{
+				super.reset();
+				try{
+					media.reset();
+				} catch(e:Error){
+					
+				}
+			}
+			[Bindable]
+			public function get html():String{return _html;}
+			public function set html(value:String):void{
+				_html = value;
+			}
+			
+			private var _html:String = "";
+			
+			
+			public function setView(select:Boolean,
+									description:Boolean,
+									size:Boolean,
+									crop:Boolean,
+									thumb:Boolean,
+									save:Boolean,
+									image:Boolean):void{
+				var v:CropPalletView = this.media.getView();
+				v.select = select;
+				v.description = description;
+				v.size = size;
+				v.crop = crop;
+				v.thumb = thumb;
+				v.image = image;
+				this.media.setView(v);	
+			}
+									
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:LinkBar xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Button;
+			 override protected function hiliteSelectedNavItem(index:int):void
+		    {
+		        var child:Button;
+		
+		        // Un-hilite the current selection.
+		        if (selectedIndex != -1 && selectedIndex < numChildren)
+		        {
+		            child = Button(getChildAt(selectedIndex));
+		            child.enabled = true;
+		        }
+		
+		        // Set new index.
+		        super.selectedIndex = index;
+		
+		        // Hilite the new selection.
+		        if (selectedIndex != -1 && selectedIndex < numChildren)
+		        {
+			        child = Button(getChildAt(selectedIndex));
+			        child.enabled = false;
+		        }
+		    }
+		]]>
+	</mx:Script>
+</mx:LinkBar>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet creationComplete="{init()}" xmlns="com.hphant.components.containers.*" label="Data SEO Tools" xmlns:mx="http://www.adobe.com/2006/mxml" verticalGap="0" xmlns:buttons="com.hphant.components.buttons.*" xmlns:text="com.hphant.components.text.*" xmlns:ui="flash.ui.*">
+	<!--<buttons:PalletButton label="Title" width="100%" palletPosition="left" palletLabel="Page Title">
+		<buttons:pallet>
+			<Pallet width="500">
+				<text:BaseTextArea id="pageTitle" width="100%" height="100" text="{title}"/>
+			</Pallet>
+		</buttons:pallet>
+	</buttons:PalletButton>-->
+	<buttons:PalletButton label="Description" width="100%" palletPosition="left" palletLabel="Page Description">
+		<buttons:pallet>
+			<Pallet width="500" id="dPallet">
+				<text:BaseTextArea id="pageDescription" width="100%" height="100" text="{description}" change="{description = pageDescription.text;this.dispatchEvent(event)}"/>
+			</Pallet>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<buttons:PalletButton label="Keywords" width="100%" palletPosition="left" palletLabel="Page Keywords">
+		<buttons:pallet>
+			<Pallet width="500" id="kPallet">
+				<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+					<mx:List id="wordList" width="200" rowCount="10" dataProvider="{this.keywordsCollection}" allowMultipleSelection="true">
+						<mx:contextMenu>
+					    	<ui:ContextMenu customItems="{this._cmArray}">
+					    		<ui:builtInItems>
+					    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+					    		</ui:builtInItems>
+					    	</ui:ContextMenu>
+					    </mx:contextMenu>
+					</mx:List>
+					<mx:VBox verticalScrollPolicy="off" width="100%" height="100%" horizontalScrollPolicy="off" verticalGap="0">
+						<mx:Text text="Seperate keywords with a comma." width="100%"/>
+						<text:BaseTextArea id="newKeywords" width="100%" height="100%"/>
+						<mx:Button width="100%" enabled="{Boolean(newKeywords.text)}" label="Add Keywords" click="{addKeywords()}" />
+					</mx:VBox>
+				</mx:HBox>
+			</Pallet>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<!--<mx:Binding destination="head.title" source="pageTitle.text"/>-->
+	<!--<mx:Binding destination="description" source="pageDescription.text"/>-->
+	<mx:Binding destination="removeWords.enabled" source="Boolean(wordList.selectedItems.length>0)"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.managers.PalletManager;
+			import mx.utils.StringUtil;
+			import mx.collections.ArrayCollection;
+			[Bindable]
+			private var _cmArray:Array = [];
+			private var removeWords:ContextMenuItem = new ContextMenuItem("Remove Selected Words.");
+			
+			private function init():void{
+				_cmArray.push(removeWords);
+				removeWords.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,removeSelectedWords);
+			}
+			
+			private function removeSelectedWords(event:ContextMenuEvent):void{
+				var selected:Array = wordList.selectedItems;
+				for each(var word:String in selected){
+					try{
+						keywordsCollection.removeItemAt(keywordsCollection.getItemIndex(word));
+					}catch(e:Error){
+						log(e);
+					}
+				}
+				_keywords = keywordsCollection.source.join(",");
+				this.dispatchEvent(new Event("keywordsChanged"));
+				this.dispatchEvent(new Event(Event.CHANGE));
+
+			}
+			public override function reset():void{
+				super.reset();
+				if(this.kPallet)
+					PalletManager.closePallet(this.kPallet);
+				if(this.dPallet)
+					PalletManager.closePallet(this.dPallet);
+				this.data = null;
+			}
+			private function addKeywords():void{
+				for each (var word:String in newKeywords.text.split(",")){
+					keywordsCollection.addItem(StringUtil.trim(word));
+				}
+				_keywords = keywordsCollection.source.join(",");
+				newKeywords.text = "";
+				this.dispatchEvent(new Event("keywordsChanged"));
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			[Bindable("keywordsChanged")]
+			public function get keywords():String{
+				return keywordsCollection.source.join(",");
+			}
+			public function set keywords(value:String):void{
+				var changed:Boolean = _keywords != value;
+				_keywords = value;
+				if(value){
+					var words:Array = value.split(",");
+					for(var i:uint=0;i<words.length;i++){
+						words[i]=StringUtil.trim(String(words[i]));
+					}
+					keywordsCollection.source = words;
+				} else {
+					keywordsCollection.source = [];
+				}
+				if(changed)
+					this.dispatchEvent(new Event("keywordsChanged"));
+			}
+			private var _keywords:String = "";
+			[Bindable]
+			private var keywordsCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var description:String = "";
+		]]>
+	</mx:Script>
+</Pallet>

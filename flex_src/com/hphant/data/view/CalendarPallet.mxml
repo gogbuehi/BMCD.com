@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{init();}" verticalGap="0" 
+	label="Boutique Data" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:List id="dataList" height="500" change="{this.selectedIndex = dataList.selectedIndex}" dataProvider="{DataModelLocator.getInstance().calendar}" dropEnabled="{this._allowOrder}" dragMoveEnabled="{_allowOrder}"
+		allowMultipleSelection="false" dragEnabled="true">
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" backgroundAlpha="{Boolean(data.visible)?0:.8}" backgroundColor="#FF0000" >
+					<mx:Image source="{data.thumb}" height="25" width="34" scaleContent="true" maintainAspectRatio="true" verticalAlign="middle" horizontalAlign="center"/>
+					<mx:Label text="{data.date}" width="200" selectable="false"/>
+					<mx:Label text="{data.startTime+' - '+data.endTime}" width="200" selectable="false"/>
+				</mx:HBox>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:List>
+	<mx:Button label="Change Order" id="changeOrder" selected="{this._allowOrder}" click="{toggleOrder()}" width="100%"/>
+	<mx:Button label="Item Details" id="formToggle" selected="{_formToggle}" click="{showForm()}" width="100%"/>
+	<mx:Binding destination="form.data" source="dataList.selectedItem"/>
+	<mx:Binding destination="orderManager.data" source="DataModelLocator.getInstance().calendar"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.data.model.NameReferenceRecord;
+			import mx.collections.ArrayCollection;
+			import com.hphant.data.control.event.NameReferenceEvent;
+			import com.hphant.data.control.DataOrderChanger;
+			import mx.events.ResizeEvent;
+			import com.hphant.components.events.PalletEvent;
+			import mx.events.MoveEvent;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.data.view.Forms.CalendarForm;
+			import com.hphant.data.model.StoreRecord;
+			import com.hphant.data.control.event.CalendarEvent;
+			import com.hphant.data.control.DataModelLocator;
+			
+			[Bindable]
+			private var selectedIndex:int;
+			
+			private var form:CalendarForm;
+			private var getAllEvent:CalendarEvent;
+			private var orderManager:DataOrderChanger = new DataOrderChanger();
+			
+			
+			private function init():void{
+				this.form = new CalendarForm();
+				moveForm(null);
+				this.addEventListener(MoveEvent.MOVE,moveForm);
+				this.addEventListener(ResizeEvent.RESIZE,moveForm);
+				this.addEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.addEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.addEventListener(PalletEvent.CLOSE,this.setFormToggle);
+				DataModelLocator.getInstance().addEventListener('calendarChanged',setSelectedIndex);
+				/* this.dataClass = StoreRecord;
+				this.eventClass = StoreEvent; */
+				this.getAllEvent = new CalendarEvent(CalendarEvent.GET_ALL);
+				this.getAllEvent.dispatch();
+				var namesEvent:NameReferenceEvent = new NameReferenceEvent(NameReferenceEvent.GET_ALL);
+				namesEvent.dispatch();
+			}
+			private function setSelectedIndex(event:Event):void{
+				if(this.dataList){
+					if(this.selectedIndex<DataModelLocator.getInstance().calendar.length){
+						this.dataList.selectedIndex = this.selectedIndex;
+						this.dataList.scrollToIndex(this.selectedIndex);
+					} else {
+						this.selectedIndex = this.dataList.selectedIndex;
+					}
+					if(form){
+						form.data = this.dataList.selectedItem;
+					}
+				}
+			}
+			private function moveThis(event:MoveEvent):void{
+				this.x = this.form.x-this.width;
+				this.y = this.form.y;
+			}
+			private function moveForm(event:Event):void{
+				this.form.x = this.x+this.width;
+				this.form.y = this.y;
+			}
+			private function removeMoveListeners(event:PalletEvent):void{
+				this.removeEventListener(MoveEvent.MOVE,moveForm);
+				this.removeEventListener(ResizeEvent.RESIZE,moveForm);
+				this.removeEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+				this.form.removeEventListener(PalletEvent.START_DRAG,this.removeMoveListeners);
+			}
+			private function showForm():void{
+				_formToggle = ! _formToggle;
+				formToggle.label = _formToggle ? "Hide Details" : "Show Details";
+				if(_formToggle)
+				PalletManager.openPallet(this.form);
+				else
+				PalletManager.closePallet(this.form);
+			}
+			private function setFormToggle(event:PalletEvent):void{
+				_formToggle = false;
+				formToggle.label = _formToggle ? "Hide Details" : "Show Details";
+				formToggle.selected = false;
+			}
+			private function toggleOrder():void{
+				_allowOrder = !_allowOrder;
+				changeOrder.label = _allowOrder ? "Save Order" : "Change Order";
+				if(!_allowOrder){
+					orderManager.applyOrder();
+					for each(var item:StoreRecord in orderManager.changedItems){
+						var event:CalendarEvent = new CalendarEvent(CalendarEvent.UPDATE);
+						event.data = item;
+						event.dispatch();
+					}
+				}
+			}
+			[Bindable]
+			private var _formToggle:Boolean = false;
+			[Bindable]
+			private var _allowOrder:Boolean = false;
+			
+			public override function reset():void{
+				super.reset();
+				if(_formToggle)
+					showForm();
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

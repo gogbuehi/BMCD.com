@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	     xmlns:text="com.hphant.modsite.site.assets.text.*"
+	     styleName="showcaseTextArea">
+	<text:MAText id="title" width="100%" styleName="showcaseTitle" xml="{ttl}"/>
+	<mx:Box id="textScroller" width="100%" height="100%" backgroundAlpha="0">
+		<text:MAText id="text" width="100%" styleName="showcaseText" xml="{txt}" link="{this.linkClickedEvent(event)}"/>
+	</mx:Box>
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.utils.Logger;
+			[Bindable]
+			[Inspectable]
+			public function get xml():XMLList{return this._xml;}
+			public function set xml(value:XMLList):void{
+				this._xml = value;
+				if(value){
+					this.ttl = value.h1;
+					this.txt = value;
+				} else {
+					this.ttl = null;
+					this.txt = null;
+				}
+				this.xmlChanged = true;
+				this.invalidateProperties();
+			}
+			private var _xml:XMLList;
+			private var xmlChanged:Boolean = false;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var txt:XMLList;
+			
+			private function linkClickedEvent(event:TextEvent):void{
+				log("Link Clicked: "+event.text);
+				this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,{href:event.text}));
+			}
+			
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this.title){
+					if(!this.ttl || this.ttl.length()==0){
+						try{
+							if(this.getChildIndex(this.title)>-1){
+								this.removeChild(this.title);		
+							}
+						} catch (e:Error){
+							
+						}
+					} else {
+						try{
+							if(this.getChildIndex(this.title)==-1){
+								this.addChildAt(this.title,0);		
+							}
+						} catch (e:Error){
+							this.addChildAt(this.title,0);
+						}
+					}
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function log(message:Object,level:int=0):void{
+				Logger.log("[MAShowcaseText:"+this.name+"] "+message,level);
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

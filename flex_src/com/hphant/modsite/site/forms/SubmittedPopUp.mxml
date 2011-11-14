@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml" styleName="emailFormPod" direction="vertical"  minWidth="300" xmlns:text="com.hphant.modsite.site.assets.text.*">
+	<text:MAText xml="{XMLList('Form Submitted Successfully')}" styleName="popUpTitle"/>
+	<mx:Button id="cancel" label="Ok" click="{this.cancelEvent(event)}"/>
+	<mx:Metadata>
+		[Event(name="cancel",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function cancelEvent(event:MouseEvent):void{
+				this.dispatchEvent(new MAFormEvent(MAFormEvent.CANCEL,null));
+			}
+		]]>
+	</mx:Script>
+</mx:Box>

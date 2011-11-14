@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" currentState="closed" horizontalAlign="center"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	xmlns:text="com.hphant.modsite.site.assets.text.*" clipContent="false"
+	xmlns:menu="com.hphant.modsite.site.assets.menu.*" verticalScrollPolicy="off"
+	horizontalScrollPolicy="off" creationComplete="{this.defineListeners()}"
+	xmlns:images="com.hphant.modsite.site.assets.images.*" xmlns:calendar="com.hphant.modsite.site.assets.calendar.*">
+<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Event(name="buttonClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+		[Event(name="daySelect",type="com.dhmpire.Events.CalendarEvent")]
+		[Event(name="monthNext",type="com.dhmpire.Events.CalendarEvent")]
+		[Event(name="monthPrevious",type="com.dhmpire.Events.CalendarEvent")]
+</mx:Metadata>
+	
+	<!--<mx:HBox verticalAlign="bottom" horizontalAlign="left" id="links" visible="false" styleName="storeFilters">-->
+		<!--<mx:Box id="prevBtn" horizontalAlign="left" width="50%" verticalScrollPolicy="off" horizontalScrollPolicy="off">-->
+			<!--<mx:Button id="prevBtn" label="Previous Month" click="{handlePrevClick()}" />-->
+	<!--	</mx:Box>-->
+		<!--<mx:Box id="nextBtn" horizontalAlign="right" width="50%" verticalScrollPolicy="off" horizontalScrollPolicy="off">-->
+			<!--<mx:Button id="nextBtn" label="Next Month" click="{handleNextClick()}" />-->
+		<!--</mx:Box>-->
+		<!--<mx:showEffect>
+				<mx:Fade alphaFrom="0" alphaTo="1"/>
+			</mx:showEffect>
+			<mx:hideEffect>
+				<mx:Fade alphaFrom="1" alphaTo="0"/>
+			</mx:hideEffect>-->
+	<!--</mx:HBox>-->
+	<mx:VBox id="titleBar" resize="{resizeLinksBar()}" styleName="calendarHeader" width="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<!--<text:MAText id="title" styleName="title" width="100%" xml="{titleXML}" visible="false">
+				<text:showEffect>
+					<mx:Fade alphaFrom="0" alphaTo="1"/>
+				</text:showEffect>
+				<text:hideEffect>
+					<mx:Fade alphaFrom="1" alphaTo="0"/>
+				</text:hideEffect>
+			</text:MAText>-->
+		<!--<mx:VBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<images:MAImage id="image" width="700" height="100" xml="{imgXML}" autoLoad="true" autoSize="false" visible="false">
+				<images:showEffect>
+					<mx:Fade alphaFrom="0" alphaTo="1"/>
+				</images:showEffect>
+				<images:hideEffect>
+					<mx:Fade alphaFrom="1" alphaTo="0"/>
+				</images:hideEffect>
+			</images:MAImage>
+		</mx:VBox>-->
+		<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="middle" horizontalAlign="center">
+		<mx:Button id="prevBtn" label="Previous Month" width="200" click="{handlePrevClick()}" height="25%">
+				<mx:showEffect>
+					<mx:Fade alphaFrom="0" alphaTo="1"/>
+				</mx:showEffect>
+				<mx:hideEffect>
+					<mx:Fade alphaFrom="1" alphaTo="0"/>
+				</mx:hideEffect>
+		</mx:Button>
+		<calendar:MAMiniCalendar id="miniCal" xml="{calXML}" creationComplete="{defineListeners()}" visible="false">
+				<calendar:showEffect>
+					<mx:Fade alphaFrom="0" alphaTo="1"/>
+				</calendar:showEffect>
+				<calendar:hideEffect>
+					<mx:Fade alphaFrom="1" alphaTo="0"/>
+				</calendar:hideEffect>
+		</calendar:MAMiniCalendar>
+		<mx:Button id="nextBtn" label="Next Month" width="200" click="{handleNextClick()}" height="25%">
+				<mx:showEffect>
+					<mx:Fade alphaFrom="0" alphaTo="1"/>
+				</mx:showEffect>
+				<mx:hideEffect>
+					<mx:Fade alphaFrom="1" alphaTo="0"/>
+				</mx:hideEffect>
+		</mx:Button>
+		</mx:HBox>
+	</mx:VBox>
+	<mx:states>
+		<mx:State name="closed">
+			<mx:SetProperty target="{titleBar}" name="width" value="0"/>
+			<mx:SetProperty target="{titleBar}" name="height" value="0"/>
+		</mx:State>
+		<mx:State name="opened" basedOn="closed">
+			<mx:SetProperty target="{titleBar}" name="width" value="984"/>
+			<mx:SetProperty target="{titleBar}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="closed" toState="opened">
+			<mx:Sequence>
+				<mx:Resize target="{titleBar}" widthTo="150" heightTo="50"/>
+				<mx:Resize target="{titleBar}"/>
+				<!--<mx:SetPropertyAction targets="{[links,title,image,miniCal]}" name="visible" value="true"/>-->
+				<mx:SetPropertyAction targets="{[prevBtn,nextBtn,miniCal]}" name="visible" value="true"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="closed">
+			<mx:Sequence>
+				<!--<mx:SetPropertyAction targets="{[title,image,miniCal]}" name="visible" value="false"/>-->
+				<mx:SetPropertyAction targets="{[prevBtn,nextBtn,miniCal]}" name="visible" value="false"/>
+				<mx:Resize target="{titleBar}" widthTo="150" heightTo="50"/>
+				<mx:Resize target="{titleBar}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.dhmpire.Events.CalendarEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			[Inspectable]
+			[Bindable]
+			public var titleXML:XMLList;
+			[Inspectable]
+			[Bindable]
+			public var linksXML:XMLList;
+			[Inspectable]
+			[Bindable]
+			public var imgXML:XMLList;
+			[Inspectable]
+			[Bindable]
+			public var calXML:XMLList;
+
+			private function resizeLinksBar():void{
+				//links.y=this.prevBtn.height;
+				//links.height=this.titleBar.height+this.prevBtn.height;
+				//links.x=this.titleBar.getStyle('cornerRadius');
+				//links.width=this.titleBar.width - this.titleBar.getStyle('cornerRadius')*2;
+			}
+			private function defineListeners():void{
+				this.miniCal.addEventListener(CalendarEvent.LOADED,this.dispatchCalendarEvent);
+				this.miniCal.addEventListener(CalendarEvent.DAY_SELECT,this.dispatchCalendarEvent);
+				this.miniCal.addEventListener(CalendarEvent.MONTH_NEXT,this.dispatchCalendarEvent);
+				this.miniCal.addEventListener(CalendarEvent.MONTH_PREVIOUS,this.dispatchCalendarEvent); 
+			}
+			private function dispatchCalendarEvent(e:CalendarEvent):void{
+				//Logger.log("[Calendar Header] "+e.toString());
+				if(e.type==CalendarEvent.LOADED || e.type==CalendarEvent.DAY_SELECT)
+					this.dispatchEvent(new CalendarEvent(e.type,e.year,e.month,e.day,e.data));
+			}
+			private function handlePrevClick():void{
+				var d:Date = new Date(Number(calXML.@year),Number(calXML.@month));
+				d.month--;
+				this.dispatchEvent(new CalendarEvent(CalendarEvent.MONTH_PREVIOUS,(d.month==0) ? String(d.fullYear-1) : String(d.fullYear),(d.month==0) ? "12" : zeropad(d.month,2),"01",null));
+			}
+			private function handleNextClick():void{
+				var d:Date = new Date(Number(calXML.@year),Number(calXML.@month)-1);
+				d.month++;
+				this.dispatchEvent(new CalendarEvent(CalendarEvent.MONTH_NEXT,String(d.fullYear),zeropad(d.month+1,2),"01",null));	
+			}
+			private function zeropad(num:Number, len:Number):String {
+				var newnum:String = String(num);
+				for(var i:int = 0; i < len-newnum.length; i++){
+					newnum = "0"+newnum;
+				}
+				return newnum;
+			}
+			
+		]]>
+	</mx:Script>
+</mx:HBox>

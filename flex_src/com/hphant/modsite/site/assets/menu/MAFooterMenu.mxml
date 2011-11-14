@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+  	       implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   verticalAlign="top" 
+		   horizontalAlign="center" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*" 
+		   verticalScrollPolicy="off"
+		   horizontalScrollPolicy="off"
+		   autoLayout="true"
+		   currentState="state0"
+		   verticalGap="0"
+		   xmlns:components="com.hphant.components.*">
+   <components:HMLinkBar  itemClick="{this.linkClicked(event)}" id="siteMap" dataProvider="{lbViewStack}"/>
+   <mx:ViewStack id="lbViewStack" visible="false" height="0" width="0"/>
+   <mx:states>
+   		<mx:State name="state0">
+   			<mx:RemoveChild target="{lbViewStack}"/>
+   		</mx:State>
+   </mx:states>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.system.ModSiteMenuConverter;
+			import mx.containers.Canvas;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.events.ItemClickEvent;
+			import mx.controls.LinkBar;
+			include "../interfaces/AssetIncludes.as";
+			import mx.controls.LinkButton;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					var c:ModSiteMenuConverter = new ModSiteMenuConverter();
+					c.toTreeXMLList(this._xml);
+					this.lbViewStack.removeAllChildren();
+					var ss:XMLList = this._xml.li.(attribute("class").toLowerCase()=="section");
+					this.siteMap.selectedIndex = -1;
+					for(var j:uint=0;j<ss.length();j++){
+						var l:Canvas;
+						l = new Canvas();
+						this.lbViewStack.addChild(l);
+						l.percentWidth = 100;
+						l.label = ss[j].a.children();
+						l.data = ss[j];
+						if(ss[j].@selected=="selected"){
+							this.siteMap.selectedIndex = j;
+						}
+					}
+					this.invalidateSize();
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function linkClicked(e:ItemClickEvent):void{
+				var c:Canvas = Canvas(this.lbViewStack.getChildAt(e.index));
+				if(this.data != c.data && c.data.a.length()>0){
+					this.data = c.data;
+				//	log("Link Clicked : "+XML(c.data).toXMLString());
+					this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,c.data));
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

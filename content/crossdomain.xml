@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<cross-domain-policy>
+	<site-control permitted-cross-domain-policies="master-only"/>
+	<allow-access-from domain="*" />
+	<allow-access-from domain="hphantdev.com" />
+	<allow-access-from domain="bmcd.hphantdev.com" />
+	<allow-access-from domain="bmcdstaging.hphantdev.com" />
+	<allow-access-from domain="bmcdtesting.hphantdev.com" />
+	<allow-access-from domain="dev.local" />
+	<allow-access-from domain="content.dev.local" />
+</cross-domain-policy>

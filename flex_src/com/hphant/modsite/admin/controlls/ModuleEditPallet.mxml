@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	implements="com.hphant.remoting.IResponder"
+	xmlns:buttons="com.hphant.components.buttons.*" xmlns:controlls="com.hphant.modsite.admin.controlls.*"
+    creationComplete="{setListeners()}" xmlns:components="com.hphant.components.*">
+    <mx:RadioButtonGroup id="imageDataSelect" selectedValue="{imageDataSelectValue}" />
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<buttons:PalletButton enabled="{this.moduleContent.hasTitle}" label="Title" 
+			palletLabel="Edit Title" palletPosition="bottom">
+			<buttons:pallet>
+				<Pallet id="titlePallet">
+					<components:ExtendedRichTextEditor width="600" id="titleEditor" change="{titleTextChange()}" 
+						backgroundAlpha="0" borderThickness="0" dropShadowEnabled="false" 
+						htmlText="{this.moduleContent.titleString}" 
+				
+						/>
+					<mx:Button label="Apply Changes" click="{titleTextChange();this.applyToModule()}" />
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<buttons:PalletButton enabled="{this.moduleContent.hasBody}" label="Body" 
+			palletLabel="Edit Body Text" palletPosition="bottom">
+			<buttons:pallet>
+				<Pallet id="bodyPallet">
+					<components:ExtendedRichTextEditor width="600" id="bodyEditor" change="{bodyTextChange()}" 
+						backgroundAlpha="0" borderThickness="0" dropShadowEnabled="false" 
+						htmlText="{this.moduleContent.bodyString}" cornerRadius="0"/>
+					<mx:Button label="Apply Changes" click="{bodyTextChange();this.applyToModule()}" />
+				</Pallet>
+			</buttons:pallet>
+		</buttons:PalletButton>
+		<!--<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0">-->
+			<!--<mx:RadioButton value="image" group="{imageDataSelect}" enabled="{imageDataSelectEnabled}" />-->
+			<buttons:PalletButton enabled="{this.hasImage}" label="Image"  click="{imageDataSelectValue='image';showCrops()}"
+				palletLabel="Edit Images" palletPosition="none" pallet="{this.imagePallet}"/>
+		<!--</mx:HBox>-->
+		<buttons:PalletButton enabled="{this.hasVideo}" label="Video" 
+			palletLabel="Edit Videos" palletPosition="none" click="{showVideos()}" pallet="{this.videoPallet}"/>
+		<!--<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalGap="0">-->
+			<!--<mx:RadioButton value="data" group="{imageDataSelect}" enabled="{imageDataSelectEnabled}" />-->
+			<buttons:PalletButton enabled="{this.hasData}" label="Data" pallet="{this.dataPallet}" click="{imageDataSelectValue='data'}"
+				palletLabel="Edit Data" palletPosition="none"/>
+		<!--</mx:HBox>-->
+		<mx:Button label="Delete Module" click="{this.dispatchEvent(new Event('deleteClick'))}"/>
+		<!--<mx:Button label="Log" click="{log('Content XML:\n'+this._moduleContent.toXMLString())}"/>-->
+	</mx:HBox>
+	<mx:Binding destination="_imageSingle.imageXML" source="imageXML"/>
+	<mx:Binding destination="_videoSingle.videoXML" source="videoXML"/>
+	<mx:Binding destination="_imageList.imageListXML" source="imageListXML"/>
+	<mx:Binding destination="_imageList.data" source="moduleContent.image"/>
+	<mx:Binding destination="_videoList.data" source="moduleContent.video"/>
+	<mx:Binding destination="dataPallet.availableDataSources" source="supportedDataSources"/>
+	<mx:Binding destination="dataPallet.data" source="moduleContent.data"/>
+	<mx:Binding destination="_videoList.imageListXML" source="videoListXML"/>
+	<mx:Binding destination="dataPallet.dataLimit" source="restrictCount"/>
+	<mx:Binding destination="_imageList.dataLimit" source="restrictCount"/>
+	<mx:Binding destination="imageDataSelectValue" source="String(imageDataSelect.selectedValue)"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.admin.services.DataTableIDService;
+			import com.hphant.components.AlertPallet;
+			import com.hphant.modsite.admin.TemplateHTML;
+			import com.hphant.remoting.GeneralEvent;
+			import com.hphant.modsite.admin.util.VideoConverter;
+			import com.hphant.contentlibrary.view.SuggestedVideosPallet;
+			import com.hphant.contentlibrary.control.event.VideoEvent;
+			import com.hphant.modsite.admin.model.VideoXML;
+			import mx.collections.ArrayCollection;
+			import com.hphant.modsite.admin.util.CropConverter;
+			import com.hphant.modsite.admin.model.ImageListXML;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import com.hphant.contentlibrary.control.event.CropEvent;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import mx.rpc.Fault;
+			import com.hphant.contentlibrary.view.SuggestedCropsPallet;
+			import com.hphant.modsite.admin.model.ImageXML;
+			import com.hphant.events.PalletManagerEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.admin.constants.ContentTypes;
+			import com.hphant.modsite.admin.model.ModuleContent;
+			
+			[Inspectable]
+			[Bindable]
+			public function get moduleContent():ModuleContent{
+				return _moduleContent;
+			}
+			public function set moduleContent(value:ModuleContent):void{
+				if(_moduleContent)
+					_moduleContent.removeEventListener("imageChanged",imageChangedListener);
+					_moduleContent.removeEventListener("videoChanged",videoChangedListener);
+					_moduleContent.removeEventListener("dataChanged",dataChangedListener);
+				_moduleContent = (value) ? value : new ModuleContent();
+				if(_moduleContent){
+					_moduleContent.addEventListener("imageChanged",imageChangedListener);
+					_moduleContent.addEventListener("videoChanged",videoChangedListener);
+					_moduleContent.addEventListener("dataChanged",dataChangedListener);
+					
+					var mcnew:ModuleContent = new ModuleContent();
+					mcnew.xml = XML(TemplateHTML.getInstance().getTemplate(_moduleContent.moduleClassName));
+					supportedDataSources = mcnew.data;
+					var css:CSSStyleDeclaration = StyleManager.getStyleDeclaration(mcnew.moduleClassName);
+					if(css){
+						var r:uint = uint(css.getStyle('restricted'));
+						this.restrictCount = r ? r : 0;
+					} else {
+						this.restrictCount = 0;
+					}
+					imageDataSelectEnabled = (mcnew.hasData && mcnew.hasImage);
+					imageDataSelectValue = mcnew.hasData ? 'data' : 'image';
+					imageChangedListener();
+					videoChangedListener();
+					dataChangedListener();
+					
+				} else {
+					imageDataSelectEnabled = false;
+					imageDataSelectValue = "image";
+					this.dispatchEvent(new Event("hasImageChange"));
+					this.dispatchEvent(new Event("hasVideoChange"));
+					this.dispatchEvent(new Event("hasDataChange"));
+				}
+			}
+			[Bindable]
+			private var supportedDataSources:XMLList;
+			
+			[Bindable]
+			private var imageDataSelectEnabled:Boolean = false;
+			[Bindable]
+			private var imageDataSelectValue:String = "image";
+			
+			private var _moduleContent:ModuleContent = new ModuleContent();
+			
+			private function imageChangedListener(event:Event=null):void{
+				if(this.moduleContent.imageType==ContentTypes.SINGLE){
+					log("Image data changed.");
+					this.imageXML.parse(this.moduleContent.image);
+				} else if(this.moduleContent.imageType==ContentTypes.LIST){
+					log("Image list data changed.");
+					this.imageListXML.parse(this.moduleContent.image);
+					log(this.imageListXML.toXMLString());
+				}
+				this.dispatchEvent(new Event("hasImageChange"));
+				this.dispatchEvent(new Event("imagePalletChanged"));
+			}
+			private function videoChangedListener(event:Event=null):void{
+				if(this.moduleContent.videoType==ContentTypes.SINGLE){
+					log("Video data changed.");
+					this.videoXML.parse(this.moduleContent.video);
+				} else if(this.moduleContent.videoType==ContentTypes.LIST){
+					log("Video list data changed.");
+					this.videoListXML.parse(this.moduleContent.video);
+					log(this.videoListXML.toXMLString());
+				}
+				this.dispatchEvent(new Event("hasVideoChange"));
+				this.dispatchEvent(new Event("videoPalletChanged"));
+			}
+			private function dataChangedListener(event:Event=null):void{
+				
+				this.dispatchEvent(new Event("hasDataChange"));
+			}
+			
+			[Inspectable]
+			[Bindable]
+			public var imageXML:ImageXML = new ImageXML();
+			
+			
+			[Inspectable]
+			[Bindable]
+			public var videoXML:VideoXML = new VideoXML();
+			
+			[Inspectable]
+			[Bindable]
+			public var imageListXML:ImageListXML = new ImageListXML();
+			
+			[Inspectable]
+			[Bindable]
+			public var videoListXML:ImageListXML = new ImageListXML();
+			
+			[Inspectable]
+			[Bindable]
+			public var module:IModule;
+			[Bindable]
+			private var restrictCount:uint = 0;
+			
+			private function titleTextChange():void{
+				this.moduleContent.titleString = this.titleEditor.htmlText;
+			}
+			
+			private function bodyTextChange():void{
+				this.moduleContent.bodyString = this.bodyEditor.htmlText;
+			}
+			private function get allowSave():Boolean{
+				var ic:uint = ((this.imageListXML && this.imageListXML.images) ? this.imageListXML.images.length : 0) + ((this.dataPallet && this.dataPallet.data) ? XMLList(this.dataPallet.data).length() : 0);
+				return (restrictCount && ic==this.restrictCount || !restrictCount);
+			}
+			private function applyToModule(event:Event=null):void{
+				
+				if(module && event && event is PalletManagerEvent){
+					log("Locating pallet: "+PalletManagerEvent(event).pallet);
+					switch(PalletManagerEvent(event).pallet){
+						case this.bodyPallet:
+						case this.titlePallet:
+							log(moduleContent.xml);
+							xmlToModule();
+						break;
+						case this.videoPallet:
+						case this._videoSingle:
+						case this._videoList:
+							updateVideo();
+							xmlToModule();
+							PalletManager.closePallet(vidsPallet);
+						break;
+						case this.imagePallet:
+						case this._imageSingle:
+						case this._imageList:
+							updateImage();
+							for each(var tbl:XML in XMLList(moduleContent.data)){
+								DataTableIDService.removeTable(tbl);
+							}
+							xmlToModule();
+							PalletManager.closePallet(cropsPallet);
+						break;
+						case this:
+							PalletManager.getInstance().removeEventListener(PalletManagerEvent.CLOSE,applyToModule);
+							updateImage();
+							updateVideo();
+							xmlToModule();
+							PalletManager.closePallet(this.bodyPallet);
+							PalletManager.closePallet(this.titlePallet);
+							PalletManager.closePallet(this._imageSingle);
+							PalletManager.closePallet(this._videoSingle);
+							PalletManager.closePallet(this._imageList);
+							PalletManager.closePallet(this._videoList);
+							PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,applyToModule);
+						break;
+						default:
+							log("Pallet not recognized: "+PalletManagerEvent(event).pallet,1);
+						break;
+					}
+					
+				} else if(module && !event){
+					log("applyToModule called without an event");
+					updateImage();
+					updateVideo();
+					xmlToModule();
+				} else if(module && event.currentTarget == this.dataPallet){
+					log("applyToModule called by a CHANGE event from the DataAdminPallet");
+					moduleContent.data = XMLList(this.dataPallet.data);//(imageDataSelectValue=='data') ? XMLList(this.dataPallet.data) : tTable;
+					//this.moduleContent.setImage(null);
+					xmlToModule();
+					
+				} else {
+					log("No module to apply to.");
+				}
+			}
+			private var tTable:XMLList = XMLList(<table />);
+			private function xmlToModule():void{
+				//var tdata:XMLList = moduleContent.data;
+				//moduleContent.data = (moduleContent.data==tTable) ? null : tdata ;
+				module.xml = XMLList(moduleContent.xml);
+				//log('XML Sent to Module:\n'+moduleContent.xml);
+				//moduleContent.data = tdata;
+			}
+			private function updateImage():void{
+			//	if(imageDataSelectValue=='image'){
+					if(this.moduleContent.imageType==ContentTypes.SINGLE){
+						this.moduleContent.setImage(new XMLList(this.imageXML.toXMLString()));
+					} else if(this.moduleContent.imageType==ContentTypes.LIST){
+						if((this.restrictCount && imageListXML.images.length==this.restrictCount) || !this.restrictCount){
+							log("Image XML List:");
+							var img:String = this.imageListXML.toXMLString();
+							log(img);
+							this.moduleContent.setImage(new XMLList(img));
+							//moduleContent.data = tTable;
+						} else {
+						    AlertPallet.show('You must select '+this.restrictCount+' Images before the changes will apply.',
+						    				 imageListXML.images.length+' out of '+this.restrictCount+' images',
+						    				 AlertPallet.OK, AlertPallet.OK);
+						}
+					} else {
+						log("No Image to update.");
+					}
+			/* 	} else {
+					this.moduleContent.setImage(new XMLList());
+				} */
+			}
+			private function updateVideo():void{
+				if(this.moduleContent.videoType==ContentTypes.SINGLE){
+					this.moduleContent.setVideo(new XMLList(this.videoXML.toXMLString()));
+				} else if(this.moduleContent.videoType==ContentTypes.LIST){
+					log("Video XML List:");
+					var vid:String = this.videoListXML.toXMLString();
+					log(vid);
+					this.moduleContent.setVideo(new XMLList(vid));
+				} else {
+					log("No Video to update.");
+				}
+			}
+			private function setListeners():void{
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,applyToModule);
+				ContentModelLocator.getInstance().addEventListener("cropsChanged",updateCropsPallet);
+				ContentModelLocator.getInstance().addEventListener("videosChanged",updateVideosPallet);
+				this.dataPallet.addEventListener(Event.CHANGE,this.applyToModule);
+				this.dataPallet.dataLimit = this.restrictCount;
+				if(!ContentModelLocator.getInstance().masters){
+					var ie:ImageEvent = new ImageEvent(ImageEvent.GET_ALL_MASTERS);
+					ie.responder = this;
+					ie.dispatch();
+				}
+			}
+			private function showCrops():void{
+				if(this.imagePallet && this.imagePallet.parent){
+					var cropsEvent:CropEvent = new CropEvent(CropEvent.GET_ALL_CROPS);
+					cropsEvent.responder = this;
+					cropsEvent.dispatch();
+				}
+			}
+			private function showVideos():void{
+				if(this.videoPallet && this.videoPallet.parent){
+					var videoEvent:VideoEvent = new VideoEvent(VideoEvent.GET_ALL_VIDEOS);
+					videoEvent.responder = this;
+					videoEvent.dispatch();
+				}
+			}
+			private function showData():void{
+				if(this.dataPallet && this.dataPallet.parent){
+					
+				}
+			}
+			
+			private var cropsPallet:SuggestedCropsPallet = new SuggestedCropsPallet();
+			private var vidsPallet:SuggestedVideosPallet = new SuggestedVideosPallet();
+			
+			private function updateCropsPallet(event:Event=null):void{
+				var cList:ArrayCollection;
+				for each(var size:Rectangle in this.moduleContent.imageSizes){
+					if(!cList){
+						cList = ContentModelLocator.getInstance().getCropsOfDimension(size.width,size.height);
+					} else {
+						var tList:ArrayCollection = ContentModelLocator.getInstance().getCropsOfDimension(size.width,size.height);
+						for each(var tSize:Rectangle in tList){
+							cList.addItem(tSize);
+						}
+					}
+				}
+				if(!cList){
+					//cList = ModelLocator.getInstance().crops;
+				}
+				if(this.moduleContent.imageType==ContentTypes.SINGLE){
+					ImageAdminPallet(this.imagePallet).imageSizes = this.moduleContent.imageSizes;
+					ImageAdminPallet(this.imagePallet).availableImages = CropConverter.toImageXMLList(cList);
+				} else if(this.moduleContent.imageType==ContentTypes.LIST){
+					ImageListAdminPallet(this.imagePallet).imageSizes = this.moduleContent.imageSizes;
+					ImageListAdminPallet(this.imagePallet).availableImages = CropConverter.toImageListXMLItemList(cList);
+				}
+			}
+			private function updateVideosPallet(event:Event=null):void{
+				var vList:ArrayCollection;
+				for each(var size:Rectangle in this.moduleContent.videoSizes){
+					if(!vList){
+						vList = ContentModelLocator.getInstance().getVideosOfDimension(size.width,size.height);
+					} else {
+						var tList:ArrayCollection = ContentModelLocator.getInstance().getVideosOfDimension(size.width,size.height);
+						for each(var tSize:Rectangle in tList){
+							vList.addItem(tSize);
+						}
+					}
+				}
+				if(!vList){
+					vList = ContentModelLocator.getInstance().videos;
+				}
+				
+				if(this.moduleContent.videoType==ContentTypes.SINGLE){
+					VideoAdminPallet(this.videoPallet).videoSizes = this.moduleContent.videoSizes;
+					VideoAdminPallet(this.videoPallet).availableVideos = VideoConverter.toVideoXMLList(vList);
+				} else if(this.moduleContent.videoType==ContentTypes.LIST){
+					VideoListAdminPallet(this.videoPallet).videoSizes = this.moduleContent.videoSizes;
+					VideoListAdminPallet(this.videoPallet).availableVideos = VideoConverter.toImageListXMLItemList(vList);
+				}
+			}
+			
+			public function handleResult(event:GeneralEvent, result:Object)	: void{
+				switch(event.type){
+					case CropEvent.GET_ALL_CROPS:
+						this.log("All crops ready");
+					break;
+					case ImageEvent.GET_ALL_MASTERS:
+						this.log("All masters ready");
+					break;
+					case VideoEvent.GET_ALL_VIDEOS:
+						this.log("All videos ready");
+					break;
+					default:
+						log("handle result for "+event.type+": "+result);
+					break;
+				}
+				
+			}
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void{
+				log(fault);
+			}
+			
+			
+			[Bindable(event="imagePalletChanged")]
+			public function get imagePallet():Pallet{
+				if(this.moduleContent.imageType==ContentTypes.LIST){
+					return _imageList;
+				} else if(this.moduleContent.imageType==ContentTypes.SINGLE){
+					return _imageSingle;
+				} else {
+					return null;
+				}
+			}
+			private var _imageSingle:ImageAdminPallet = new ImageAdminPallet();
+			private var _imageList:ImageListAdminPallet = new ImageListAdminPallet();
+			
+			[Bindable(event="videoPalletChanged")]
+			public function get videoPallet():Pallet{
+				if(this.moduleContent.videoType==ContentTypes.LIST){
+					return _videoList;
+				} else if(this.moduleContent.videoType==ContentTypes.SINGLE){
+					return _videoSingle;
+				} else {
+					return null;
+				}
+			}
+			private var _videoSingle:VideoAdminPallet = new VideoAdminPallet();
+			private var _videoList:VideoListAdminPallet = new VideoListAdminPallet();
+			
+			[Bindable]
+			public var dataPallet:DataAdminPallet = new DataAdminPallet();
+			
+			public override function reset():void{
+				this.imageXML.parse(null);
+				this.imageListXML.parse(null);
+				this.videoXML.parse(null);
+				this.videoListXML.parse(null);
+				this.module = null;
+				this.moduleContent = new ModuleContent();
+				this.titleEditor.htmlText = '';
+				this.bodyEditor.htmlText = '';
+				
+			}
+			
+			[Bindable("hasImageChange")]
+			private function get hasImage():Boolean{
+				return !this.moduleContent ? false : (this.moduleContent.hasImage);
+			}
+			
+			[Bindable("hasVideoChange")]
+			private function get hasVideo():Boolean{
+				return !this.moduleContent ? false : (this.moduleContent.hasVideo);
+			}
+			
+			[Bindable("hasDataChange")]
+			private function get hasData():Boolean{
+				return !this.moduleContent ? false : (this.moduleContent.hasData);
+			}
+			
+			
+		]]>
+	</mx:Script>
+</Pallet>

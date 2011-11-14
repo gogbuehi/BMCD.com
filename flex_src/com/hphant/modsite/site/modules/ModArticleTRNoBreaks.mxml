@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModArticleTextRight xmlns="com.hphant.modsite.site.modules.*" xmlns:mx="http://www.adobe.com/2006/mxml" includeBreaks="false">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			public override function duplicate():IModule{
+				var m:ModArticleTRNoBreaks = new ModArticleTRNoBreaks();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+</ModArticleTextRight>

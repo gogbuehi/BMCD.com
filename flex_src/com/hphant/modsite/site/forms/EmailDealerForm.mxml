@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" currentState="form" clipContent="false" backgroundAlpha="0" borderThickness="0" verticalAlign="middle" horizontalAlign="center" xmlns:forms="com.hphant.modsite.site.forms.*">
+	<forms:EmailForm id="baseForm" formName="{formName}" sendEmail="{this.sendEmailEvent(event)}" clearForm="{this.currentState='form'}"/>
+	<mx:String id="formName">EmailDealerForm</mx:String>
+	<forms:EmailFormDataMap id="dataMap"/>
+	<mx:Metadata>
+		[Event(name="sendEmail",type="com.hphant.modsite.site.events.MAFormEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.forms.EmailFormData;
+			import com.hphant.modsite.data.forms.EmailDealerFormData;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			private function sendEmailEvent(event:MAFormEvent):void{
+				var fd:EmailDealerFormData = new EmailDealerFormData();
+				fd.comment = EmailFormData(event.formData).message;
+				fd.firstName = EmailFormData(event.formData).fromFirstName;
+				fd.lastName = EmailFormData(event.formData).fromLastName;
+				fd.phoneNumber = EmailFormData(event.formData).fromPhone;;
+				fd.email = EmailFormData(event.formData).fromEmail;
+				this.dispatchEvent(new MAFormEvent(event.type,fd));
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="form" />
+		<mx:State name="sent" >
+			<mx:SetProperty target="{baseForm}" name="currentState" value="sent" />
+		</mx:State>
+	</mx:states>
+</mx:VBox>

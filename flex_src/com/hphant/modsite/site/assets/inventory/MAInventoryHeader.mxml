@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" currentState="closed"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	xmlns:text="com.hphant.modsite.site.assets.text.*" clipContent="false"
+	xmlns:menu="com.hphant.modsite.site.assets.menu.*" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+	
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<menu:MALinkBarSubmenu id="links" visible="false" linkClicked="{this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,event.item))}" 
+							styleName="inventoryFilters" linkButtonStyleName="evenItemInventory" xml="{linksXML}">
+		<menu:showEffect>
+				<mx:Fade alphaFrom="0" alphaTo="1"/>
+			</menu:showEffect>
+			<menu:hideEffect>
+				<mx:Fade alphaFrom="1" alphaTo="0"/>
+			</menu:hideEffect>
+	</menu:MALinkBarSubmenu>
+	
+	<mx:HBox id="titleBar"  resize="{resizeLinksBar()}" styleName="inventoryHeader" width="100%" verticalAlign="middle" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<text:MAText id="title" styleName="title" width="100%" xml="{titleXML}" visible="false">
+			<text:showEffect>
+				<mx:Fade alphaFrom="0" alphaTo="1"/>
+			</text:showEffect>
+			<text:hideEffect>
+				<mx:Fade alphaFrom="1" alphaTo="0"/>
+			</text:hideEffect>
+		</text:MAText>
+		<mx:ComboBox id="sorts" visible="false">
+			<mx:showEffect>
+				<mx:Fade alphaFrom="0" alphaTo="1"/>
+			</mx:showEffect>
+			<mx:hideEffect>
+				<mx:Fade alphaFrom="1" alphaTo="0"/>
+			</mx:hideEffect>
+		</mx:ComboBox>
+	</mx:HBox>
+	<mx:states>
+		<mx:State name="closed">
+			<mx:SetProperty target="{titleBar}" name="width" value="0"/>
+			<mx:SetProperty target="{titleBar}" name="height" value="0"/>
+		</mx:State>
+		<mx:State name="opened" basedOn="closed">
+			<mx:SetProperty target="{titleBar}" name="width" value="984"/>
+			<mx:SetProperty target="{titleBar}" name="height"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="closed" toState="opened">
+			<mx:Sequence>
+				<mx:Resize target="{titleBar}" widthTo="150" heightTo="50"/>
+				<mx:Resize target="{titleBar}"/>
+				<mx:SetPropertyAction targets="{[sorts,links,title]}" name="visible" value="true"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="opened" toState="closed">
+			<mx:Sequence>
+				<mx:SetPropertyAction targets="{[sorts,links,title]}" name="visible" value="false"/>
+				<mx:Resize target="{titleBar}" widthTo="150" heightTo="50"/>
+				<mx:Resize target="{titleBar}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.inventory.BMCDInventoryItemData;
+			import mx.controls.LinkButton;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			[Inspectable]
+			[Bindable]
+			public var titleXML:XMLList;
+			[Inspectable]
+			[Bindable]
+			public var linksXML:XMLList;
+			[Bindable]
+			private var modles:XMLList;
+			[Bindable]
+			private var makes:XMLList;
+			public function get selectedItem():XML{
+				return XML(linksXML.li[this.links.itemTypes.selectedIndex]);
+			}
+			public function get selectedSortIndex():int{
+				return this.sorts.selectedIndex;
+			}
+			private function resizeLinksBar():void{
+				links.y=this.links.sorts.height;
+				links.height=this.titleBar.height+this.links.sorts.height;
+				links.x=this.titleBar.getStyle('cornerRadius');
+				links.width=this.titleBar.width - this.titleBar.getStyle('cornerRadius')*2;
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

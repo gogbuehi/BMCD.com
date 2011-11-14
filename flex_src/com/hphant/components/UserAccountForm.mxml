@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox horizontalAlign="left" styleName="loginForm" width="300" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:text="com.hphant.components.text.*" creationComplete="{setEnabled()}" xmlns:components="com.hphant.components.*" xmlns:validators="com.hphant.validators.*">
+	<mx:Label text="{'User: '+user}" width="100%"/>
+	<mx:HRule width="100%" />
+	<mx:Label text="Change Password:" />
+	<text:SelfLabelTextInput label="Old Password:" id="pword_old" width="100%" displayAsPassword="true" textChange="{setEnabled()}"/>
+	<text:SelfLabelTextInput label="New Password:" id="pword_new" width="100%" displayAsPassword="true" textChange="{setEnabled()}"/>
+	<text:SelfLabelTextInput label="Confirm New Password:" id="pword_conf" width="100%" displayAsPassword="true" textChange="{setEnabled()}"/>
+	<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" horizontalAlign="center">
+		<mx:Button id="update" enabled="{en}" label="Update" click="{this.dispatchEvent(new Event(Event.SELECT))}"/>
+		<mx:Button id="cancel" label="Cancel" click="{this.dispatchEvent(new Event(Event.CANCEL))}"/>
+	</mx:HBox>
+	<mx:Metadata>
+		[Event(name="cancel",type="flash.events.Event")]
+		[Event(name="select",type="flash.events.Event")]
+		[Exclude(name="usr",kind="property")]
+		[Exclude(name="pword_old",kind="property")]
+		[Exclude(name="pword_new",kind="property")]
+		[Exclude(name="pword_conf",kind="property")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ValidationResultEvent;
+			import mx.validators.StringValidator;
+			import com.hphant.components.events.LoginFormEvent;
+			[Bindable]
+			[Inspectable]
+			public function get user():String{
+				return _usr;
+			}
+			public function set user(value:String):void{
+				_usr = value;
+			}
+			private var _usr:String = "";
+			
+			public function get confirmPassword():String{
+				return pword_conf ? pword_conf.text : _pword_conf;
+			}
+			
+			[Bindable]
+			[Inspectable]
+			public function get previousPassword():String{
+				return pword_old ? pword_old.text : _pword_old;
+			}
+			public function set previousPassword(value:String):void{
+				if(pword_old){
+					pword_old.text = value;
+				}
+				_pword_old = value;
+			}
+			
+			private var _pword_old:String = "";
+			
+			[Bindable]
+			[Inspectable]
+			public function get newPassword():String{
+				return pword_new ? pword_new.text : _pword_new;
+			}
+			public function set newPassword(value:String):void{
+				if(pword_new && pword_conf){
+					pword_new.text = value;
+					pword_conf.text = value;
+				}
+				_pword_new = value;
+			}
+			[Bindable]
+			private var _pword_new:String = "";
+			[Bindable]
+			private var _pword_conf:String = "";
+			[Bindable]
+			private var en:Boolean = false;
+			private function setEnabled():void{
+				var conf:String = pword_conf ? pword_conf.text : "";
+				en = previousPassword && newPassword && conf==newPassword && newPassword.length > 0;
+			}
+			
+			
+			public function clear():void{
+				user = "";
+				if(pword_old)
+					pword_old.text = "";
+				if(pword_new)
+					pword_new.text = "";
+				if(pword_conf)
+					pword_conf.text = "";
+				setEnabled();
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

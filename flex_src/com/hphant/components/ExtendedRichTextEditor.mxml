@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<text:BaseRichTextEditor xmlns:text="com.hphant.components.text.*" xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%"
+ backgroundAlpha="0" dropShadowEnabled="false" cornerRadius="0" top="0" bottom="0" right="0" left="0"
+ paddingBottom="0" paddingTop="0" paddingLeft="0" paddingRight="0"
+ creationComplete="{setRadioListener()}" link="handleLinkClick(event)"
+ >
+<mx:Binding destination="linkProtocal.enabled" source="linkTextInput.enabled" />
+<mx:Binding source="textArea.width" destination="linkTextInput.width" />
+<mx:Binding source="defaultBold" destination="boldButton.selected" />
+<mx:Binding source="defaultItalic" destination="italicButton.selected" />
+<mx:Binding source="defaultUnderline" destination="underlineButton.selected" />
+
+
+
+<mx:Binding source="defaultFontSize" destination="fontSizeCombo.selectedItem" />
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.components.text.BaseTextArea;
+			import mx.core.UITextField;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.controls.RadioButtonGroup;
+			import mx.controls.RadioButton;
+			public var httpLink:RadioButton;
+			public var mailtoLink:RadioButton;
+			public var linkProtocal:RadioButtonGroup = new RadioButtonGroup();
+			private var extendedTextField:BaseTextArea;
+			
+			[Bindable]
+			[Inspectable]
+			public var defaultFontSize:int = 12;
+			
+			[Bindable("valueCommit")]
+			[Inspectable(enumeration="left,right,center,justify",defaultValue="left")]
+			public function get defaultTextAlign():String{
+				switch(defaultTextAlignIndex){
+					case 0:
+						return "left";
+					case 1:
+						return "center";
+					case 2:
+						return "right";
+					default:
+						return "justify";
+				}
+			}
+			public function set defaultTextAlign(value:String):void{
+				switch(value){
+					case "left":
+						defaultTextAlignIndex = 0;
+					case "center":
+						defaultTextAlignIndex = 1;
+					case "right":
+						defaultTextAlignIndex = 2;
+					default:
+						defaultTextAlignIndex = 3;
+				}
+				if(alignButtons){
+					alignButtons.selectedIndex = defaultTextAlignIndex;
+				}
+			}
+			
+			[Bindable("valueCommit")]
+			private var defaultTextAlignIndex:int = 0;
+			
+			[Bindable("valueCommit")]
+			[Inspectable]
+			public var defaultBold:Boolean = false;
+			
+			[Bindable("valueCommit")]
+			[Inspectable]
+			public var defaultItalic:Boolean = false;
+			
+			[Bindable("valueCommit")]
+			[Inspectable]
+			public var defaultUnderline:Boolean = false;
+			
+			
+			private function defineFontList():void{
+				this.fontFamilyArray = ["SiteFont"];
+				this.fontFamilyCombo.enabled = false;
+			}
+			 
+			private var _htmlText:String = "";
+
+			[Bindable("valueCommit")]
+			[CollapseWhiteSpace]
+			[NonCommittingChangeEvent("change")]
+			[Inspectable(category="General")]
+		
+			public override function get htmlText():String
+			{
+				return super.htmlText.split('FACE="SiteFont"').join("");
+			}
+		
+			public override function set htmlText(value:String):void
+			{
+				super.htmlText = value.split('>\n<').join('><');//XMLList(value).toXMLString();
+			}
+			 
+			protected override function createChildren():void{
+				/*  if(!this.extendedTextField){
+					this.extendedTextField = new ExtendedTextFiled();
+					this.textArea.parent.addChildAt(this.extendedTextField,this.textArea.parent.getChildIndex(this.textArea));
+					this.textArea.parent.removeChild(this.textArea);
+					for(var i:String in this.textArea){
+						this.extendedTextField[i] = this.textArea[i];
+					} 
+					this.textArea = this.extendedTextField;
+				} */
+				super.createChildren();
+				if(!httpLink){
+					httpLink = new RadioButton();
+					httpLink.label = "http://";
+					httpLink.value = httpLink.label;
+					httpLink.group = linkProtocal;
+					httpLink.selected = true;
+					linkProtocal.selection = httpLink;
+					this.toolbar.addChild(httpLink);
+				}
+				if(!mailtoLink){
+					mailtoLink = new RadioButton();
+					mailtoLink.label = "mailto:";
+					mailtoLink.value = mailtoLink.label;
+					mailtoLink.group = linkProtocal;
+					this.toolbar.addChild(mailtoLink);
+				}
+				if(this.fontFamilyCombo.parent==this.toolbar){
+					this.toolbar.removeChild(this.fontFamilyCombo);
+				}
+				/* if(this._RichTextEditor_VRule1.parent){
+					this._RichTextEditor_VRule1.parent.removeChild(this._RichTextEditor_VRule1);
+				}
+				if(this._RichTextEditor_VRule2.parent){
+					this._RichTextEditor_VRule2.parent.removeChild(this._RichTextEditor_VRule2);
+				}
+				if(this.titleBar){
+					this.titleBar.height = 0;
+				} */
+				/* if(!this.extendedTextField){
+					this.extendedTextField = new ExtendedTextFiled();
+					this.textArea.parent.addChildAt(this.extendedTextField,this.textArea.parent.getChildIndex(this.textArea));
+					this.textArea.parent.removeChild(this.textArea);
+					for(var i:String in this.textArea){
+						this.extendedTextField[i] = this.textArea[i];
+					}
+					this.textArea = this.extendedTextField;
+				} */
+				
+				if(alignButtons){
+					alignButtons.selectedIndex = defaultTextAlignIndex;
+				}
+			}
+			private function setRadioListener():void{
+				this.linkProtocal.addEventListener(ItemClickEvent.ITEM_CLICK,changeProtocal);
+				
+				this.toolbar.setStyle('paddingLeft',0);
+				this.toolbar.setStyle('paddingRight',0);
+				defineFontList();
+			}
+			private function handleLinkClick(event:TextEvent):void{
+				trace("The link Click was caught");
+			}
+			private function changeProtocal(event:ItemClickEvent):void{
+				var temp:String = this.linkTextInput.text.replace(this.defaultLinkProtocol,"");
+				this.defaultLinkProtocol = String(this.linkProtocal.selectedValue);
+				this.linkTextInput.text = this.defaultLinkProtocol+temp;
+			}
+			
+		]]>
+	</mx:Script>
+</text:BaseRichTextEditor>

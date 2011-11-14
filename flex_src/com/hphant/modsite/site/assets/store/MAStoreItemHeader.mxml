@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="984" height="200" backgroundAlpha="0"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*"
+	       xmlns:text2="com.hphant.modsite.site.assets.store.text.*"
+	       xmlns:text1="flash.text.*"  
+	       dataChange="{dataChanged()}" currentState="colapsed"
+	       verticalScrollPolicy="off" horizontalScrollPolicy="off" >
+	<mx:Metadata>
+		[Event(name="expandClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="colapseClick",type="com.hphant.modsite.site.events.MAListItemEvent")]
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	
+	<mx:Box clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="209" height="100%" minHeight="200" y="0" x="10" verticalAlign="middle" horizontalAlign="center" >
+		<images:MAImage autoSize="false" xml="{this.img}" click="{this.swapState()}" id="thumb" width="200" height="150" buttonMode="true" useHandCursor="true"/>
+	</mx:Box>
+	<mx:VBox id="title" verticalGap="0" x="229" y="10" width="840" clipContent="false" >
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:VBox width="420" verticalGap="-5" clipContent="false" horizontalAlign="left" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<text:MAText styleName="title" xml="{this.ttl}" bottom="0" insertBreaks="false"/>
+				<text:MAText styleName="specs" xml="{this.sttl}" bottom="0" insertBreaks="false"/>
+			</mx:VBox>
+			<mx:VBox id="mileageText" verticalGap="-5" clipContent="false" width="140" horizontalAlign="right" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<text:MAText styleName="title"  bottom="0" insertBreaks="false"/>
+				<text:MAText styleName="specs"  bottom="0" insertBreaks="false"/>
+			</mx:VBox>
+			<mx:VBox id="priceText" verticalGap="-5" clipContent="false" width="160" horizontalAlign="right" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<text:MAText styleName="title" xml="{this.prc}" bottom="0" insertBreaks="false"/>
+				<text:MAText styleName="specs" xml="{this.prc_lbl}" bottom="0" insertBreaks="false"/>
+			</mx:VBox>
+		</mx:HBox>
+		<text:MAText id="specText" styleName="specs" xml="{this.dsc}" bottom="0" insertBreaks="false"/>
+		<mx:resizeEffect>
+			<mx:Resize />
+		</mx:resizeEffect>
+	</mx:VBox>
+	<mx:Box id="saleHolder" x="824" y="58" width="150" height="97" clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="middle" horizontalAlign="center">
+		<images:MAImage styleName="storeSaleImage" autoSize="{sleAutoSize}" id="sale" width="{sleWidth}" xml="{sle}" height="{sleHeight}" buttonMode="true" useHandCursor="true" linkClicked="{this.saleClicked(event)}">
+			<images:resizeEffect>
+				<mx:Resize easingFunction="mx.effects.easing.Exponential.easeInOut"/>
+			</images:resizeEffect>
+		</images:MAImage>
+	</mx:Box>
+	<mx:Button click="{this.swapState()}" id="detailsBtn" label="View Details" width="150"  x="824" y="{this.height-this.detailsBtn.height-10}" buttonMode="true" useHandCursor="true"/>
+	<mx:states>
+		<mx:State name="colapsed">
+		</mx:State>
+		<mx:State name="expanded">
+			<mx:SetProperty target="{thumb}" name="width" value="0"/>
+			<mx:SetProperty target="{thumb}" name="height" value="0"/>
+			<mx:SetProperty target="{this}" name="height" value="80"/>
+			<mx:SetProperty target="{this.title}" name="x" value="10"/>
+			<mx:SetProperty target="{this.saleHolder}" name="x" value="680"/>
+			<mx:SetProperty target="{this.saleHolder}" name="y" value="5"/>
+			<mx:SetProperty target="{this.saleHolder}" name="height" value="80"/>
+			<mx:SetProperty target="{this.detailsBtn}" name="label" value="Minimize"/>
+			<mx:RemoveChild target="{this.specText}"/>
+			<mx:RemoveChild target="{this.mileageText}"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="colapsed" toState="expanded">
+			<mx:Sequence>
+				<mx:Resize target="{thumb}" easingFunction="{mx.effects.easing.Exponential.easeIn}"/>
+				<mx:Fade targets="{[this.mileageText,this.specText,this.priceText]}" alphaFrom="1" alphaTo="0" />
+				<mx:RemoveChildAction targets="{[thumb,this.mileageText,this.specText]}" />
+				<mx:Parallel>
+					<mx:Move target="{title}" />
+					<mx:Resize target="{this}"/>
+					<mx:Move target="{this.saleHolder}" />
+					<mx:Resize target="{this.saleHolder}"/>
+				</mx:Parallel>
+				<mx:Fade target="{this.priceText}" alphaFrom="0" alphaTo="1" />
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="colapsed">
+			<mx:Sequence>
+				<mx:Fade target="{this.priceText}" alphaFrom="1" alphaTo="0" />
+				<mx:Parallel>
+					<mx:Move target="{title}" />
+					<mx:Resize target="{this}"/>
+					<mx:Move target="{this.saleHolder}" />
+					<mx:Resize target="{this.saleHolder}"/>
+				</mx:Parallel>
+				<mx:SetPropertyAction targets="{[this.mileageText,this.specText]}" name="alpha" value="0"/>
+				<mx:AddChildAction targets="{[thumb,this.mileageText,this.specText]}" />
+				<mx:Fade targets="{[this.mileageText,this.specText,this.priceText]}" alphaFrom="0" alphaTo="1" />
+				<mx:Resize target="{thumb}" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:CurrencyFormatter id="priceFormatter" alignSymbol="left" currencySymbol="$" precision="2" decimalSeparatorFrom="." thousandsSeparatorFrom="," thousandsSeparatorTo="," useThousandsSeparator="true" /> 
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.data.store.BMCDStoreItemData;
+			import mx.formatters.CurrencyFormatter;
+			import mx.formatters.NumberFormatter;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import mx.effects.easing.Back;
+			import com.hphant.modsite.site.events.MAListItemEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import mx.effects.easing.Exponential;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var hRuleStyleName:String;
+			[Bindable]
+			public var suggestionsStyleName:String;
+			[Bindable]
+			private var ttl:XMLList;
+			[Bindable]
+			private var sttl:XMLList;
+			[Bindable]
+			private var dsc:XMLList;
+			[Bindable]
+			private var prc:XMLList;
+			[Bindable]
+			private var prc_lbl:XMLList;
+			[Bindable]
+			private var sle:XMLList;
+			[Bindable]
+			private var sleHeight:Number=0;
+			[Bindable]
+			private var sleWidth:Number=0;
+			[Bindable]
+			private var sleAutoSize:Boolean=false;
+			[Bindable]
+			private var img:XMLList;
+				
+			private function swapState():void{
+				if(this.currentState=="expanded"){
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.COLAPSE_CLICK,this.data));
+				} else if(this.currentState=="colapsed") {
+					this.dispatchEvent(new MAListItemEvent(MAListItemEvent.EXPAND_CLICK,this.data));
+				}
+			}
+			protected function dataChanged():void{
+				if(this.data){
+					var di:BMCDStoreItemData = new BMCDStoreItemData();
+					di.row = XML(data);
+					this.setBulletImage(di);
+					this.setTitle(di);
+					this.setPrice(di);
+				} else {
+					this.sle = null;
+					this.ttl = null;
+					this.sttl = null;
+					this.dsc = null;
+					this.prc = null;
+					this.prc_lbl = null;
+				}
+			}
+			private function setBulletImage(di:BMCDStoreItemData):void{
+				var s:String = XMLList(di.thumb.data).toXMLString();//.replace("/images/","/thumb.php/");
+				img = XMLList(s);
+				log("Looking Fore Sale Text for ("+di.id.data+"):["+di.sale.data+"]");
+				if(String(di.sale.data)=="On Sale" || String(di.sale.data).toLowerCase()=="yes"){
+					s  = XMLList(BMCDStoreItemData.urlTemplates.li.(@['class']=="sale_logo").children()).toXMLString();
+					sleAutoSize = false;
+					sleWidth = 80;
+					sleHeight = 75;
+					sle = XMLList(s);
+				} else {
+					sleAutoSize = false;
+					sle = null;
+					sleWidth = 0;
+					sleHeight = 0;
+				}
+			}
+			protected function setTitle(di:BMCDStoreItemData):void{
+				ttl = XMLList("<p>"+di.title.data+"</p>");
+				sttl = XMLList("<p></p>");
+				dsc = XMLList("<p>"+di.short.data+"</p>");
+				log(ttl.toXMLString());
+				log(dsc.toXMLString());
+			}
+			protected function setPrice(di:BMCDStoreItemData):void{
+				prc_lbl = XMLList(String(di.price.label).toLowerCase());
+				if(Number(di.price.data)==0){
+					prc = XMLList("Call for price");
+				} else {
+					prc = XMLList(priceFormatter.format(di.price.data));
+				}
+			}
+			private function saleClicked(e:MALinkClickEvent):void{
+				this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,e.item));
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

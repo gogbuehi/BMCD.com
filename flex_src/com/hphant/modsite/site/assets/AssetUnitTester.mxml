@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:system="com.hphant.modsite.system.*">
+	<mx:ButtonBar itemClick="{this.buttonSelected(event)}">
+		<mx:dataProvider>
+			<mx:Array>
+				<mx:String>Add</mx:String>
+				<mx:String>Data</mx:String>
+				<mx:String>DataProvider</mx:String>
+				<mx:String>XML</mx:String>
+				<mx:String>XML to DataProvider</mx:String>
+				<mx:String>Data||XML=null</mx:String>
+				<mx:String>Remove</mx:String>
+			</mx:Array>
+		</mx:dataProvider>
+	</mx:ButtonBar>
+	<mx:Label text="States"/>
+	<mx:ButtonBar id="statesBar" itemClick="{this.stateSelected(event)}" labelField="name">
+	</mx:ButtonBar>
+	<mx:HBox id="siteFrame" width="100%" maxWidth="1024" minWidth="1004" horizontalAlign="center" autoLayout="true" horizontalScrollPolicy="off" verticalScrollPolicy="off" styleName="siteFrame">
+	<mx:VBox id="body" clipContent="false" styleName="siteBody" width="100%" autoLayout="true" verticalScrollPolicy="off" horizontalAlign="center" horizontalScrollPolicy="off">
+	
+	</mx:VBox>
+	</mx:HBox>
+	<mx:String id="cssSWF">css/flash.swf</mx:String>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.collections.IList;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			import mx.core.UIComponent;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import mx.events.ItemClickEvent;
+			[Bindable]
+			public var asset:UIComponent;
+			private var _modFactory:IFactory = new ClassFactory();
+			[Bindable]
+			[Inspectable]
+			public function get assetFactory():Object{
+				return this._modFactory;
+			}
+			public function set assetFactory(value:Object):void{
+				if(value is Class){
+					this._modFactory = new ClassFactory(Class(value));
+				}
+				if(value is IFactory){
+					this._modFactory = IFactory(value);
+				}
+			}
+			private function buttonSelected(event:ItemClickEvent):void{
+				switch(event.item){
+					case "DataProvider":
+						Object(this.asset).dataProvider = data;	
+					break;
+					case "Data":
+						Object(this.asset).data = data;
+					break;
+					case "XML":
+						Object(this.asset).data = XMLList(html);
+					break;
+					case "XML to DataProvider":
+						Object(this.asset).dataProvider = XMLList(html);	
+					break;
+					case "Data||XML=null":
+						if(Object(this.asset).hasOwnProperty("dataProvider")){
+							Object(this.asset).dataProvider = null;	
+						} else {
+							Object(this.asset).data = null;	
+						}	
+					break;
+					case "Add":
+						this.asset = UIComponent(this.assetFactory.newInstance());
+						statesBar.dataProvider=this.asset.states;
+						this.body.addChild(this.asset);
+					break;
+					case "Remove":
+						Object(this.asset).data = null;
+						this.body.removeAllChildren();
+						this.asset = null;
+					break;
+					default:
+					break;
+				}
+			}
+			private function stateSelected(event:ItemClickEvent):void{
+				this.asset.currentState = event.item.name;
+			}
+		]]>
+	</mx:Script>
+	<mx:XML id="html"/>
+	<system:CSSLoader id="cssLoader" url="{cssSWF}" complete="{this.cssLoaded(event)}"/>
+	<system:URIManager id="uriManager" 
+		requestComplete="{log('Request Complete: '+event.uri)}" 
+		requestError="{log('Request Error: '+event.uri)}" 
+		requestMade="{log('Request Made: '+event.uri)}" 
+		sendComplete="{log('Send Complete: '+event.error)}" 
+		sendError="{log('Send Error: '+event.error)}" 
+		uriChanged="{log('URI Changed: '+event.uri)}"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			private function log(message:Object):void{
+				Logger.log(String(message));
+			}
+			
+			private function cssLoaded(e:Event=null):void{
+				XML.prettyIndent = 0;
+				XML.prettyPrinting = false;
+				XML.ignoreComments = true;
+				XML.ignoreWhitespace = true;
+				XML.ignoreProcessingInstructions = true;
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="{init()}" xmlns:ui="flash.ui.*" xmlns:text="com.hphant.components.text.*">
+	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<mx:List id="wordList" width="200" rowCount="10" dataProvider="{this.wordsCollection}" allowMultipleSelection="true">
+			<mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+		</mx:List>
+		<mx:VBox verticalScrollPolicy="off" width="100%" height="100%" horizontalScrollPolicy="off" verticalGap="0">
+			<mx:Text text="Seperate words with a comma." width="100%"/>
+			<text:BaseTextArea id="newWords" width="100%" height="100%"/>
+			<mx:Button width="100%" enabled="{Boolean(newWords.text)}" label="Add Keywords" click="{addWords()}" />
+		</mx:VBox>
+	</mx:HBox>
+	<mx:Binding destination="removeWords.enabled" source="wordList.selectedItems.length>0"/>
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			import mx.collections.ArrayCollection;
+			[Bindable("wordsChanged")]
+			[Inspectable]
+			public function get words():String{
+				return wordsCollection.source.join(",");
+			}
+			public function set words(value:String):void{
+				var changed:Boolean = _words != value;
+				_words = value;
+				if(value){
+					var wordsArray:Array = value.split(",");
+					for(var i:uint=0;i<wordsArray.length;i++){
+						wordsArray[i]=StringUtil.trim(String(wordsArray[i]));
+					}
+					wordsCollection.source = wordsArray;
+				} else {
+					wordsCollection.source = [];
+				}
+				if(changed)
+					this.dispatchEvent(new Event("wordsChanged"));
+			}
+			private var _words:String = "";
+			[Bindable]
+			private var wordsCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			private var _cmArray:Array = [];
+			private var removeWords:ContextMenuItem = new ContextMenuItem("Remove Selected Words.");
+			
+			private function removeSelectedWords(event:ContextMenuEvent):void{
+				var selected:Array = wordList.selectedItems;
+				for each(var word:String in selected){
+					try{
+						wordsCollection.removeItemAt(wordsCollection.getItemIndex(word));
+					}catch(e:Error){
+						log(e);
+					}
+				}
+				_words = wordsCollection.source.join(",");
+				this.dispatchEvent(new Event("wordsChanged"));
+				this.dispatchEvent(new Event(Event.CHANGE));
+
+			}
+			private function addWords():void{
+				for each (var word:String in newWords.text.split(",")){
+					wordsCollection.addItem(StringUtil.trim(word));
+				}
+				_words = wordsCollection.source.join(",");
+				newWords.text = "";
+				this.dispatchEvent(new Event("wordsChanged"));
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			private function init():void{
+				removeWords.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,removeSelectedWords);
+				_cmArray.push(removeWords);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

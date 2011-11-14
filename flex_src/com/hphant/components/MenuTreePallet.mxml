@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{defineListeners()}" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:ui="flash.ui.*">
+	<mx:Tree itemRollOver="{this.itemOverChanged(event)}" id="menuTree" dataProvider="{_convertedMenu}" width="200" labelField="@label" folderClosedIcon="{null}" folderOpenIcon="{null}">
+		<mx:contextMenu>
+	    	<ui:ContextMenu customItems="{this._cmArray}">
+	    		<ui:builtInItems>
+	    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+	    		</ui:builtInItems>
+	    	</ui:ContextMenu>
+	    </mx:contextMenu>
+	</mx:Tree>
+	<mx:Metadata>
+		[Exclude(name="menuTree", kind="property")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.events.ListEvent;
+			
+			[Bindable]
+			private var _menu:XMLList;
+			[Bindable]
+			private var _convertedMenu:XMLList;
+			[Bindable]
+			public function get menu():XMLList{
+				return _menu;
+			}
+			public function set menu(value:XMLList):void{
+				_menu = value;
+				_convertedMenu = menuToTreeXMLList(XML(value));
+			}
+			private function menuToTreeXMLList(ul:XML):XMLList{
+				var menu:XML = <menu />;
+				for each(var li:XML in ul.li){
+					var item:XML = <item />;
+					item.@link = li.a.@href;
+					item.@label = XML(li.a).children().toString();
+					if(XMLList(li.ul).length()>0){
+						var sub:XML = XML(li.ul);
+						item.setChildren(menuToTreeXMLList(sub));
+					}
+					menu.appendChild(item);
+				}
+				return XMLList(menu.item);
+			}
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			private var copyURL:ContextMenuItem = new ContextMenuItem("Copy URL");
+
+			private function defineListeners():void{
+				this._cmArray.push(this.copyURL);
+				this.copyURL.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);			
+			}
+				
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.copyURL:
+						log("Copy ");
+						if(overRow){
+							var textToCopy:String = XML(overRow.data).@link;
+							System.setClipboard(textToCopy);
+						}
+					break;
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			private var overRow:IListItemRenderer;
+			private function itemOverChanged(event:ListEvent):void{
+				overRow = event.itemRenderer;
+			}
+		]]>
+	</mx:Script>
+</Pallet>

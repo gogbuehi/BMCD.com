@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" creationComplete="{setClosedListener()}" xmlns:mx="http://www.adobe.com/2006/mxml" label="Video Player" xmlns:components="com.hphant.components.*">
+	<components:VideoPlayer id="player" source="{source}" autoPlay="{autoPlay}"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.events.PalletManagerEvent;
+			import com.hphant.managers.PalletManager;
+			[Bindable]
+			public var source:String = "";
+			
+			[Bindable]
+			public var autoPlay:Boolean = false;
+			
+			public override function reset():void{
+				if(player){
+					player.stop();
+				}
+				super.reset();
+			}
+			private function setClosedListener():void{
+				PalletManager.getInstance().addEventListener(PalletManagerEvent.CLOSE,stopVideo);
+			}
+			private function stopVideo(event:PalletManagerEvent):void{
+				if(event.pallet==this && player){
+					player.stop();
+				}
+			}
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Image dataChange="{this.dataChanged()}" xmlns:mx="http://www.adobe.com/2006/mxml" verticalAlign="middle" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			private function dataChanged():void{
+				
+				switch(String(data.name())){
+					case "a":
+						this.source = data.img.@src;
+						this.height = data.img.@height;
+						this.width = data.img.@width;
+					break;
+					case "img":
+						this.source = data.@src;
+						this.height = data.@height;
+						this.width = data.@width;
+					break;
+					default:
+						this.source = data;
+					break;
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Image>

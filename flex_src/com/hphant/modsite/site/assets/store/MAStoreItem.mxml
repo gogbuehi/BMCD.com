@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="1024" 
+	xmlns:images="com.hphant.modsite.site.assets.images.*" 
+	xmlns:text="com.hphant.modsite.site.assets.text.*" 
+	verticalScrollPolicy="off" 
+ horizontalAlign="center"
+	horizontalScrollPolicy="off"
+ 	creationComplete="{this.addListeners();MAStoreItem.instances.push(this);}"
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+	backgroundAlpha="0" xmlns:store="com.hphant.modsite.site.assets.store.*" verticalGap="0">
+    
+	<store:MAStoreItemHeader xml="{this.headerXML}" id="header" styleName="{this.styleName}"/>
+	<store:MAStoreItemBody xml="{this.bodyXML}" id="body" styleName="{this.styleName}"/>
+	<store:MAStoreItemFooter xml="{this.footerXML}" id="footer" styleName="{this.styleName}"/>
+	<mx:states>
+		<mx:State name="colapsed" basedOn="begin">
+			<mx:SetProperty target="{header}" name="currentState" value="colapsed"/>
+			<mx:SetProperty target="{body}" name="currentState" value="colapsed"/>
+			<mx:SetProperty target="{footer}" name="currentState" value="colapsed"/>
+		</mx:State>
+		<mx:State name="expanded" basedOn="colapsed">
+			<mx:SetProperty target="{header}" name="currentState" value="expanded"/>
+			<mx:SetProperty target="{body}" name="currentState" value="expanded"/>
+			<mx:SetProperty target="{footer}" name="currentState" value="expanded"/>
+		</mx:State>
+		<mx:State name="begin">
+			<mx:SetProperty target="{header}" name="currentState" value="begin"/>
+			<mx:SetProperty target="{body}" name="currentState" value="begin"/>
+			<mx:SetProperty target="{footer}" name="currentState" value="begin"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<mx:Transition fromState="begin" toState="colapsed">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{header}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="*" toState="expanded">
+			<mx:Sequence effectStart="{this.setStyle('verticalGap',10)}">
+				<mx:SetPropertyAction target="{header}"/>
+				<mx:SetPropertyAction target="{body}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="expanded" toState="colapsed">
+			<mx:Sequence effectEnd="{this.setStyle('verticalGap',0)}">
+				<mx:SetPropertyAction targets="{[header,body]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="colapsed" toState="begin">
+			<mx:Sequence>
+				<mx:SetPropertyAction target="{header}"/>
+			</mx:Sequence>
+		</mx:Transition>
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import mx.controls.List;
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			[Bindable]
+			public var bgColor:uint;
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+				}
+				if(this.xmlChanged && this._xml){
+					//Logger.log(this._xml.div);
+					try{
+						this.bodyXML = this._xml.div.(@['class'].toLowerCase()==this.body.className.toLowerCase());
+						this.headerXML = this._xml.div.(@['class'].toLowerCase()==this.header.className.toLowerCase());
+						this.footerXML = this._xml.div.(@['class'].toLowerCase()==this.footer.className.toLowerCase());
+						this.xmlChanged = false;
+					} catch(e:Error){
+					}
+				}
+				super.commitProperties(); 
+			}
+			[Bindable]
+			private var headerXML:XMLList;
+			[Bindable]
+			private var bodyXML:XMLList;
+			[Bindable]
+			private var footerXML:XMLList;
+			
+			private function changeExpand(e:MALinkClickEvent):void{
+				this.currentState = String(e.item);
+				MAStoreItem.expandInstance(this);
+			}
+			private function addListeners():void{
+				this.header.addEventListener(MALinkClickEvent.LINK_CLICKED,this.changeExpand);
+				this.body.addToCart.addEventListener(MouseEvent.CLICK,this.addToCartClick);
+				this.body.viewCart.addEventListener(MouseEvent.CLICK,this.viewCartClick);
+			}
+			protected static function expandInstance(instance:MAStoreItem):void{
+				for each(var inst:MAStoreItem in instances){
+					if(inst!=instance && inst.currentState == "expanded"){
+						inst.currentState = "colapsed";
+					}
+				}
+			}
+			private function addToCartClick(e:MouseEvent):void{
+				this.dispatchEvent(new MAStoreEvent(MAStoreEvent.ADD_TO_CART,XML(this._xml)));
+			}
+			private function viewCartClick(e:MouseEvent):void{
+				this.dispatchEvent(new MAStoreEvent(MAStoreEvent.VIEW_CART,XML(this._xml)));
+			}
+			protected static var instances:Array = new Array();
+		]]>
+	</mx:Script>
+</mx:VBox>

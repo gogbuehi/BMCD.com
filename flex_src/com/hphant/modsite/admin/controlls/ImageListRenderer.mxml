@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" dataChange="{dataChanged()}">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.admin.model.ImageXML;
+			[Bindable]
+			private var imageXML:ImageXML;
+			
+			
+			private function dataChanged():void{
+				if(data is ImageXML){
+					imageXML = ImageXML(data);
+				} else {
+					imageXML = new ImageXML();
+					for (var i:String in data){
+						try{
+							imageXML[i] = data[i];
+						} catch(e:Error){}
+					}
+				}
+				
+				source = (data) ? data.source : "";
+			}
+			
+		]]>
+	</mx:Script>
+	<!--<mx:Binding source="ImageXML(data)" destination="imageXML"/>-->
+</mx:Image>

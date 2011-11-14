@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MOld_MATextArea  removedEffect="{this.removeEffect}" addedEffect="{this.removeEffect}" xmlns="com.hphant.modsite.site.assets.text.*" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Fade id="removeEffect"/>
+</MOld_MATextArea>

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml"
+    direction="vertical"
+    implements="mx.collections.IList"
+	dragEnter="dragEnterHandler(event);"
+	dragDrop="dropHandler(event);"
+    updateComplete="{updateCompleted()}"
+	 verticalScrollPolicy="auto"
+	  horizontalScrollPolicy="off"
+	   paddingLeft="5"
+	    paddingRight="5"
+	    >
+	    <mx:Number id="rowHeight">100</mx:Number>
+	    <mx:Number id="columnWidth">100</mx:Number>
+	    
+	<mx:Script>
+		<![CDATA[
+			import mx.core.EdgeMetrics;
+			import mx.skins.halo.ListDropIndicator;
+			import mx.core.IFlexDisplayObject;
+			import mx.containers.BoxDirection;
+			import mx.controls.listClasses.ListItemDragProxy;
+			import mx.core.IUIComponent;
+			import mx.core.EventPriority;
+			import mx.controls.List;
+			import mx.collections.XMLListCollection;
+			import mx.events.CollectionEvent;
+			import mx.core.UIComponent;
+			import mx.controls.listClasses.IListItemRenderer;
+			import mx.collections.ListCollectionView;
+			import mx.collections.ArrayCollection;
+			import mx.core.IDataRenderer;
+			
+			import mx.core.BitmapAsset;
+			import mx.core.DragSource;
+			import mx.events.DragEvent;
+			import mx.managers.DragManager;
+			use namespace mx_internal;
+			
+			mx_internal var dropIndicator:IFlexDisplayObject;
+			
+			
+			public static const FORMAT:String = "items";
+			
+			/**
+			 * @public
+			 * itemRenderer 
+			 * 
+			 * */
+			 private var _itemRenderer:IFactory;
+			 private var itemRendererChanged:Boolean =false;
+			 
+			 [Bindable]
+			 [Inspectable]
+			 public function get itemRenderer():Object
+			 {
+			 	return this._itemRenderer;
+			 }
+			 public function set itemRenderer(value:Object):void{
+				if(value is String){
+					this._itemRenderer = new ClassFactory(Class(ApplicationDomain.currentDomain.getDefinition(String(value))));
+				} else if( value is IFactory){
+					this._itemRenderer = IFactory(value);
+				} else if(value is Class){
+					this._itemRenderer = new ClassFactory(Class(value));
+				}
+				trace(" itemRenderer = " + this.itemRenderer);
+			 }			 
+			/**
+			 * @public
+			 * dataProvider 
+			 * 
+			 * */
+			 private var dataProviderChanged:Boolean = false;
+			 
+			 private var _dataProvider:ListCollectionView = new ListCollectionView();
+			 
+			 [Bindable]
+			 [Inspectable]
+			 public function get dataProvider():Object
+			 {
+			 	return this._dataProvider;
+			 }
+			 public function set dataProvider(value:Object):void
+			 {
+			 	if(this.dataProvider != value)
+			 	{ 	
+			 		if(value is XMLList){
+			 			this._dataProvider = new XMLListCollection(XMLList(value));
+			 		} else if(value is Array){
+			 			this._dataProvider = new ArrayCollection(value as Array);
+			 		} else if(value is ListCollectionView){
+			 			this._dataProvider = ListCollectionView(value);
+			 		} else {
+			 			return;
+			 		}
+			 		this._dataProvider.addEventListener(CollectionEvent.COLLECTION_CHANGE,collectionChangedHandler);
+			 		this.dataProviderChanged = true;
+			 		this.invalidateDisplayList();
+			 		//trace("dataProvider Changed to = "+ value.toString());
+			 		//trace("dataProvider.length = "+ this.dataProvider.length);
+			 	}
+			 }
+			 private function updateCompleted():void{
+			 	for each(var obj:DisplayObject in this.getChildren()){
+			 	   obj.height = rowHeight;
+			 	   obj.width = columnWidth;
+			 	}
+			 }
+			 public override function validateDisplayList():void
+			 {
+			 	if(this.dataProviderChanged)
+			 	{
+			 		this.buildItems();
+			 		this.dataProviderChanged = false;
+			 	}
+			 	super.validateDisplayList();
+			 }
+			 
+			 private function buildItems():void
+			 {
+			 	//trace(this+".buildItems()");
+		 		//run through dataPorider
+		 		
+		 		var i:int = 0;
+		 		var k:int = this.dataProvider.length;
+		 		//trace(this+".numChildren = " + this.numChildren);
+		 		// for each child in exhisting list
+		 		//trace(" -- k = " + k + "\n -- this.numChildren = " + this.numChildren);
+		 		for(i; i < this.numChildren; i++)
+		 		{
+		 				//trace(" using existing item at index " + i);
+		 				// if object in dp at index i == data in item at child i do nothing
+		 				// else set data in item to object in data provider.
+		 				try
+		 				{
+		 				this.dataProvider[i] != IDataRenderer(this.getChildAt(i)).data ? IDataRenderer(this.getChildAt(i)).data = this._dataProvider[i] : null; 
+		 				}catch(e:Error)
+		 				{
+		 					trace("  Error in buildItems()  = " + e.toString());
+		 				}
+		 		}
+		 		// Remove Extra Children
+		 		while(this.numChildren>this.dataProvider.length)
+		 		{
+		 			this.removeChildAt(this.numChildren-1);
+		 		}
+		 		// for each item in dataProvider past the number of children in the display list,
+		 		// add a new item.
+		 		for(i; i< k; i++)
+		 		{
+		 				trace(this+".addingChild()");
+		 				this.addChild(DisplayObject(this.getItem(this._dataProvider[i])));
+		 		
+		 		}
+			 }
+			 private function getItem(dataIn:Object):IDataRenderer
+			 {
+			  		var tempItem:IDataRenderer = IDataRenderer(this.itemRenderer.newInstance());
+			  		tempItem.data = dataIn;
+			  		UIComponent(tempItem).width = this.width;
+			  		UIComponent(tempItem).addEventListener(MouseEvent.ROLL_OVER,this.itemRollOverHandler);
+				  	UIComponent(tempItem).addEventListener(MouseEvent.ROLL_OUT,this.itemRollOutHandler);
+			  		UIComponent(tempItem).addEventListener(MouseEvent.MOUSE_DOWN, this.itemMouseDownHandler);
+			  		UIComponent(tempItem).addEventListener(MouseEvent.MOUSE_UP, this.itemMouseUpHandler);
+			  		
+			  		return tempItem;
+			  	
+			 }
+			 
+			 
+			 private function collectionChangedHandler(evt:CollectionEvent):void
+			 {
+			 	//trace(this + ".collectionChangedHandler");
+			 	this.dataProviderChanged = true;
+			 	this.invalidateDisplayList();
+			 }
+			 private function itemRollOverHandler(evt:MouseEvent):void
+			 {
+			 	//trace(" rollOver on " +evt.target);
+			 }
+			 private function itemRollOutHandler(evt:MouseEvent):void
+			 {
+			 	//trace(" rollOut of " +evt.target);
+			 }
+			private function itemMouseDownHandler(evt:MouseEvent):void
+			 { 
+			 	//trace(this + " itemMoustDownHanlder");
+			 	//this.xoffset = evt.localX;// May not be needed
+			 	//this.yoffset = evt.localY;// May not be needed
+			 	//trace(" currentTarget = " + evt.currentTarget);
+			 	//trace(" selected item index  = " + this.getChildIndex(UIComponent(evt.currentTarget)));
+			 	var initiator:UIComponent = evt.currentTarget as UIComponent;
+			 	var itemProxy:BitmapAsset = new BitmapAsset();
+			 	itemProxy.bitmapData = new BitmapData( initiator.width, initiator.height);
+			 	itemProxy.bitmapData.draw( initiator );
+			 	var dragSource:DragSource = new DragSource();
+			 	dragSource.addData( IDataRenderer(initiator).data , FORMAT );
+			 	
+			 	DragManager.doDrag( initiator, dragSource , evt, itemProxy,0,0,.5);	
+			 } 
+			 private function itemMouseUpHandler(evt:MouseEvent):void
+			 {
+				
+			 }
+			 
+			  private function dragEnterHandler(evt:DragEvent):void
+			 {
+			 	//trace("dragEnterHandler: " + evt.toString());
+			 //	trace("dragEnterHandler: target = " + evt.target);
+			 //	trace("dragEnterHandler: currentTarget = " + evt.currentTarget);
+			 	
+				 	if( evt.dragSource.hasFormat( FORMAT ) )
+				 	{
+				 		DragManager.acceptDragDrop( UIComponent(evt.currentTarget));
+				 		if(this.dropEnabled){
+				 			DragManager.showFeedback(evt.ctrlKey ? DragManager.COPY : DragManager.MOVE);
+				 		} else {
+				 			DragManager.showFeedback(DragManager.NONE);
+				 		}
+				 		
+				 	}
+			 }  
+			 
+			 public function dropHandler( evt:DragEvent ):void
+			 {
+			 	trace(this + ".dropHandler()");
+			 	trace(evt.toString());
+			 	var draggedData:Object = evt.dragSource.dataForFormat(FORMAT);
+			 	var dragInitiator:UIComponent = UIComponent(evt.dragInitiator);
+			 	var sourceList:CustomList = CustomList(dragInitiator.parent);
+			 	var targetIndex:int = sourceList.getChildIndex(dragInitiator); 
+			 	
+			 	trace("\n - draggedData = " + draggedData + "\n - dragInitiator = " +dragInitiator + "\n - sourceList = " + sourceList + "\n - targetIndex = " + targetIndex); 
+			 	sourceList.removeItemAt(targetIndex);
+			 	this.addItem(draggedData);
+			 }
+			 
+			 public function addItem(dataIn:Object):void
+			 {
+			 	trace(this+".addItem()");
+			 	trace(this.dataProvider);
+			 	trace(this.dataProvider.length);
+			 	if(this.dataProvider.length == 0)
+			 	{
+			 		this.dataProvider = new ArrayCollection([dataIn])
+			 	}else
+			 	{
+			 		this.dataProvider.addItemAt(dataIn,0);
+			 	}
+			 }
+			 public function addItemAt(item:Object,index:int):void{
+			 	trace(this+".addItemAt()");
+			 	trace(this.dataProvider);
+			 	trace(this.dataProvider.length);
+			 	if(this.dataProvider.length == 0)
+			 	{
+			 		this.dataProvider = new ArrayCollection([item])
+			 	}else
+			 	{
+			 		this.dataProvider.addItemAt(item,index);
+			 	}
+			 }
+			 public function get length():int{
+			 	return this.dataProvider.length;
+			 }
+			 public function getItemAt(index:int,prefetch:int=0):Object{
+			 	return this._dataProvider.getItemAt(index);
+			 }
+			 public function getItemIndex(item:Object):int{
+			 	return this.dataProvider.getItemIndex(item);
+			 }
+			 public function itemUpdated(item:Object, property:Object = null, oldValue:Object = null, newValue:Object = null):void{
+			 	this.dataProvider.itemUpdated(item,property,oldValue,newValue);
+			 }
+			 public function removeAll():void{
+			 	this.removeAllChildren();
+			 	this.dataProvider.removeAll();
+			 }
+			 public function removeItemAt(index:int):Object
+			 {
+			 	trace(" HELLO!!!!!!!");
+			 	trace(this+".removeItemAt(  "+index+"  )");
+			 	trace(this+".dataProvider.length ="+this.dataProvider.length);
+			 	this.removeChildAt(index);
+			 	var item:Object = this.dataProvider.removeItemAt(index);
+			 	
+			 	trace(this+".dataProvider.length ="+this.dataProvider.length);
+			 	return item;
+			 }
+			 public function setItemAt(item:Object, index:int):Object{
+			 	return this.dataProvider.setItemAt(item,index)
+			 }
+			 public function toArray():Array{
+			 	return this.dataProvider.toArray();
+			 }
+			 
+			 
+			 private var _dragEnabled:Boolean = true;
+			 [Inspectable]
+			 [Bindable]
+			 public function get dragEnabled():Boolean{return this._dragEnabled;}
+			public function set dragEnabled(value:Boolean):void
+		    {
+		        
+		        _dragEnabled = value;
+		
+		    }
+			 
+			 private var _dragMoveEnabled:Boolean = false;
+			 [Inspectable(defaultValue="false")]
+			 public function get dragMoveEnabled():Boolean{return this._dragMoveEnabled;}
+			 public function set dragMoveEnabled(value:Boolean):void{ this._dragMoveEnabled = value;}
+			 
+			 private var _dropEnabled:Boolean = false;
+			 [Inspectable(defaultValue="false")]
+			 public function get dropEnabled():Boolean{return this._dropEnabled;}
+			 public function set dropEnabled(value:Boolean):void
+		    {
+		       
+		        _dropEnabled = value;
+		
+		    }
+		    
+		   
+		]]>
+	</mx:Script>
+	
+</mx:Box>

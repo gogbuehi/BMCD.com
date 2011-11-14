@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox  autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" implements="com.hphant.modsite.site.modules.interfaces.IModule" xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+		include "interfaces/ModuleIncludes.as";
+			public function duplicate():IModule{
+				var m:ModVBox = new ModVBox();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+		xmlns:views="com.hphant.contentlibrary.view.*"
+		>
+		
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.control.event.MAVideoAdminEvent;
+			import com.hphant.contentlibrary.control.event.MAImageAdminEvent;
+			import mx.rpc.events.FaultEvent;			
+   			import mx.rpc.events.ResultEvent;	
+   			import mx.controls.Alert;
+   			
+			
+			/**
+			 * 	Activating ContentLibrary component.
+			 */
+			private function activateImageLibrary1():void {
+				var e:MAImageAdminEvent = new MAImageAdminEvent( MAImageAdminEvent.EDIT_PHOTO );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				dispatchEvent( e );
+			}
+			
+			private function activateImageLibrary2():void {
+				var e:MAImageAdminEvent = new MAImageAdminEvent( MAImageAdminEvent.ADD_PHOTO );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				dispatchEvent( e );
+			}
+			
+			private function activateImageLibrary3():void {
+				var e:MAImageAdminEvent = new MAImageAdminEvent( MAImageAdminEvent.CHANGE_PHOTO );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				dispatchEvent( e );
+			}
+			
+			
+			private function activateVideoLibrary():void {
+				var e:MAVideoAdminEvent = new MAVideoAdminEvent( MAVideoAdminEvent.CHANGE_VIDEO );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				dispatchEvent( e );
+			}
+			
+			
+			/**
+			 * 	Remote services testing
+			 */
+			private function testService():void {
+			    //testRO.getAllMasters.send();
+			    testRO.test.send();
+			    //helloRO.say.send("Greetings from ContentLibrary !!!");
+			}
+			
+			private function resultHandler(event:ResultEvent):void {
+			    Alert.show( event.result.toString(), 'Info' ); 			       			  
+			}
+		   
+			private function faultHandler(fault:FaultEvent):void {
+				trace("FAULT: "+fault.message);
+			    Alert.show(fault.toString(), 'Error'); 			       			  
+			}
+			
+			private function getGlobalConstants():void {
+				var request:URLRequest = new URLRequest("params.txt");
+				request.method = URLRequestMethod.POST;
+				var loader:URLLoader = new URLLoader();
+				loader.load(request);
+			}
+			
+		]]>
+	</mx:Script>
+
+
+	<!--		
+	-->
+	<mx:VBox paddingLeft="20">
+		<mx:Label text="Build Time: [BUILD_VERSION]" fontWeight="bold" fontSize="12"/>
+		<mx:Spacer height="20"/>
+		<mx:Label text="Images Library" fontWeight="bold" fontSize="14"/>
+		<mx:HBox>
+			
+			<mx:Button label="Suggested Crops"
+				click="activateImageLibrary1();"
+				/>
+				
+			<mx:Button label="Masters Library"
+				click="activateImageLibrary3();"
+				/>
+				
+			<mx:Button label="[Add A Master Tab]"
+				click="activateImageLibrary2();"
+				/>
+	
+		</mx:HBox>
+		
+		
+		<mx:Spacer height="20"/>
+		<mx:Label text="Video Library" fontWeight="bold" fontSize="14"/>
+		<mx:HBox>
+			
+			<mx:Button label="Video Library"
+				click="activateVideoLibrary();"
+				/>
+	
+		</mx:HBox>
+		
+		<mx:Spacer height="20"/>
+		<mx:Label text="Miscellaneous" fontWeight="bold" fontSize="14"/>
+		<mx:HBox>
+			
+			<mx:Button label="Test remote service"
+				click="testService()"
+				/>
+				
+		</mx:HBox>
+		
+	</mx:VBox>
+	
+	<!--		
+	-->
+	
+	<mx:RemoteObject id="testRO" 
+		destination="PHPservices" source="MastersService" 
+		fault="faultHandler(event);">
+		
+		<mx:method makeObjectsBindable="true" name="getAllMasters" result="resultHandler(event)" />	  
+		<mx:method makeObjectsBindable="true" name="test" result="resultHandler(event)" />	  
+	</mx:RemoteObject>
+	
+	<mx:RemoteObject id="helloRO" 
+		destination="PHPservices" source="HelloWorld" 
+		fault="faultHandler(event);">
+		
+		<mx:method makeObjectsBindable="true" name="say" result="resultHandler(event)" />	  
+	</mx:RemoteObject>
+
+
+	<views:ContentLibrary
+		/>
+		<!--		
+		includeInLayout="false" 
+		width="100%" height="100%"
+		-->
+	
+</mx:Application>

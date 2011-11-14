@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:img="com.hphant.contentlibrary.view.images.shared.*"
+	implements="com.hphant.contentlibrary.control.IResponder"
+	width="100%" 
+	paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+	horizontalAlign="center"
+	creationComplete="onCreationComplete()"
+	>
+	<!--
+	height="100%"
+	-->
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import com.hphant.contentlibrary.control.event.ContentLibraryEvent;
+			import com.hphant.contentlibrary.control.event.MAImageAdminEvent;
+			import com.adobe.cairngorm.control.CairngormEvent;
+			
+			import com.hphant.components.imageCropper.ImageCropperConfigurator;
+			import com.hphant.components.imageCropper.ImageCropperManager;
+			import com.hphant.contentlibrary.control.event.ImageEvent;
+			import com.hphant.contentlibrary.control.GeneralEvent;
+			import com.hphant.contentlibrary.model.Master;
+			
+			import mx.rpc.Fault;
+			import mx.controls.Alert;
+
+
+			/**
+			 * 	TODO:
+			 * 
+			 * 	Errors handling.
+			 * 	NULL issue for Number properties.
+			 * 
+			 */
+
+			
+			[Bindable]
+        	private var master		: Master	= new Master();
+        	
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Standard / predefined  events handlers.
+			 * 
+			 */	
+			private function onCreationComplete():void 
+			{
+				/*
+				//	pre-loading test image
+				this.wrapperIC.imageCropper.loadPhoto("assets/images/2008LR2MountainsandSky.jpg", 
+														WIDTH_CROP, HEIGHT_CROP );//, 25, 30, .5, 45,
+														
+				//	works ok, but see no possibility to get complete path to the file using FileReference.
+				this.wrapperIC.imageCropper.loadPhoto("file:///C:/Documents%20and%20Settings/alex/My%20Documents/Flex%20Builder%203/ContentLibrary/bin-debug/assets/images/2008LR2InteriorDriver.jpg", 
+														WIDTH_CROP, HEIGHT_CROP );
+				*/
+			}
+			
+			
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	UI interactions handlers.
+			 * 
+			 */	
+		  	private function uploadRawImage():void
+	    	{
+	    		var manIC : ImageCropperManager = new ImageCropperManager( this.wrapperIC.imageCropper, handlerUrlLoadComplete );
+	    		//	calback for UI updating 
+	    		manIC.callbackParams = { callback: callbackFileSelected, caller: this };
+	    		
+	    		manIC.uploadFileReference();
+	    		return;
+	    	}
+	    	
+			private function handlerFinishStep1():void {
+				
+				/*
+					Usecase:
+				
+					Check if ImageCropper contains image.
+					Disable buttons & show crop-uploading progress indicator.
+					Try to create crop & upload crop to server.
+					Change:  this.currentState='stateStep2'; 
+				*/
+				
+				//	TODO
+				//	Show crop-uploading progress indicator.
+				
+				if (!this.wrapperIC.imageCropper.wasLoaded) {
+					Alert.show( "Image wasn't loaded yet.\nPlease upload an image, and try again.", "Info" ); 
+					return;
+				}
+				
+				trace();
+				trace("CREATE master image: started.");
+				
+				setButtonsEnabled( false );
+				
+				makeImageCrop();
+				
+				//	TODO
+				/*
+				[Any Other Tab]
+				alert('Are you sure you want to leave the "Add A Master" section, 
+				you have not committed any changes', Yes or No.
+				if YES
+					close alert.
+					take them to selected tab
+					AddAMaster.reset();
+				If NO
+					close alert stay in section.
+				*/				
+			}
+
+			private function handlerCancelStep1():void {
+				//Alert.show("Pretending some cancellation...", "Info");
+				
+				/*
+				//	Usecase
+				
+				[Cancel and Return] button pressed
+				ContentLibrary.dispatchEvent(ContentLibrartyEvent.IMAGE_CANCELED)
+				Content Library Closes
+				*/
+				
+				var e:ContentLibraryEvent = new ContentLibraryEvent( ContentLibraryEvent.IMAGE_CANCELED );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				Application.application.dispatchEvent( e );
+			}
+			
+			private function handlerCancelStep2():void {
+				setButtonsEnabled( true );
+				this.currentState='stateStep1';
+			}
+			
+			private function handlerFinishStep2():void {
+				
+				/*
+				//	Usecase
+				
+				[Save Master and Thumb]
+				if(textDescrpiton.text.lenght > 0)
+				
+					imageCropper.commitCrop()
+						ImageCropperEvent.CONTENT_READY;
+					
+					URLLoader.load(/imgdir/upload.php?s=sessionkey) type post.
+						returns file name.
+					MasterServices.addMaster(master:Crop)
+						Note: master.id = -1;
+						returns cropID or -1 if errored out.
+						
+					User brought to Masters View
+						Most recent master is selected for the and loaded in preview.
+				else
+					alert("Plase enter a text description for this image", "OK");
+				*/
+				
+				if (txtDescription.text.length == 0) {
+					Alert.show("Please enter a text description for this image.", "Info");
+					return;
+				}
+				
+				makeImageCrop();
+							
+			}
+
+
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Helper methods.
+			 */	
+			private function callbackFileSelected( v : String ):void
+	    	{
+	            //this.txtFileName.text = event.data;
+	            txtFileName.text = v;
+	    	}
+	    	
+			private function setButtonsEnabled( v:Boolean ):void {
+				btnFinishStep1.enabled = v;
+				//btnCancelStep1.enabled = v;
+				btnUploadFile.enabled = v;
+				
+				this.invalidateDisplayList();
+				this.invalidateProperties();
+				this.validateNow();
+			}
+				
+			private function makeImageCrop():void
+			{
+				this.wrapperIC.imageCropper.commitCrop();
+			}
+	    	
+			private function activateMastersView():void {
+				/*
+					User brought to Masters View
+						Most recent master is selected for the and loaded in preview.
+				*/
+				
+				//	TODO
+				//	This is not working properly sometimes - looks like app doesn't hear this event.
+				//	It happens when the "Add Master" picked 'indirectly', e.g. after "Masters Library" tab..
+				var e:MAImageAdminEvent = new MAImageAdminEvent( MAImageAdminEvent.CHANGE_PHOTO );
+				trace("EVENT."+e.type + "  fired in: "+this);
+				Application.application.dispatchEvent( e );
+			}
+			
+
+			/**
+			 * 	@private
+			 * 
+			 * 	Block:
+			 * 
+			 *	Callbacks.
+			 * 
+			 */	
+
+			/**
+			 *	Handler for Event.COMPLETE - on succesful completion of crop uploading.
+			 */
+			private function handlerUrlLoadComplete(e:Event):void
+			{
+				trace("URL Load Complete");
+				trace("Loader Data: " + URLLoader(e.currentTarget).data);
+				
+	            //	Parse event.data for actual image URL.
+	            var xml:XML = new XML( URLLoader(e.currentTarget).data );
+	            //	error-detecting
+	            if (xml.error[0].toString().length > 0) {
+	            	Alert.show( "Error occured during image uploading:\n"+xml.error[0], "Error" );
+	            	return;
+	            }
+	            var location:String = xml.value[0];//"http://";
+             
+				//	getting imageCropperInfo
+				var info : Object = this.wrapperIC.imageCropper.lastImageCropperEvent.imageCropperInfo;
+				trace( "Image info: " + info);
+				
+				if (this.currentState != 'stateStep2')
+				{
+					//	step1
+					
+					//	saving Master's properties
+					//this.master.masterLocation = URLLoader(e.currentTarget).data;
+					this.master.masterLocation = location;
+					//	Get width & height from IC directly..
+					this.master.dimensionWidth	= info.imageData.width;
+					this.master.dimensionHeight	= info.imageData.height;
+					//trace( "Master.masterLocation = " + master.masterLocation );
+				
+					this.currentState='stateStep2';
+					//trace("STATE has been changed to: " + this.currentState);
+					
+					//	TODO
+					//	?? Just resize cropper size.
+					//	Show up progress indicator. 
+					
+					//	load just created master image 
+		            //this.wrapperIC.imageCropper.loadPhoto( Configurator.UPLOAD_STORAGE_URL + this.master.masterLocation, Configurator.WIDTH_THUMB, Configurator.HEIGHT_THUMB );
+		            this.wrapperIC.imageCropper.loadPhoto( this.master.masterLocation, ImageCropperConfigurator.WIDTH_THUMB, ImageCropperConfigurator.HEIGHT_THUMB );
+		            
+		            return;
+	            
+				}
+				else
+				{
+					//	step2
+					
+					/*
+					//	Usecase
+					
+						URLLoader.load(/imgdir/upload.php?s=sessionkey) type post.
+							returns file name.
+						MasterServices.addMaster(master:Crop)
+							Note: master.id = -1;
+							returns cropID or -1 if errored out.
+							
+						User brought to Masters View
+							Most recent master is selected for the and loaded in preview.
+					*/
+					
+
+					/*
+					public var scale	: int;
+					public var rotation	: Number;
+					public var offsetX	: Number;
+					public var offsetY	: Number;
+					
+					These values are to be populated from the Image-Cropper's "Scale" and "Rotation" when making the Thumbnail.  
+					They will  be used in the [Edit Thumbnail] branch of the storyline.  
+					The values are accessible inside the ImageCropperEvent.imageCropperInfo:Object. 
+					Each time the commitCrop() method is called.  					
+					*/
+					
+					//	at Thumb state:
+					//this.master.thumbnailLocation	= URLLoader(e.currentTarget).data;
+					this.master.thumbnailLocation	= location;
+					this.master.shortDescription	= txtDescription.text;
+					this.master.offsetX				= info.offsetX;
+					this.master.offsetY				= info.offsetY;
+					this.master.scale				= info.scale;
+					this.master.rotation			= info.rotation;
+
+					/*
+						MasterServices.addMaster(master:Crop)
+							Note: master.id = -1;
+							returns cropID or -1 if errored out.
+					*/
+					var event : ImageEvent = new ImageEvent( ImageEvent.ADD_MASTER_IMAGE );
+					//this.master.id = -1;	//	doesn't work !!!
+					event.data = this.master;
+					event.responder = this;
+					event.dispatch();
+					
+					return;
+				}
+			}
+
+			public function handleResult(event:GeneralEvent, result:Object)	: void 
+			{
+				trace("CREATE master image: completed.");
+				trace();
+				
+				//	NAVIGATION: Final OUT POINT.
+				activateMastersView();				
+ 				//Alert.show( "SUCCESS: image has been saved !", "Info");
+			}
+			
+			public function handleFault (event:GeneralEvent, fault:Fault)	: void
+			{
+				trace("FAULT: in ["+this+"] : event.type="+event.type+"; fault="+fault);
+ 				Alert.show( fault.message, "Error");
+			}
+
+		]]>
+	</mx:Script>
+
+
+	<mx:HBox width="100%">
+		<mx:Label text="Add a Master" fontWeight="bold" fontSize="19"/>
+		<mx:Label id="lblStepNumber" text="(Step 1 of 2)" fontWeight="bold" fontSize="19"/>
+	</mx:HBox>
+
+	<mx:HBox width="100%">
+	
+		<mx:VBox width="80%" horizontalAlign="left">
+			<mx:HBox id="blockFileSelection" width="100%">
+			
+				<mx:Button id="btnUploadFile" label="Select &amp; Upload File"
+					click="uploadRawImage();"
+					/>
+					
+				<mx:Spacer width="10"/>
+				
+				<mx:Label text="File Name:" fontWeight="bold"/>
+				<mx:TextInput id="txtFileName" width="100%" editable="false"/>
+				
+			</mx:HBox>
+				
+			<mx:HBox width="100%">
+				<mx:Label text="Description:" fontWeight="bold"/>
+				<mx:TextInput id="txtDescription" width="100%" maxChars="200"/>
+			</mx:HBox>
+		</mx:VBox>
+		
+		<mx:VBox width="20%" horizontalAlign="left">
+			<mx:HBox id="blockControls" width="100%" horizontalAlign="right">
+				
+				<mx:VBox id="blockButtonsStep1" height="100%" width="115">
+					<mx:Button id="btnFinishStep1" label="Next" width="110" 
+						click="handlerFinishStep1();"
+						/>
+					<mx:Button id="btnCancelStep1" label="Cancel" width="110"
+						click="handlerCancelStep1()"
+						/>
+				</mx:VBox>
+				
+				<mx:VBox id="blockButtonsStep2" height="100%" width="115" visible="false" includeInLayout="false">
+					<mx:Button id="btnFinishStep2" label="Save Thumb" width="110" 
+						click="handlerFinishStep2()"
+						/>
+					<mx:Button id="btnCancelStep2" label="Go Back" width="110" 
+						click="handlerCancelStep2();"
+						/>
+				</mx:VBox>
+				
+			</mx:HBox>
+			
+			<mx:Label id="lblScale" text="Scale and Align your Master Image" fontWeight="bold" fontSize="14" width="100%" textAlign="right"/>
+			
+		</mx:VBox>
+		
+	</mx:HBox>
+	
+	<img:ImageCropperWrapper id="wrapperIC"
+		/>
+		<!--
+		width="830" 
+		height="730"
+		-->
+	
+	
+	<mx:states>
+		<mx:State name="stateStep1">
+			<!--
+			-->
+			
+		</mx:State>
+		
+		<mx:State name="stateStep2">
+			<mx:SetProperty target="{lblStepNumber}" name="text" value="(Step 2 of 2)"/>
+			<mx:SetProperty target="{lblScale}" name="text" value="Scale and Align your Thumbnail"/>
+			
+			<mx:SetProperty target="{blockFileSelection}" name="visible" value="false"/>
+			<mx:SetProperty target="{btnUploadFile}" name="visible" value="false"/>
+			
+			<mx:RemoveChild target="{blockButtonsStep1}"/>
+			<mx:SetProperty target="{blockButtonsStep2}" name="visible" value="true"/>
+			<mx:SetProperty target="{blockButtonsStep2}" name="includeInLayout" value="true"/>
+		</mx:State>
+		
+	</mx:states>
+	
+</mx:VBox>

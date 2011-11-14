@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:buttons="com.hphant.components.buttons.*">
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.view.ImageViewPallet;
+			private function sendName(event:MouseEvent):void{
+				viewButton.pallet.data = event.currentTarget.data;	
+			}
+		]]>
+	</mx:Script>
+	<buttons:PalletButton id="viewButton" palletClass="{ImageViewPallet}" label="Viewer" />
+	<mx:Button label="Image 1" click="{sendName(event)}" data="http://content.bmcd/temp/images/999_night.png"/>
+	<mx:Button label="Image 2" click="{sendName(event)}" data="http://content.bmcd/temp/images/bent_lamb_lot_logos_footer.png"/>
+	<mx:Button label="Image 3" click="{sendName(event)}" data="http://content.bmcd/temp/images/bentleylogo.png"/>
+	<mx:Button label="Image 4" click="{sendName(event)}" data="http://content.bmcd/temp/images/bmcd_sr_901.png"/>
+	<mx:Button label="Image 5" click="{sendName(event)}" data="http://content.bmcd/temp/images/clay.png"/>
+	<mx:Button label="Image 6" click="{sendName(event)}" data="http://content.bmcd/temp/images/lambologo.png"/>
+</Pallet>
+
+
+
+
+
+
+

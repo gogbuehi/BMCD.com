@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="{setStoreListeners()}"
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   xmlns:images="com.hphant.modsite.site.assets.images.*" 
+		   xmlns:text="com.hphant.modsite.site.assets.text.*"
+		   backgroundAlpha="1"
+	       xmlns:forms="com.hphant.modsite.site.assets.forms.*" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:text1="flash.text.*">
+	       <!--<mx:VBox id="vb" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">-->
+	       		<text:MAText id="title" width="100%"/>
+	       		<mx:Button buttonMode="true" useHandCursor="true" id="cartBTN" label="View Cart" width="100%" click="{this.dispatchEvent(new MAStoreEvent(MAStoreEvent.VIEW_CART,null))}"/>
+	       <!--</mx:VBox>-->
+	<mx:Metadata>
+		[Event(name="viewCart",type="com.hphant.modsite.site.assets.store.events.MAStoreEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import com.hphant.modsite.data.store.BMCDShoppingCart;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			//include "MAStoreIncludes.as";
+			private function setStoreListeners():void{
+				BMCDShoppingCart.getInstance().addEventListener(MAStoreEvent.ADD_TO_CART,this.itemCountChanged);
+				BMCDShoppingCart.getInstance().addEventListener(MAStoreEvent.REMOVE_FROM_CART,this.itemCountChanged);
+				BMCDShoppingCart.getInstance().addEventListener(MAStoreEvent.CLEAR_CART,this.itemCountChanged);
+				this.itemCountChanged(null);
+			}
+			protected function itemCountChanged(event:MAStoreEvent):void{
+				var str:String = " items in cart";
+				
+				str = BMCDShoppingCart.getInstance().totalItems + str;
+				this.title.xml = XMLList(new XML("<p>"+str+"</p>"));
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

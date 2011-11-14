@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="1024" 
+		   implements="com.hphant.modsite.site.assets.interfaces.IMAsset"
+		   backgroundAlpha="0"
+		   creationComplete="{this.isCreated = true;this.invalidateProperties()}"
+		   paddingTop="{this.getStyle('verticalGap')}"
+		   paddingBottom="{this.getStyle('verticalGap')}"
+		   verticalScrollPolicy="off"
+		   horizontalScrollPolicy="off" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import mx.effects.Resize;
+			import mx.events.EffectEvent;
+			import com.hphant.modsite.site.assets.calendar.events.CalendarMonthEvent;
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			include "../interfaces/AssetIncludes.as";
+			private var selectedEvent:MACalendarEventPod;
+			private var eventList:XMLList;
+			private var addingIndex:uint = 0;
+			private var isCreated:Boolean = false;
+			private var buildTimer:Timer;
+			private var buildData:Object = new Object();
+			protected override function commitProperties():void{
+				if(this.cssChanged){
+					this.cssChanged = false;
+				}
+				if(this.xmlChanged && this._xml && this._css && this.isCreated){
+					this.label = this._xml.h1.(attribute("class").toLowerCase()=="title");
+					this.addingIndex = 0;
+					this.addEvents();
+						
+					this.xmlChanged = false;
+				}
+				super.commitProperties();
+			}
+			private function addEvents():void{
+				this.eventList = this._xml.ul.(attribute("class").toLowerCase()=="events").li.(attribute("class")=="MACalendarEventPod");
+				//this.addEvent(XMLList(this.eventList[this.addingIndex]),this.addingIndex);
+				var existingCount:uint = this.numChildren;
+				var xmlCount:uint = this.eventList.length();
+				
+						var e:MACalendarEventPod;
+				if(xmlCount>existingCount){
+					for(var i:uint=0;i<existingCount;i++){
+						e = MACalendarEventPod(this.getChildAt(i));
+						e.xml = XMLList(this.eventList[i]);
+					}
+					this.buildItem();
+					
+				} else if(existingCount>xmlCount){
+					for(var k:uint=0;k<xmlCount;k++){
+						e = MACalendarEventPod(this.getChildAt(k));
+						e.xml = XMLList(this.eventList[k]);
+					}
+					for(var j:uint=existingCount-1;j>=xmlCount;j--){
+						this.removeChildAt(j);
+					}
+				}
+				
+			}
+			private function buildItem():MACalendarEventPod{
+				var ma:MACalendarEventPod;
+					ma =	new MACalendarEventPod();
+					ma.addEventListener(FlexEvent.CREATION_COMPLETE,this.eventCreated);
+					ma.addEventListener(EffectEvent.EFFECT_END,this.effectEnded);
+					ma.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE,this.eventStateChanged);
+					this.addChild(ma);
+					ma.css = this.css;
+					return ma;
+			}
+			private function addEvent(xml:XMLList,i:uint):void{
+				
+				var e:MACalendarEventPod;
+				if(i >= this.numChildren){
+					e = this.buildItem();
+				} else {
+					e = MACalendarEventPod(this.getChildAt(i));
+					e.xml = xml;
+				}
+				
+			}
+			private function eventCreated(e:FlexEvent):void{
+					e.currentTarget.currentState = "colapsed"; 
+					e.currentTarget.xml = XMLList(this.eventList[this.getChildIndex(DisplayObject(e.currentTarget))]);
+				
+			}
+			private function eventStateChanged(e:StateChangeEvent):void{
+				if(e.oldState != "begin" && e.newState != "begin" ){
+					if(e.newState=="expanded"){
+						if(this.selectedEvent){
+							this.selectedEvent.currentState = "colapsed";
+						}
+						this.selectedEvent = MACalendarEventPod(e.currentTarget);
+					} else {
+						if(e.currentTarget == this.selectedEvent){
+							this.selectedEvent = null;
+						}
+					}
+				}
+				if(e.oldState == "begin"){
+					if(this.numChildren<this.eventList.length()){
+						//this.buildItem();
+					} else {
+					//	this.dispatchEvent(new CalendarMonthEvent(CalendarMonthEvent.MONTH_CREATED));
+					}
+				}
+			}
+			private function effectEnded(e:EffectEvent):void{
+				e.currentTarget.removeEventListener(EffectEvent.EFFECT_END,this.effectEnded);
+				if(this.numChildren<this.eventList.length()){
+						this.buildItem();
+					} else {
+						this.dispatchEvent(new CalendarMonthEvent(CalendarMonthEvent.MONTH_CREATED));
+					}
+			}
+			
+		]]>
+	</mx:Script>
+</mx:VBox>

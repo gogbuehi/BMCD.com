@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox paddingLeft="10" paddingRight="10" paddingTop="10" paddingBottom="10" horizontalScrollPolicy="off" width="974" height="700" verticalScrollPolicy="off" currentState="cartView"  horizontalAlign="right" xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="{this.initListeners()}" xmlns:cart="com.hphant.modsite.site.assets.store.cart.*">
+	<!--<mx:XMLListCollection source="{XMLList(data)}" id="cartData"/>-->
+	<mx:ViewStack id="forms" height="100%" width="100%">
+		<mx:VBox id="grid" height="100%" width="100%" horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+		<mx:Label styleName="cartTitle" id="dataGridtitle" text="Shopping Cart"/>
+		<mx:DataGrid headerStyleName="dataGridHeader" id="cartList" width="100%" height="100%" dataProvider="{cartData.items}" variableRowHeight="true" fontGridFitType="pixel">
+			<mx:columns>
+				<mx:DataGridColumn id="itemDetails" headerText="Item" minWidth="500">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:VBox width="100%" verticalAlign="top" verticalScrollPolicy="off" dataChange="{dispatchTextUpdateEvents()}" horizontalScrollPolicy="off">
+								<mx:Text id="nameTxt" width="100%" text="{updateNameText()}"/>
+								<!--<mx:Text id="styleTxt" paddingLeft="10" width="100%" text="{updateStyleText()}"/>-->
+								<mx:Script>
+									<![CDATA[
+										import com.hphant.utils.Logger;
+										import com.hphant.modsite.data.store.BMCDStoreItemData;
+										private function tableRowToOption(item:Object):String{
+											var sz:String = XML(item.td[1]).toString();
+											var clr:String = XML(item.td[2]).toString();
+											return sz+((sz>"" && clr>"") ? ", " : "")+clr;
+										}
+										[Bindable(event="nameTextChange")]
+										private function updateNameText():String{
+											var txt:String
+											try{
+												txt = String(BMCDStoreItemData(data).title.data)+": "+tableRowToOption(BMCDStoreItemData(data).selectedOption);
+											} catch (e1:Error){
+												txt = "No Item";
+											}
+											return txt;// + "\n" + updateStyleText();
+										}
+										[Bindable(event="styleTextChange")]
+										private function updateStyleText():String{
+											var txt:String
+											try{
+												txt = tableRowToOption(BMCDStoreItemData(data).selectedOption);
+											} catch (e1:Error){
+												txt = "";
+											}
+											return txt;	
+										}
+										private function dispatchTextUpdateEvents():void{
+											this.dispatchEvent(new Event("nameTextChange"));
+											this.dispatchEvent(new Event("styleTextChange"));
+										}
+									]]>
+								</mx:Script>
+							</mx:VBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn id="itemQuantity" headerText="Quantity"  minWidth="100">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:HBox verticalAlign="middle" horizontalAlign="rith" width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" dataChange="{updateQuantity()}" >
+								<mx:NumericStepper textAlign="right" id="quantity" width="100%" change="{updateXMLQuantity()}" maximum="NaN"/>
+								<mx:Script>
+									<![CDATA[
+										import com.hphant.modsite.data.store.BMCDStoreItemData;
+										import com.hphant.utils.Logger;
+										private function updateXMLQuantity():void{
+											if(data){
+												var item:BMCDStoreItemData = BMCDStoreItemData(data);
+												item.quantity = quantity.value;
+											}
+										}
+										private function updateQuantity():void{
+											if(data){
+												var item:BMCDStoreItemData = BMCDStoreItemData(data);
+												quantity.value =  item.quantity;
+											} else {
+												quantity.value = 1;
+											}
+										}
+									]]>
+								</mx:Script>
+							</mx:HBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn id="itemUnitPrice" headerText="Unit Price"  minWidth="100">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:HBox width="100%" verticalAlign="middle" verticalScrollPolicy="off" dataChange="{updatePrice()}" horizontalScrollPolicy="off">
+								<mx:Label id="price" width="100%" textAlign="right"/>
+								<mx:Script>
+									<![CDATA[
+										import mx.formatters.CurrencyFormatter;
+										import com.hphant.modsite.site.assets.store.data.Price;
+										import com.hphant.utils.Logger;
+										import com.hphant.modsite.data.store.BMCDStoreItemData;
+										
+										private function updatePrice():void{
+											if(data){
+												var item:BMCDStoreItemData = BMCDStoreItemData(data);
+												var cf:CurrencyFormatter = new CurrencyFormatter();
+												cf.currencySymbol = "$";
+												cf.useThousandsSeparator = true;
+												cf.useNegativeSign = true;
+												cf.precision = 2;
+												price.text =  cf.format(Number(item.price.data));
+											} else {
+												price.text =  "$0.00";
+											}
+										}
+									]]>
+							</mx:Script>
+							</mx:HBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn id="itemTotalPrice" headerText="Total Price" minWidth="100" textAlign="right">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:HBox width="100%" verticalAlign="middle" verticalScrollPolicy="off" horizontalScrollPolicy="off" dataChange="{updatePriceTotal()}" >
+								<mx:Label id="totalprice" width="100%" />
+								<mx:Script>
+									<![CDATA[
+										import mx.formatters.CurrencyFormatter;
+										import com.hphant.modsite.data.store.BMCDStoreItemData;
+										import com.hphant.modsite.data.store.BMCDShoppingCart;
+										import com.hphant.utils.Logger;
+										import mx.controls.DataGrid;
+										private function updatePriceTotal():void{
+											if(data){
+												var item:BMCDStoreItemData = BMCDStoreItemData(data);
+												var cf:CurrencyFormatter = new CurrencyFormatter();
+												cf.currencySymbol = "$";
+												cf.useThousandsSeparator = true;
+												cf.useNegativeSign = true;
+												cf.precision = 2;
+												totalprice.text =  cf.format(item.quantity*Number(item.price.data));
+											} else {
+												totalprice.text =  "$0.00";
+											}
+										}
+									]]>
+							</mx:Script>
+							</mx:HBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn id="itemRemove" width="50">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:HBox width="100%" verticalAlign="middle" horizontalAlign="center" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+								<mx:Button id="remove" label="-" click="{this.removeThisItem(event)}" width="30"/>
+								<mx:Script>
+									<![CDATA[
+										import com.hphant.modsite.data.store.BMCDShoppingCart;
+										import com.hphant.modsite.data.store.BMCDStoreItemData;
+										import com.hphant.utils.Logger;
+										import mx.controls.DataGrid;
+										import mx.collections.XMLListCollection;
+										private function removeThisItem(event:MouseEvent):void{
+											Logger.log("Remove item from cart : "+data);
+											try{
+												var cart:BMCDShoppingCart = BMCDShoppingCart.getInstance();
+												cart.removeItem(BMCDStoreItemData(data));
+											} catch (e:Error){
+												
+											}
+										}
+									]]>
+								</mx:Script>
+							</mx:HBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+		</mx:VBox>
+		<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%">
+		<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" horizontalGap="25">
+			<cart:MAStoreBillingInfo id="billing" width="50%"/>
+			<cart:MAStoreShippingInfo id="shipping" width="50%" data="{billing}"/>
+		</mx:HBox>
+		<mx:Label text="Additional Information" styleName="cartTitle" width="100%"/>
+		<mx:TextArea width="100%" height="50" id="comments" />
+		</mx:VBox>
+	</mx:ViewStack>
+	<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button id="closeBtn" click="{this.closeClick()}" label="Return to Store"/>
+		<mx:Button id="continueBtn" click="{this.continueClick()}" label="Continue" enabled="false"/>
+		<mx:HBox width="100%" height="100%" verticalAlign="middle" verticalScrollPolicy="off" horizontalAlign="right" horizontalScrollPolicy="off">
+			<mx:Text styleName="cartTitle" id="totalPrice" textAlign="right"/>
+		</mx:HBox>
+	</mx:HBox>
+	<mx:Label text="* Taxes may apply" styleName="cartTitle"/>
+	<mx:Metadata>
+		[Event(name="closeCart",type="com.hphant.modsite.site.assets.store.events.MAStoreEvent")]
+	</mx:Metadata>
+	<mx:states>
+		<mx:State name="cartView">
+			<mx:SetProperty target="{this}" name="height" value="700" />
+			<mx:SetProperty target="{this}" name="width" value="974" />
+			<mx:SetProperty target="{this.closeBtn}" name="label" value="Return to Store"/>
+			<mx:SetProperty target="{this.continueBtn}" name="label" value="Continue"/>
+		</mx:State>
+		<mx:State name="billingView">
+			<mx:SetProperty target="{this}" name="height" value="700" />
+			<mx:SetProperty target="{this}" name="width" value="974" />
+			<mx:SetProperty target="{this.closeBtn}" name="label" value="Back"/>
+			<!--<mx:SetProperty target="{this.continueBtn}" name="label" value="Continue"/>
+		</mx:State>
+		<mx:State name="shippingView">
+			<mx:SetProperty target="{this}" name="height" />
+			<mx:SetProperty target="{this}" name="width" value="974" />
+			<mx:SetProperty target="{this.closeBtn}" name="label" value="Back"/>-->
+			<mx:SetProperty target="{this.continueBtn}" name="label" value="Submit Order"/>
+		</mx:State>
+	</mx:states>
+	<mx:transitions>
+		<!--<mx:Transition fromState="shippingView" toState="cartView">
+			<mx:Sequence>
+				<mx:Fade target="{this.forms}" alphaFrom="1" alphaTo="0"/>
+				<mx:Parallel>
+					<mx:SetPropertyAction target="{this.forms}" name="selectedIndex" value="0"/>
+					<mx:Move  targets="{[this.closeBtn,this.continueBtn]}"/>
+					<mx:Resize target="{this}"/>
+					<mx:Resize targets="{[this.closeBtn,this.continueBtn]}"/>
+				</mx:Parallel>
+				<mx:Fade target="{this.forms}" alphaFrom="0" alphaTo="1"/>
+			</mx:Sequence>
+		</mx:Transition>-->
+		<mx:Transition fromState="billingView" toState="cartView">
+			<mx:Sequence>
+				<mx:Fade target="{this.forms}" alphaFrom="1" alphaTo="0"/>
+				<mx:Parallel>
+					<mx:SetPropertyAction target="{this.forms}" name="selectedIndex" value="0"/>
+					<mx:Move  targets="{[this.closeBtn,this.continueBtn]}"/>
+					<mx:Resize target="{this}"/>
+					<mx:Resize targets="{[this.closeBtn,this.continueBtn]}"/>
+				</mx:Parallel>
+				<mx:Fade target="{this.forms}" alphaFrom="0" alphaTo="1"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="*" toState="billingView">
+			<mx:Sequence>
+				<mx:Fade target="{this.forms}" alphaFrom="1" alphaTo="0"/>
+				<mx:Parallel>
+					<mx:SetPropertyAction target="{this.forms}" name="selectedIndex" value="1"/>
+					<mx:Move  targets="{[this.closeBtn,this.continueBtn]}"/>
+					<mx:Resize target="{this}"/>
+					<mx:Resize targets="{[this.closeBtn,this.continueBtn]}"/>
+				</mx:Parallel>
+				<mx:Fade target="{this.forms}" alphaFrom="0" alphaTo="1"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<!--<mx:Transition fromState="*" toState="shippingView">
+			<mx:Sequence>
+				<mx:Fade target="{this.forms}" alphaFrom="1" alphaTo="0"/>
+				<mx:Parallel>
+					<mx:SetPropertyAction target="{this.forms}" name="selectedIndex" value="2"/>
+					<mx:Move  targets="{[this.closeBtn,this.continueBtn]}"/>
+					<mx:Resize target="{this}"/>
+					<mx:Resize targets="{[this.closeBtn,this.continueBtn]}"/>
+				</mx:Parallel>
+				<mx:Fade target="{this.forms}" alphaFrom="0" alphaTo="1"/>
+			</mx:Sequence>
+		</mx:Transition>-->
+	</mx:transitions>
+	<mx:Script>
+		<![CDATA[
+			import mx.formatters.CurrencyFormatter;
+			import mx.managers.PopUpManager;
+			import com.hphant.modsite.data.store.BMCDStoreItemData;
+			import com.hphant.modsite.data.store.BMCDShoppingCart;
+			import com.hphant.utils.Logger;
+			import com.hphant.modsite.site.assets.store.events.MAStoreEvent;
+			import com.hphant.modsite.site.assets.store.data.Price;
+			private function closeClick():void{
+				switch(this.currentState){
+					case "cartView":
+						this.dispatchEvent(new MAStoreEvent(MAStoreEvent.CLOSE_CART,null));
+					break;
+					case "billingView":
+						this.currentState = "cartView";
+					break;/* 
+					case "shippingView":
+						this.currentState = "billingView";
+					break; */
+					default:
+						
+					break;
+				}
+			}
+			[Bindable]
+			private var cartData:BMCDShoppingCart  = BMCDShoppingCart.getInstance();
+			private function continueClick():void{
+				switch(this.currentState){
+					case "cartView":
+						this.currentState = "billingView";
+					break;
+					case "billingView":
+						if (this.billing.validateForm() && this.shipping.validateForm()){
+						/* 	this.shipping.data = this.billing;
+							this.currentState = "shippingView";
+						}
+					break;
+					case "shippingView":
+						if (){ */
+							this.dispatchEvent(new MAStoreEvent(MAStoreEvent.SUBMIT_CART,null));
+							this.currentState = "cartView";
+						}
+					break;
+					default:
+						
+					break;
+				}
+			}
+			public function calculateTotalPrice(event:Event=null):void{
+				var sum:Number = 0;
+				this.continueBtn.enabled = (this.cartData) ? (this.cartData.items.length>0) : false;
+				var cf:CurrencyFormatter = new CurrencyFormatter();
+				cf.currencySymbol = "$";
+				cf.useThousandsSeparator = true;
+				cf.useNegativeSign = true;
+				cf.precision = 2;
+				this.totalPrice.text =  "Total: "+cf.format(this.cartData.totalPrice)+"*";
+			}
+			private function initListeners():void{
+				this.cartData.addEventListener("itemsChanged",this.calculateTotalPrice);
+				calculateTotalPrice();
+			}
+			public function removeItem(item:BMCDStoreItemData):void{
+				BMCDShoppingCart.getInstance().removeItem(item);
+			}
+			public function addItem(item:BMCDStoreItemData):void{
+				BMCDShoppingCart.getInstance().addItem(item);
+			}
+			public function clear():void{
+				billing.clear();
+				shipping.clear();
+				this.comments.text = "";
+				BMCDShoppingCart.getInstance().clear();
+			}
+		]]>
+	</mx:Script>
+</mx:VBox>

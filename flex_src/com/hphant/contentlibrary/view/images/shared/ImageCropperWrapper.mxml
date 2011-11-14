@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+-->
+<mx:Box xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ic="com.hphant.components.imageCropper.*"
+	>
+	<!--
+	borderStyle="outset" 
+	backgroundColor="#E2DCDC"
+	width="820"
+	width="800" height="700"
+	-->
+
+	<!--
+	<mx:Label x="10" y="10" text="This is a Canvas with sizes of 800x700 - looks too big, doesn't it ?" fontWeight="bold"/>
+	-->
+	
+	<ic:ImageCropper id="imageCropper" 
+		/>
+		
+	
+</mx:Box>

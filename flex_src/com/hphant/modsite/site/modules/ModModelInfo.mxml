@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModCanvas xmlns="com.hphant.modsite.site.modules.*" horizontalAlign="center"
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:video="com.hphant.modsite.site.assets.video.*" 
+	xmlns:images="com.hphant.modsite.site.assets.images.*" paddingLeft="0" paddingRight="0"
+	xmlns:text="com.hphant.modsite.site.assets.text.*" xmlns:components="com.hphant.components.*">
+	<mx:HBox paddingLeft="10" paddingRight="10" id="dropDowns" alpha="0" horizontalAlign="left" width="100%" horizontalGap="20">
+		<mx:VBox verticalGap="-5">
+			<text:MAText id="selectMakeLabel" styleName="modelSelectLabel" xml="{XMLList('Select Make')}"/>
+			<mx:TileList id="selectMake" width="100%" columnCount="{selectMake.dataProvider.length}" backgroundAlpha="0" borderThickness="0" rowCount="1" useRollOver="false" focusSkin="{null}" selectable="false" focusRoundedCorners="5"
+				itemRenderer="com.hphant.renderers.ImageButtonRenderer" variableRowHeight="true"
+			    itemClick="{this.makeSelected(event)}"
+			    labelFunction="{this.makesLabelFunction}"/>
+		</mx:VBox>
+		<mx:VBox verticalGap="-5">
+			<text:MAText id="selectModelLabel" styleName="modelSelectLabel" xml="{XMLList('Select Model')}"/>
+			<mx:ComboBox id="selectModel" width="100%"
+			    change="{modelSelected(event)}"/> 
+		</mx:VBox>
+	</mx:HBox>
+	<mx:HRule id="hr1" width="0" visible="false" height="1" styleName="itemRule" updateComplete="{drawHR1EndCircles()}"></mx:HRule>	
+	<mx:HBox horizontalGap="15"  autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false">
+	<mx:VBox id="lefSide"  autoLayout="true" verticalGap="15" verticalScrollPolicy="off" horizontalScrollPolicy="off" clipContent="false" height="100%">
+		<mx:Box id="videoHolder" verticalAlign="middle" horizontalAlign="center" width="420" height="280" clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<video:MAVideoDisplay id="videoPlayer" width="0" height="0" creationComplete="{applyVideoSkin()}" />
+		</mx:Box>
+		<mx:Box id="imageHolder" verticalAlign="middle" horizontalAlign="center" width="420" height="280" clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<images:MAImagePlayer skinFactory="{com.hphant.skins.image.ImagePlayerSkin}" id="imagePlayer" width="0" height="0" />
+		</mx:Box>
+	</mx:VBox>
+	<mx:VBox id="rigthSide" autoLayout="true" alpha="0" verticalGap="30" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:HBox  clipContent="false" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="520" height="265">
+			<mx:VBox clipContent="false"  verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+				<mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="-10" width="100%">
+					<text:MAText id="title" styleName="modelTitle" width="100%"/>
+					<text:MAText id="subTitle" styleName="modelSubtitle" width="100%"/>
+				</mx:VBox>
+				<mx:VBox verticalAlign="bottom" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+				<mx:VBox clipContent="false" id="highlightsTable" styleName="modelHighlights" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="290" height="170">
+					<text:MAText id="highlightsTitle" styleName="highlightsTitle" width="100%"/>
+					<mx:TileList columnCount="2" id="highlights" width="100%" backgroundAlpha="0" borderThickness="0" height="100%">
+						<mx:itemRenderer>
+							<mx:Component>
+								<mx:Label text="{data}" height="16" paddingTop="0" paddingBottom="0" top="0" width="100%"/>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:TileList>
+					<!--<mx:DataGrid showHeaders="false" borderThickness="0"
+					    id="highlights" allowMultipleSelection="true"
+						styleName="highlightsTable" width="100%" 
+					    backgroundAlpha="0" verticalGridLines="false">
+						<mx:columns>
+							<mx:DataGridColumn labelFunction="{column1label}" />
+							<mx:DataGridColumn labelFunction="{column2label}"/>
+						</mx:columns>
+					</mx:DataGrid>-->
+				</mx:VBox>
+				</mx:VBox>
+			</mx:VBox>
+			<mx:VBox paddingLeft="10" verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+				<mx:Button id="inventory" width="100%" height="25" label="{this.inventory.data}" click="{makeRequest(event)}"/>
+				<mx:VBox verticalAlign="bottom" paddingBottom="12" verticalGap="5"  verticalScrollPolicy="off" horizontalScrollPolicy="off" width="100%" height="100%">
+					<mx:Button id="brochure" width="100%" height="26.4" label="{this.brochure.data}" click="{makeRequest(event)}"/>
+					<mx:Button id="configurator" width="100%" height="26.4" label="{this.configurator.data}" click="{makeRequest(event)}"/>
+					<mx:Button id="testDrive" width="100%" height="26.4" label="{this.testDrive.data}" click="{formPopup(event)}"/>
+					<mx:Button id="quote" width="100%" height="26.4" label="{this.quote.data}" click="{formPopup(event)}"/>
+					<mx:Button id="email" width="100%" height="26.4" label="{this.email.data}" click="{formPopup(event)}"/>
+				</mx:VBox>
+			</mx:VBox>
+		</mx:HBox>
+		<mx:VBox horizontalAlign="center"  autoLayout="true" styleName="modelText" verticalScrollPolicy="off" horizontalScrollPolicy="off" minHeight="280" width="520">
+			<text:MAText id="text" width="100%" link="{makeTextLinkRequest(event)}"/>
+			<text:MAText id="manufactureLink" width="100%" link="{makeTextLinkRequest(event)}"/>
+			<text:MAText id="disclaimer" styleName="smallPrint" width="100%"/>
+			<mx:resizeEffect>
+				<mx:Resize />
+			</mx:resizeEffect>
+		</mx:VBox>
+	</mx:VBox>
+	</mx:HBox>
+	
+		
+	<video:MAVideoListController id="videoController" videoPlayer="{this.videoPlayer}" autoLoad="true"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.XMLUtility;
+			import com.hphant.modsite.site.modules.interfaces.IModule;
+			import com.hphant.modsite.site.forms.SubmittedPopUp;
+			import mx.utils.URLUtil;
+			import com.hphant.modsite.system.URIManager;
+			import com.hphant.modsite.data.forms.EmailFriendFormData;
+			import com.hphant.modsite.data.forms.QuoteRequestEmailFormData;
+			import com.hphant.modsite.data.forms.TestDriveEmailFormData;
+			import com.hphant.modsite.site.forms.TestDriveEmailForm;
+			import com.hphant.modsite.site.forms.QuoteRequestEmailForm;
+			import mx.events.ListEvent;
+			import com.hphant.modsite.site.forms.EmailFriendFormDataMap;
+			import com.hphant.modsite.site.forms.EmailFriendForm;
+			import com.hphant.modsite.site.forms.EmailFormDataMap;
+			import com.hphant.modsite.site.forms.EmailForm;
+			import mx.core.Application;
+			import mx.controls.Alert;
+			import com.hphant.modsite.site.forms.EmailDealerForm;
+			import com.hphant.modsite.site.events.MAFormEvent;
+			import com.hphant.modsite.site.forms.EmailFormPopUp;
+			import mx.core.IFlexDisplayObject;
+			import com.hphant.modsite.site.assets.forms.MAEmail;
+			import mx.managers.PopUpManager;
+			import com.hphant.skins.image.ImagePlayerSkin;
+			import mx.effects.easing.Exponential;
+			import mx.effects.easing.Back;
+			import com.hphant.skins.video.ShowCase;
+			import com.hphant.skins.video.VideoSkinEvent;
+			import com.hphant.renderers.ImgNodeRenderer;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.Image;
+			import com.hphant.components.CustomList;
+			private function drawHR1EndCircles():void{
+				if(this.hr1.width>20){
+					this.hr1.graphics.beginFill(this.hr1.getStyle('strokeColor'),1);
+					this.hr1.graphics.drawCircle(0,0,5);
+					this.hr1.graphics.drawCircle(this.hr1.width,0,5);
+					this.hr1.graphics.endFill();
+				}
+			}
+			[Bindable]
+			private var modelsIndex:int=0;
+			[Bindable]
+			private var makesIndex:int=0;
+			[Bindable]
+			private var modelsXML:XMLList;
+			[Bindable]
+			private var makesXML:XMLList;
+			[Bindable]
+			private var imagesXML:XMLList;
+			[Bindable]
+			private var videosXML:XMLList;
+			[Bindable]
+			private var highlightsTitleXML:XMLList;
+			[Bindable]
+			private var highlightsTableXML:XMLList;
+			[Bindable]
+			private var titleXML:XMLList;
+			[Bindable]
+			private var subtitleXML:XMLList;
+			[Bindable]
+			private var brochureXML:XMLList;
+			[Bindable]
+			private var configuratorXML:XMLList;
+			[Bindable]
+			private var manufactureXML:XMLList;
+			[Bindable]
+			private var disclaimerXML:XMLList;
+			[Bindable]
+			private var inventoryXML:XMLList;
+			private var _inventoryXML:XMLList = XMLList(new XML("<a href='/inventory'>Inventory</a>"));
+			[Bindable]
+			private var testdriveXML:XMLList;
+			[Bindable]
+			private var quoteXML:XMLList;
+			[Bindable]
+			private var emailXML:XMLList;
+			[Bindable]
+			private var textXML:XMLList;
+			
+			protected override function commitProperties():void{
+				if(this.xmlChanged){
+					this.xmlChanged = true;
+					if(this._xml){
+						modelsXML = this._xml.ul.(@['class']=='models').li.a;
+						modelsIndex = this.getSelectedModel().childIndex();
+						makesXML = this._xml.ul.(@['class']=='makes').li;
+						makesIndex = this.getSelectedMake().childIndex();
+						if(modelsIndex<=0 && modelsXML.length()>0){
+							this._xml.ul.(@['class']=='models').li[0].@selected = 'selected';
+							modelsIndex = 0;
+						}
+						if(makesIndex<=0 && makesXML.length()>0){
+							this._xml.ul.(@['class']=='makes').li[0].@selected = 'selected';
+							makesIndex = 0;
+						}
+						imagesXML = this._xml.ul.(String(@['class']).toLowerCase()=='images');
+						videosXML = this._xml.ul.(String(@['class']).toLowerCase()=='videos');
+						highlightsTitleXML = this._xml.div.(String(@['class']).toLowerCase()=='highlights').p;
+						highlightsTableXML = this._xml.div.(String(@['class']).toLowerCase()=='highlights').table.tbody.tr.td; 
+						
+						titleXML = this._xml.p.(String(@['class']).toLowerCase()=='title');
+						subtitleXML = this._xml.p.(String(@['class']).toLowerCase()=='subtitle');
+						brochureXML = this._xml.a.(String(@['id']).toLowerCase()=='brochure');
+						configuratorXML = this._xml.a.(String(@['id']).toLowerCase()=='configurator');
+						inventoryXML = this._xml.a.(String(@['id']).toLowerCase()=='inventory');
+						disclaimerXML = this._xml.p.(String(@['class']).toLowerCase()=='disclaimer');
+						if(inventoryXML.length()==0){inventoryXML = this._inventoryXML;}
+						testdriveXML = this._xml.a.(String(@['id']).toLowerCase()=='testdrive');
+						quoteXML = this._xml.a.(String(@['id']).toLowerCase()=='quote');
+						emailXML = this._xml.a.(String(@['id']).toLowerCase()=='email');
+						textXML = this._xml.div.(String(@['class']).toLowerCase()=='description').children();
+						manufactureXML = this._xml.a.(String(@['id']).toLowerCase()=='manufacture');
+						
+						XMLUtility.insertBlankNode(highlightsTitleXML);
+						XMLUtility.insertBlankNode(this._xml.p);
+						XMLUtility.insertBlankNode(this._xml.a);
+						
+						
+					} else {
+						makesIndex = 0;
+						modelsIndex = 0;
+						modelsXML = null;
+						makesXML = null;
+						imagesXML = null;
+						videosXML = null;
+						highlightsTitleXML = null;
+						highlightsTableXML = null;
+						titleXML = null;
+						subtitleXML = null;
+						brochureXML = null;
+						configuratorXML = null;
+						inventoryXML = null;
+						disclaimerXML = null;
+						testdriveXML = null;
+						quoteXML = null;
+						emailXML = null;
+						textXML = null;
+						manufactureXML = null;
+					}
+					if(this.currentState>"state3"){
+						this.brochure.data = this.brochureXML;
+						this.configurator.data = this.configuratorXML;
+			            this.testDrive.data = this.testdriveXML;
+						this.email.data = this.emailXML;
+			   			this.quote.data = this.quoteXML;
+						this.highlightsTitle.xml = this.highlightsTitleXML;
+						this.text.xml = this.textXML;
+						this.title.xml = this.titleXML;
+						this.disclaimer.xml = this.disclaimerXML;
+						this.manufactureLink.xml = this.manufactureXML;
+						this.inventory.data = this.inventoryXML;
+						this.subTitle.xml = this.subtitleXML;
+						this.highlights.dataProvider = this.highlightsTableXML;
+						this.selectMake.dataProvider = this.makesXML;
+						this.selectModel.dataProvider = this.modelsXML;
+						//this.selectMake.selectedIndex = this.makesIndex;
+						this.selectModel.selectedIndex = this.modelsIndex;
+					} if(this.currentState>"state5"){
+						this.videoController.xml = this.videosXML;
+						this.imagePlayer.xml = this.imagesXML;
+					}
+				}
+				super.commitProperties();
+			}
+			private function setSelectedMake(index:int):void{
+			}
+			private function column1label(obj:Object,col:DataGridColumn):String{
+				return String(obj.td[0]);
+			}
+			private function column2label(obj:Object,col:DataGridColumn):String{
+				return String(obj.td[1]);
+			}
+			private function makesLabelFunction(obj:Object):String{
+				return '';//obj.img.@alt;
+			}
+			private function makeSelected(event:ListEvent):void{
+				this.log(event.itemRenderer.data.a.@href);
+				this.uriManager.goToURI(event.itemRenderer.data.a.@href);
+			}
+			private function modelSelected(event:Event):void{
+				this.log(this.selectModel.selectedItem.@href);
+				this.uriManager.goToURI(this.selectModel.selectedItem.@href);
+			}
+			private function makeTextLinkRequest(event:TextEvent):void{
+				this.uriManager.goToURI(event.text);
+			}
+			private function makeRequest(event:MouseEvent):void{
+				var href:String = String(Button(event.currentTarget).data.@href);
+				var mk:String;
+				try{
+					mk = String(getSelectedMake().a.img.@alt).toLowerCase().split(" ").join("_").split("/").join("_").split(".").join("");
+			 	} catch (e:Error){
+					
+				}
+				var md:String;
+				try{
+					md = String(getSelectedModel().a.toString()).toLowerCase().split(" ").join("_").split("/").join("_").split(".").join("");
+			 	} catch (e:Error){
+					
+				}
+			 	if((!href || href=="" || href=="/inventory") && event.currentTarget == this.inventory){
+			 		href = "/inventory"+(mk ? "/"+mk : "");
+			 	}
+			 	this.log(href);
+				this.uriManager.goToURI(href);
+				if(event.currentTarget == this.brochure){
+					
+				}
+			 	
+			}
+			private function getSelectedMake():XML{
+				for each(var makeNode:XML in this._xml.ul.(@['class']=='makes').li){
+					if(makeNode.@selected=='selected'){
+						return makeNode;
+					}
+				}
+				return new XML();
+			}
+			private function getSelectedModel():XML{
+				for each(var modelNode:XML in this._xml.ul.(@['class']=='models').li){
+					if(modelNode.@selected=='selected'){
+						return modelNode;
+					}
+				}
+				return new XML();
+			}
+			private var applicationOvelrlayAlpha:Number = 0;
+			private function formPopup(event:MouseEvent):void{
+			   var pop:IFlexDisplayObject;
+			   var cf:ClassFactory;
+			   applicationOvelrlayAlpha = Application.application.getStyle('disabledOverlayAlpha');
+			   Application.application.setStyle('disabledOverlayAlpha',.25);
+			   pop = PopUpManager.createPopUp(this,com.hphant.modsite.site.forms.EmailFormPopUp); 
+			   EmailFormPopUp(pop).title = String(Button(event.currentTarget).data); 
+			   if(event.currentTarget==this.testDrive){
+			   		cf = new ClassFactory(com.hphant.modsite.site.forms.TestDriveEmailForm);
+			   } else if(event.currentTarget==this.quote){
+			   		cf = new ClassFactory(com.hphant.modsite.site.forms.QuoteRequestEmailForm);
+			   } else if(event.currentTarget==this.email){
+			   		cf = new ClassFactory(com.hphant.modsite.site.forms.EmailFriendForm);
+			   } else {
+			   		EmailFormPopUp(pop).title = "Send Email";
+			   		cf = new ClassFactory(com.hphant.modsite.site.forms.EmailForm);
+			   }
+			   EmailFormPopUp(pop).formFactory = cf;
+			   cf.properties = {make:getSelectedMake().a.img.@alt,model:getSelectedModel().a.toString()};
+			   
+			   
+			   
+			   EmailFormPopUp(pop).addEventListener(MAFormEvent.CANCEL,this.cancelPopup);
+			   EmailFormPopUp(pop).addEventListener(MAFormEvent.SEND_EMAIL,this.sendEmail);
+			   
+				this.centerPopUp(pop);
+			    Application.application.enabled = false;
+			   
+			}
+			private function submittedPopUp(event:MAFormEvent):void{
+				var pop:IFlexDisplayObject;
+				Application.application.setStyle('disabledOverlayAlpha',.25);
+				Application.application.enabled = false;
+				pop = PopUpManager.createPopUp(this,com.hphant.modsite.site.forms.SubmittedPopUp);
+				SubmittedPopUp(pop).addEventListener(MAFormEvent.CANCEL,this.cancelPopup);
+				this.centerPopUp(pop);
+			}
+			import com.hphant.managers.BrowserScrollManager;
+			private function centerPopUp(pop:IFlexDisplayObject):void{
+				pop.x = BrowserScrollManager.getInstance().horizontal+BrowserScrollManager.getInstance().width/2-pop.width/2;
+				pop.y = BrowserScrollManager.getInstance().vertical+BrowserScrollManager.getInstance().height/2-pop.height/2;
+			}
+			private function cancelPopup(event:MAFormEvent):void{
+				PopUpManager.removePopUp(IFlexDisplayObject(event.currentTarget));
+				Application.application.setStyle('disabledOverlayAlpha',this.applicationOvelrlayAlpha);
+				 Application.application.enabled = true;
+			}
+			private function getMSRP():String{
+				var table:XMLList = this._xml.div.(String(@['class']).toLowerCase()=='highlights').table;
+				var msrp:String = XML(table.tbody.tr.(td[0].toString()=="MSRP").td[1]).toString();
+				log("MSRP is "+msrp);
+				return msrp;
+			}
+			private function sendEmail(event:MAFormEvent):void{
+				var success:Boolean = true;
+				var fd:Object = event.formData;
+				 if(fd is TestDriveEmailFormData){
+					TestDriveEmailFormData(fd).vehicleModel = getSelectedModel().a.toString();
+					TestDriveEmailFormData(fd).vehicleMake = getSelectedMake().a.img.@alt;
+				}else if(fd is QuoteRequestEmailFormData){
+					QuoteRequestEmailFormData(fd).vehicleModel = getSelectedModel().a.toString();
+					QuoteRequestEmailFormData(fd).vehicleMake = getSelectedMake().a.img.@alt;
+				} else if(fd is EmailFriendFormData){
+					EmailFriendFormData(fd).linkToVehicle = "http://"+URLUtil.getServerName(Application.application.url)+URIManager(this.uriManager).current;
+					EmailFriendFormData(fd).price = this.getMSRP();
+					EmailFriendFormData(fd).vehicleMainImage = XML(imagesXML.li.img[0]).@src;
+					EmailFriendFormData(fd).vehicleDescription = textXML.toString();
+					EmailFriendFormData(fd).vehicleMake = getSelectedMake().a.img.@alt;
+					EmailFriendFormData(fd).vehicleTitle = getSelectedModel().a.toString();
+				}
+				
+				cancelPopup(event);
+				try{
+					success = ExternalInterface.call("submitFormData",fd);
+					submittedPopUp(event);
+					//XMLList("<p>Form Submitted Successfully</p>");
+				} catch(e:Error){
+					 
+					success = false;
+				}
+				if(!success){
+					//XMLList("<p>There was a problem communicating with the server.</p><p>Please try to resubmit your form.</p>");	
+				} else {
+					//cancelPopup(event);
+				}
+			}
+			
+			
+			[Bindable]
+			private var videoControlls:ShowCase = new ShowCase();
+			
+			private function videoNextClick(event:VideoSkinEvent):void{
+				this.videoController.playNextVideo();
+			}
+			private function videoPreviousClick(event:VideoSkinEvent):void{
+				this.videoController.playPreviousVideo();
+			}
+			private function videoSoundOnClick(event:VideoSkinEvent):void{
+				this.videoControlls.soundOff.visible = true;
+				this.videoControlls.soundOn.visible = false;
+				this.videoPlayer.videoPlayer.volume = 0;
+			}
+			private function videoSoundOffClick(event:VideoSkinEvent):void{
+				this.videoControlls.soundOff.visible = false;
+				this.videoControlls.soundOn.visible = true;
+				this.videoPlayer.videoPlayer.volume = 1;
+			}
+			
+			private function applyVideoSkin():void{
+				this.videoPlayer.skinHolder.addChild(videoControlls);
+				this.videoControlls.addEventListener(VideoSkinEvent.NEXT_CLICK,this.videoNextClick);
+				this.videoControlls.addEventListener(VideoSkinEvent.PREVIOUS_CLICK,this.videoPreviousClick);
+				this.videoControlls.addEventListener(VideoSkinEvent.SOUND_OFF_CLICK,this.videoSoundOffClick);
+				this.videoControlls.addEventListener(VideoSkinEvent.SOUND_ON_CLICK,this.videoSoundOnClick);
+			}
+			public override function duplicate():IModule{
+				var m:ModModelInfo = new ModModelInfo();
+				m.xml = this.xml;
+				m.currentState = this.currentState;
+			m.height = this.height;
+			m.width = this.width;
+				m.validateNow();
+				return m;
+			}
+		]]>
+	</mx:Script>
+	<states>
+		<mx:State name="state0"/>
+		<mx:State name="state1">
+			<mx:SetProperty target="{this}" name="height"/>
+			<mx:SetProperty target="{this}" name="width" value="984"/>
+		</mx:State>
+		<mx:State name="state2" basedOn="state1">
+			<mx:SetProperty target="{this.hr1}" name="width" value="{this.width}"/>
+		</mx:State>
+		<mx:State name="state3" basedOn="state2">
+			<mx:SetProperty target="{this.videoPlayer}" name="width" value="420"/>
+			<mx:SetProperty target="{this.videoPlayer}" name="height" value="280"/>
+			<mx:SetProperty target="{this.imagePlayer}" name="width" value="420"/>
+			<mx:SetProperty target="{this.imagePlayer}" name="height" value="280"/>
+		</mx:State>
+		<mx:State name="state4" basedOn="state3">
+			<mx:SetProperty target="{this.brochure}" name="data" value="{this.brochureXML}"/>
+			<mx:SetProperty target="{this.configurator}" name="data" value="{this.configuratorXML}"/>
+			<mx:SetProperty target="{this.testDrive}" name="data" value="{this.testdriveXML}"/>
+			<mx:SetProperty target="{this.email}" name="data" value="{this.emailXML}"/>
+			<mx:SetProperty target="{this.quote}" name="data" value="{this.quoteXML}"/>
+			<mx:SetProperty target="{this.inventory}" name="data" value="{this.inventoryXML}"/>
+			<mx:SetProperty target="{this.highlightsTitle}" name="xml" value="{this.highlightsTitleXML}"/>
+			<mx:SetProperty target="{this.text}" name="xml" value="{this.textXML}"/>
+			<mx:SetProperty target="{this.manufactureLink}" name="xml" value="{this.manufactureXML}"/>
+			<mx:SetProperty target="{this.disclaimer}" name="xml" value="{this.disclaimerXML}"/>
+			<mx:SetProperty target="{this.title}" name="xml" value="{this.titleXML}"/>
+			<mx:SetProperty target="{this.subTitle}" name="xml" value="{this.subtitleXML}"/>
+			<mx:SetProperty target="{this.highlights}" name="dataProvider" value="{this.highlightsTableXML}"/>
+			<mx:SetProperty target="{this.selectMake}" name="dataProvider" value="{this.makesXML}"/>
+			<mx:SetProperty target="{this.selectModel}" name="dataProvider" value="{this.modelsXML}"/>
+			<!--<mx:SetProperty target="{this.selectMake}" name="selectedIndex" value="{this.makesIndex}"/>-->
+			<mx:SetProperty target="{this.selectModel}" name="selectedIndex" value="{this.modelsIndex}"/>
+		</mx:State>
+		<mx:State name="state5" basedOn="state4"/>
+		<mx:State name="state6" basedOn="state5">
+			<mx:SetProperty target="{this.videoController}" name="xml" value="{this.videosXML}"/>
+			<mx:SetProperty target="{this.imagePlayer}" name="xml" value="{this.imagesXML}"/>
+		</mx:State>
+	</states>
+	<transitions>
+		<mx:Transition fromState="state0" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+   				<mx:Resize target="{this}" widthTo="250" heightTo="30" duration="500" easingFunction="{mx.effects.easing.Back.easeOut}"/>
+				<mx:Resize target="{this}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state1" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction target="{this.hr1}" name="visible" value="true"/>
+   				<mx:Resize target="{this.hr1}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state3">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Parallel>
+	   				<mx:Resize target="{this.videoPlayer}"/>
+	   				<mx:Resize target="{this.imagePlayer}"/>
+				</mx:Parallel>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state4">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction targets="{[this.inventory,this.manufactureLink,this.brochure,this.configurator,this.email,this.highlights,this.highlightsTitle,this.quote,this.selectMake,this.selectModel,this.testDrive,this.text,this.title,this.subTitle]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state4" toState="state5">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Parallel>
+	   				<mx:Fade target="{this.rigthSide}" alphaTo="1"/>
+	   				<mx:Fade target="{this.dropDowns}" alphaTo="1"/>
+				</mx:Parallel>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state5" toState="state6">
+			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+				<mx:SetPropertyAction targets="{[this.videoController,this.imagePlayer]}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state6" toState="state5">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction targets="{[this.videoController,this.imagePlayer]}" value="{null}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state5" toState="state4">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Parallel>
+	   				<mx:Fade target="{this.rigthSide}" alphaTo="0"/>
+	   				<mx:Fade target="{this.dropDowns}" alphaTo="0"/>
+				</mx:Parallel>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state4" toState="state3">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:SetPropertyAction targets="{[this.inventory,this.manufactureLink,this.brochure,this.configurator,this.email,this.highlightsTable,this.highlightsTitle,this.quote,this.selectMake,this.selectModel,this.testDrive,this.text,this.title,this.subTitle]}" value="{null}"/>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state3" toState="state2">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+				<mx:Parallel>
+	   				<mx:Resize target="{this.videoPlayer}"/>
+	   				<mx:Resize target="{this.imagePlayer}"/>
+				</mx:Parallel>
+			</mx:Sequence>
+		</mx:Transition>
+		<mx:Transition fromState="state2" toState="state1">
+			<mx:Sequence effectEnd="{this.dispatchStateReached()}">
+   				<mx:Resize target="{this.hr1}"/>
+				<mx:SetPropertyAction target="{this.hr1}" name="visible" value="false"/>
+			</mx:Sequence>
+		</mx:Transition>
+   		<mx:Transition fromState="state1" toState="state0">
+   			<mx:Sequence effectEnd="{this.dispatchTransitionCompleted()}">
+   				<mx:Resize target="{this}" widthTo="500" heightTo="30" easingFunction="{mx.effects.easing.Exponential.easeOut}"/>
+				<mx:Resize target="{this}" duration="500" />
+   			</mx:Sequence>
+   		</mx:Transition>
+	</transitions>
+</ModCanvas>

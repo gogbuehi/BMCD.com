@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" horizontalAlign="right" width="500" height="400" verticalGap="0" label="Edit Text" xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:components="com.hphant.components.*">
+	<components:ExtendedRichTextEditor id="editor" width="100%" height="100%" htmlText="{html}"
+		tabIndex="0" focusEnabled="true"/>
+	<mx:HBox width="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:Button id="ok" label="Done" click="{close(event)}" tabIndex="1"/>
+	</mx:HBox>
+	
+	<mx:Metadata>
+		[Event(name="change",type="flash.events.Event")]
+	</mx:Metadata>
+	<mx:Binding destination="html" source="editor.htmlText"/>
+	<mx:Script>
+		<![CDATA[
+			import flash.events.Event;
+			[Bindable]
+			public var html:String = "";
+			
+			protected override function close(event:MouseEvent=null):void{
+				this.dispatchEvent(new Event(Event.CHANGE));
+				super.close(event);
+			}
+		]]>
+	</mx:Script>
+</Pallet>

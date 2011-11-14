@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" label="Available Images" xmlns:buttons="com.hphant.components.buttons.*" xmlns:view="com.hphant.contentlibrary.view.*" xmlns:process="com.hphant.contentlibrary.process.*">
+	<mx:TileList rowHeight="50" columnWidth="75" backgroundAlpha="0" rowCount="10" columnCount="3" maxColumns="3" 
+	    dragEnabled="true"
+	    allowDragSelection="{allowDragSelection}"
+	    allowMultipleSelection="{allowMultipleSelection}"
+		dataProvider="{data}">
+		<mx:itemRenderer>
+			<mx:Component>
+				<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" toolTip="{data.title}" source="{data.source}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:TileList>
+	<buttons:PalletButton id="editVideoButton" palletPosition="none" label="Edit Video" palletLabel="Edit VIdeo">
+		<buttons:pallet>
+			<view:EditVideoPallet process="{editVideoProcess}"/>
+		</buttons:pallet>
+	</buttons:PalletButton>
+	<mx:Boolean id="allowDragSelection">true</mx:Boolean>
+	<mx:Boolean id="allowMultipleSelection">true</mx:Boolean>
+	<process:EditVideoProcess id="editVideoProcess" complete="{updateVideoList(event)}"/>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.contentlibrary.control.event.VideoEvent;
+			
+			[Bindable]
+			public function set videoSizes(value:Array):void{
+				this._videoSizes = (value) ? value : [];
+			}
+			public function get videoSizes():Array{
+				return this._videoSizes;
+			}
+			
+			private var _videoSizes:Array = [];
+			
+			private function updateVideoList(event:Event=null):void{
+				var allVids:VideoEvent = new VideoEvent(VideoEvent.GET_ALL_VIDEOS);
+				allVids.dispatch();
+			}
+		]]>
+	</mx:Script>
+</Pallet>

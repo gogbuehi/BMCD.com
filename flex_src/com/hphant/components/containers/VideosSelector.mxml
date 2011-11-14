@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Pallet xmlns="com.hphant.components.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="{init()}" xmlns:ui="flash.ui.*" xmlns:buttons="com.hphant.components.buttons.*" xmlns:components="com.hphant.components.*">
+    <mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="middle">
+    
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+    	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    		<mx:Label text="Available Videos:"/>
+    		<buttons:PalletButton label="Preview Selected Video" palletLabel="Preview Available Video" enabled="{Boolean(availableList.selectedItem)}">
+    			<buttons:pallet>
+    				<components:VideoPallet autoPlay="true" source="{com.hphant.contentlibrary.model.Video(availableList.selectedItem).location}" />
+    			</buttons:pallet>
+    		</buttons:PalletButton>
+    	</mx:HBox>
+		<mx:TileList id="availableList" rowCount="2" columnWidth="60" columnCount="15" rowHeight="45"
+			direction="horizontal" 
+		    dragEnabled="true"
+		    allowDragSelection="false"
+		    allowMultipleSelection="false"
+			dataProvider="{ContentModelLocator.getInstance().videos}">
+			<mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" source="{data.thumbnailLocation}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+				</mx:Component>
+			</mx:itemRenderer>
+		</mx:TileList>
+    </mx:VBox>
+    <mx:VBox verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalGap="0">
+    	<mx:HBox verticalScrollPolicy="off" horizontalScrollPolicy="off">
+    		<mx:Label text="Used Videos:"/>
+    		<buttons:PalletButton label="Preview Selected Video" palletLabel="Preview Used Video" enabled="{Boolean(usedList.selectedItem)}">
+    			<buttons:pallet>
+    				<components:VideoPallet autoPlay="true" source="{(usedList.selectedItem is String) ? String(usedList.selectedItem) : (usedList.selectedItem is com.hphant.contentlibrary.model.Video) ? com.hphant.contentlibrary.model.Video(data).location : null }" />
+    			</buttons:pallet>
+    		</buttons:PalletButton>
+    	</mx:HBox>
+    	
+		<mx:TileList id="usedList" dataProvider="{videos}" updateComplete="{replaceObjectsInImageList()}"
+			direction="horizontal" change="{this.dispatchEvent(new Event(Event.CHANGE))}"
+		    rowCount="2" dragMoveEnabled="true" dragEnabled="true" dropEnabled="true"
+		    dragDrop="{this.dragDropListener(event)}"   
+		    columnWidth="60" columnCount="15" rowHeight="45">
+		    <mx:contextMenu>
+		    	<ui:ContextMenu customItems="{this._cmArray2}">
+		    		<ui:builtInItems>
+		    			<ui:ContextMenuBuiltInItems forwardAndBack="false" loop="false" play="false" print="false" quality="false" rewind="false" save="false" zoom="false"/>
+		    		</ui:builtInItems>
+		    	</ui:ContextMenu>
+		    </mx:contextMenu>
+			<mx:itemRenderer>
+				<mx:Component>
+					<mx:Canvas verticalScrollPolicy="off" dataChange="{findThumb()}" horizontalScrollPolicy="off" width="100%" height="100%">
+						<mx:Image horizontalAlign="center" verticalAlign="middle" buttonMode="true" useHandCursor="true" source="{src}" width="100%" height="100%" scaleContent="true" maintainAspectRatio="true"/>
+					<mx:Script>
+						<![CDATA[
+							import com.hphant.contentlibrary.control.ContentModelLocator;
+							import com.hphant.contentlibrary.model.Video
+							private function findThumb():void{
+								for each(var v:com.hphant.contentlibrary.model.Video in ContentModelLocator.getInstance().videos){
+									if(v.location==data){
+										src = v.thumbnailLocation;
+										return;
+									}
+								}
+								src = '';
+							}
+							[Bindable]
+							private var src:String = "";
+						]]>
+					</mx:Script>
+
+					</mx:Canvas>
+					</mx:Component>
+			</mx:itemRenderer>
+		</mx:TileList>
+    </mx:VBox>
+    </mx:VBox>
+    <!--<mx:VideoDisplay id="preview" width="240" height="180" />-->
+    </mx:HBox>
+    <mx:Binding destination="cmRemoveImage.enabled" source="Boolean(usedList.selectedItem)" />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.DragEvent;
+			import com.hphant.managers.PalletManager;
+			import com.hphant.contentlibrary.view.NewImageCropPallet;
+			import com.hphant.contentlibrary.control.event.VideoEvent;
+			import com.hphant.contentlibrary.control.ContentModelLocator;
+			import mx.collections.ArrayCollection;
+			import com.hphant.contentlibrary.model.Video;
+			import mx.events.FlexEvent;
+			
+			
+			[Bindable('videosChange')]
+			public function set videos(value:Array):void{
+				_videos = value;
+				if(!_origionalVideos){
+					_origionalVideos = _videos;
+				}
+				this.dispatchEvent(new Event('videosChange'));
+			}
+			public function get videos():Array{
+				return this._videos;
+			}
+			
+			
+			private var _origionalVideos:Array;
+			
+			[Bindable]
+			private var _videos:Array;
+			
+			[Bindable]
+			private var availableImages:ArrayCollection;
+			[Bindable('videoSizesChange')]
+			[Inspectable]
+			[ArrayElementType("flash.geom.Rectangle")]
+			public function get videoSizes():Array{
+				return _videoSizes;
+			}
+			public function set videoSizes(value:Array):void{
+				_videoSizes = value;
+				getAvailableThumbs();
+				this.dispatchEvent(new Event('videoSizesChange'));
+			}
+			
+			
+			private var _videoSizes:Array;
+			
+			[Bindable]
+			private var _cmArray:Array = new Array();
+			[Bindable]
+			private var _cmArray2:Array = new Array();
+			
+			private var cmNewImage:ContextMenuItem = new ContextMenuItem("New Video",true);
+			private var cmRemoveImage:ContextMenuItem = new ContextMenuItem("Remove Video",true);
+			private var cmPreview1:ContextMenuItem = new ContextMenuItem("Preview Video");
+			private var cmPreview2:ContextMenuItem = new ContextMenuItem("Preview Video");
+			
+			private function defineListeners():void{
+				//this._cmArray.push(this.cmPreview1);
+				//this._cmArray.push(this.cmNewImage);
+				//this._cmArray2.push(this.cmPreview2);
+				this._cmArray2.push(this.cmRemoveImage);
+				this.cmNewImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				this.cmPreview1.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				this.cmPreview2.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				this.cmRemoveImage.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT,this.listContextMenuItemSelected);
+				
+				ContentModelLocator.getInstance().addEventListener("videosChanged",getAvailableThumbs);
+			}
+			
+			private function init():void{
+				defineListeners();
+				var event:VideoEvent = new VideoEvent(VideoEvent.GET_ALL_VIDEOS);
+				event.dispatch();
+			}
+			
+			private function getAvailableThumbs(event:Event = null):void{
+				if(this.videoSizes)
+					this.availableImages = ContentModelLocator.getInstance().getVideosOfDimension(Rectangle(this.videoSizes[0]).width,Rectangle(this.videoSizes[0]).height);
+			}
+			
+			private var newImagePallet:NewImageCropPallet;
+			private function listContextMenuItemSelected(event:ContextMenuEvent):void{
+				switch(event.target){
+					case this.cmRemoveImage:
+						log("Remove the selected image");
+						if(this.usedList.selectedItem){
+							ArrayCollection(this.usedList.dataProvider).removeItemAt(this.usedList.selectedIndex);
+							replaceObjectsInImageList();
+						}
+					break
+					case this.cmNewImage:
+						if(!this.newImagePallet){
+							this.newImagePallet = new NewImageCropPallet();
+						} else {
+							this.newImagePallet.reset();
+						}
+					//	this.newImagePallet.cropSizes = this.videoSizes;
+						PalletManager.openPallet(this.newImagePallet);
+					break;
+					/* case this.cmPreview1:
+						preview.source = com.hphant.contentlibrary.model.Video(availableList.selectedItem).location;
+					break;
+					case this.cmPreview2:
+						preview.source = String(usedList.selectedItem);
+					break; */
+					default:
+						log("Menu Item selected: "+event.target);
+					break;
+				}
+			}
+			private function dragDropListener(event:DragEvent):void{
+				this.usedList.selectedItem = event.dragSource.dataForFormat(event.dragSource.formats[0])[0];
+				this._selectedIndex = this.usedList.selectedIndex;
+				this.dispatchEvent(new Event(Event.CHANGE));
+			}
+			private var _selectedIndex:int = 0;
+			private function replaceObjectsInImageList():void{
+				var objectsFound:Boolean = false;
+				var newArray:Array = new Array();
+				if(this.usedList){
+					_selectedIndex = this.usedList.selectedIndex;
+				}
+				for each(var img:Object in videos){
+					if(img is String){
+						newArray.push(img);
+					} else {
+						objectsFound = true;
+						newArray.push(com.hphant.contentlibrary.model.Video(img).location);
+					}
+				}
+				if(objectsFound){
+					this.videos = newArray;
+				}
+				if(this.usedList){
+					if(newArray.length<=_selectedIndex){
+						_selectedIndex = newArray.length-1;
+					}
+					this.usedList.selectedIndex = this._selectedIndex;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+</Pallet>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Button dataChange="{this.dataChanged()}" xmlns:mx="http://www.adobe.com/2006/mxml" paddingTop="7" paddingBottom="7" paddingLeft="7" paddingRight="7">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.utils.IconUtility;
+			import mx.controls.Image;
+			private function dataChanged():void{
+				if(data){
+					switch(String(data.children()[0].name())){
+						case "a":
+							this.iconHeight = data.a.img.@height;
+							this.iconWidth = data.a.img.@width;
+							this.source = data.a.img.@src;
+							this.selected = (data.@selected=="selected");
+							this.minHeight = this.iconHeight+this.getStyle('paddingTop')+this.getStyle('paddingBottom');
+							this.minWidth = this.iconWidth+this.getStyle('paddingRight')+this.getStyle('paddingLeft');
+						break;
+						case "img":
+							this.iconHeight = data.img.@height;
+							this.iconWidth = data.img.@width;
+							this.source = data.img.@src;
+							this.selected = (data.@selected=="selected");
+							this.minHeight = this.iconHeight+this.getStyle('paddingTop')+this.getStyle('paddingBottom');
+							this.minWidth = this.iconWidth+this.getStyle('paddingRight')+this.getStyle('paddingLeft');
+						break;
+						default:
+							this.iconHeight = 0;
+							this.iconWidth = 0;
+							this.source = String(data);
+							this.selected = false;
+							this.minHeight = 0;
+							this.minWidth = 0;
+						break;
+					}
+				} else {
+					this.iconHeight = 0;
+					this.iconWidth = 0;
+					this.minHeight = 0;
+					this.minWidth = 0;
+					this.source = null;
+					this.selected = false;
+				}
+				
+			}
+			private var iconWidth:Number = 0;
+			private var iconHeight:Number = 0;
+			private var _src:String = "";
+			private var _srcChanged:Boolean = false;
+			[Bindable]
+			[Inspectable]
+			public function get source():String{
+				return this._src;
+			}
+			public function set source(value:String):void{
+				if(this._src!=value){
+					this._src = value;
+					this._srcChanged = true;
+					this.invalidateProperties();
+				}
+			}
+			protected override function commitProperties():void{
+				super.commitProperties();
+				if(this._srcChanged){
+					this._srcChanged = false;
+					try{
+						this._icon.source = this.source;
+					} catch(e:Error){
+						
+					}
+				}
+			}
+			private var _icon:Image;
+			protected override function createChildren():void{
+				super.createChildren();
+				if(!this._icon){
+					this._icon = new Image();
+					this._icon.maintainAspectRatio = true;
+					this._icon.setStyle('verticalAlign','middle');
+					this._icon.setStyle('horizontalAlign','center');
+					this._icon.source = this.source;
+					this.addChild(this._icon);
+				}
+			}
+			protected override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				super.updateDisplayList(unscaledWidth,unscaledHeight);
+				this._icon.x = this.getStyle('paddingLeft');
+				this._icon.y = this.getStyle('paddingTop');
+				this._icon.width = unscaledWidth-this.getStyle('paddingLeft')-this.getStyle('paddingRight');
+				this._icon.height = unscaledHeight-this.getStyle('paddingTop')-this.getStyle('paddingBottom');
+				this.swapChildrenAt(this.getChildIndex(this._icon),this.numChildren-1);
+			}
+		]]>
+	</mx:Script>
+</mx:Button>

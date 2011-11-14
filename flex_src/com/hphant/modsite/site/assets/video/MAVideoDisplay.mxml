@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas resize="resizeHandler()"
+	horizontalScrollPolicy="off" 
+	autoLayout="false"
+	backgroundAlpha="1"
+    updateComplete="{this.drawMask()}"
+	verticalScrollPolicy="off" 
+	implements="com.hphant.modsite.site.assets.interfaces.IMAsset" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:text="com.hphant.modsite.site.assets.text.*"
+    
+     xmlns:local="*" xmlns:components="com.hphant.components.*">
+
+	<mx:Script>
+				<![CDATA[
+					import com.hphant.utils.XMLUtility;
+					import mx.effects.easing.Bounce;
+					import mx.effects.Resize;
+					import mx.events.VideoEvent;
+					import mx.events.MetadataEvent;
+				
+					include "../interfaces/AssetIncludes.as";
+				
+					private var _source:String = "";
+					private var flashVars:Object;
+					private var _maMinWidth:Number;
+					private var _maMaxWidth:Number;
+					private var _maMinHeight:Number;
+					private var _maMaxHeight:Number;
+					public static const LOCK_WIDTH:String 		= "LockWidth";
+					public static const LOCK_HEIGHT:String 		= "LockHeight";
+					public static const LOCK_NONE:String 		= "LockNone";
+					public static const LOCK_BOTH:String 		= "LockBoth";
+					
+					private var _sizeConstraint:String = MAVideoDisplay.LOCK_NONE;
+					
+					private function setInitialSize():void
+					{
+						switch(sizeConstraint)
+						{
+							case MAVideoDisplay.LOCK_HEIGHT:
+								this.width = this.maMinWidth;
+							break;
+							
+							case MAVideoDisplay.LOCK_WIDTH:
+								this.height = this.maMinHeight;
+							break;
+							
+							case MAVideoDisplay.LOCK_BOTH:
+							break;							
+							default:
+							case MAVideoDisplay.LOCK_NONE:
+								if(this.maMinHeight)
+								{
+									this.videoPlayer.height=this.maMinHeight;
+								}else
+								{
+									this.videoPlayer.height=50;
+								}
+								
+								if(this.maMinWidth)
+								{
+									this.videoPlayer.width=this.maMinWidth;
+								}else
+								{
+									this.videoPlayer.width=50;
+								}
+							break;
+							
+						}	
+					}
+									
+					protected override function commitProperties():void
+					{
+						//if xml changed and xml is an embed tag.
+						if(this.xmlChanged && this._xml)
+						{
+							if(String(this._xml.attribute("class")).toLowerCase()=="video"){
+								
+								
+								XMLUtility.insertBlankNode(_xml.a);
+								XMLUtility.insertBlankNode(_xml.p);
+								XMLUtility.insertBlankNode(_xml.embed);
+								if(XML(this._xml).name().localName=="li" && _xml.embed.length()==0){
+									this._xml = XMLList('<div class="Video"><embed src="'+_xml.a.@href+'" />'+_xml.p.toXMLString()+'</div>');
+								}
+								
+								
+								if(source == _xml.embed.@src){
+									try{
+										this.videoPlayer.player.seek(0);
+										this.videoPlayer.player.play();
+									} catch(e:Error){
+										
+									}
+								} else if(_xml.embed.@src==""){
+									try{
+										this.videoPlayer.stop();
+										this.videoPlayer.player.seek(0);
+										this.videoPlayer.player.stop();
+									} catch(e:Error){
+										
+									}
+								} else {
+									source = _xml.embed.@src;
+								}
+								this.overlayText.xml = this._xml.p;
+							}
+							this.xmlChanged = false;
+						} else if(this.xmlChanged){
+							try{
+								this.videoPlayer.stop();
+								this.videoPlayer.player.seek(0);
+								this.videoPlayer.player.stop();
+							} catch(e:Error){
+								
+							}
+							this.xmlChanged = false;
+						}
+						super.commitProperties();
+					}
+
+					//------------------------
+					//      	Public Functions 
+					//------------------------
+					
+					//
+					// 		GETTERS/SETTERS
+					//
+					
+					[Bindable]
+					public function get source():String{ return _source;}	
+					public function set source(value:String):void{ this._source=value;}
+					
+					//	maMaxWidth
+					[Bindable]
+					public function get maMaxWidth():Number {return this._maMaxWidth}
+					public function set maMaxWidth(value:Number):void
+					{
+						this._maMaxWidth = value;
+					}
+					
+					//	maMaxHeight
+					[Bindable]
+					public function get maMaxHeight():Number {return this._maMaxHeight}
+					public function set maMaxHeight(value:Number):void
+					{
+						this._maMaxHeight = value;
+					}
+					
+					//	maMinWidth
+					[Bindable]
+					public function get maMinWidth():Number {return this._maMinWidth}
+					public function set maMinWidth(value:Number):void
+					{
+						this._maMinWidth = value;
+					}
+					
+					//	maMinHeight
+					[Bindable]
+					public function get maMinHeight():Number {return this._maMinHeight}
+					public function set maMinHeight(value:Number):void
+					{
+						this._maMinHeight = value;
+					}
+				
+
+					//	 sizeConstraint
+					public function set sizeConstraint(value:String):void
+					{
+						this._sizeConstraint = value;
+					}
+					public function get sizeConstraint():String
+					{
+						return this._sizeConstraint;
+					}
+					
+					
+					//------------------------
+					//      	Private functions 
+					//------------------------
+					private function metadataReceivedHandler(e:MetadataEvent = null):void
+					{
+						resizeToNewVideo();
+					}
+					//
+					//     UTILITIES
+					//
+					private function resizeToNewVideo():void
+					{
+						var aspectMax:Number; 	
+						var aspectMin:Number;
+						var metaWidth:Number = videoPlayer.metadata.width;
+						var metaHeight:Number = videoPlayer.metadata.height;
+						var metaAspect:Number = metaWidth/metaHeight;
+						log("Video\theight:"+metaHeight+"\twidth:"+metaWidth+"\tapsectRation:"+metaAspect);
+						var vidPlayerNewW:Number;
+						var vidPlayerNewH:Number;
+						var vidPlayerNewAspect:Number;
+						switch(this.sizeConstraint)
+						{
+							case MAVideoDisplay.LOCK_HEIGHT: 
+								aspectMax = this.maMaxWidth/this.height;
+								aspectMin = this.maMinWidth/this.height;		
+								
+								vidPlayerNewW = this.height*metaAspect;
+								vidPlayerNewAspect = vidPlayerNewW/this.height;
+								
+								if(vidPlayerNewAspect > aspectMax)
+								{
+									vidPlayerNewW = this.maMaxWidth;
+								}
+								else if(vidPlayerNewAspect < aspectMin)
+								{
+									vidPlayerNewW = this.maMinWidth;
+								}
+								this.width = vidPlayerNewW;
+								
+							break;
+						
+							case MAVideoDisplay.LOCK_WIDTH:
+								aspectMax = this.width/this.maMaxHeight;
+								aspectMin = this.width/this.maMinHeight;		
+								
+								vidPlayerNewH = this.width/metaAspect;
+								vidPlayerNewAspect = this.width/vidPlayerNewH;
+								
+								if(vidPlayerNewAspect > aspectMax)
+								{
+									vidPlayerNewH = this.maMaxHeight;
+								}
+								else if(vidPlayerNewAspect < aspectMin)
+								{
+									vidPlayerNewH = this.maMaxHeight;
+								}
+								this.height = vidPlayerNewH;
+							break;
+				
+							/*
+							//
+							//  This section is not complete.  must complete the 4 iteration and add a 3rd resize to all iterations. 
+							//
+							case MAVideoDisplay.LOCK_NONE:
+								if(metaAspect > 1 && (metaWidth > maMaxWidth))// landscape size and too wide
+								{
+									vidPlayerNewW = maMaxWidth;
+									vidPlayerNewH = vidPlayerNewW/metaAspect;
+								
+									if(vidPlayerNewH > maMaxHeight)
+									{
+										vidPlayerNewH = maMaxHeight;
+										vidPlayerNewW = maMaxHeight*metadAspect
+									}
+								}
+								if(metaAspect < 1 && (metaHeight > maMaxHeight)) // portrait size and too tall
+								{
+									vidPlayerNewH = maMaxHeight; // constrain height 
+									vidPlayerNewW = vidPlayerNewH*metaAspect; // match aspect ratio
+								
+									if(vidPlayerNewH > maMaxHeight) //tests new width 
+									{
+										vidPlayerNewW = maMaxWidth; // constrain width 
+										vidPlayerNewH = maMaxWidth/metaAspect// match aspect ratio
+									}
+									
+								}
+								if(metaAspect > 1 && (metaHeight < maMaxHeight)) // landscape size and too small
+								{
+									vidPlayerNewH = maMinHeight; // constrain height 
+									vidPlayerNewW = vidPlayerNewH*metaAspect; // match aspect ratio
+								
+									if(vidPlayerNewW > maMaxWidth) //tests new width to ensure it does not max out
+									{
+										vidPlayerNewW = maMaxWidth; // constrain width within max.
+										vidPlayerNewH = maMaxWidth/metaAspect// match aspect ratio
+									}
+									
+								}
+								if(metaAspect < 1 && (metaWidth > maMaxWidth))// portrait size and too small
+								{
+									vidPlayerNewW = maMinWidth; // constrain height
+									vidPlayerNewH = vidPlayerNewW/metaAspect; //match aspect ratio
+			
+									if(vidPlayerNewH > maMaxHeight) 
+									{
+										vidPlayerNewH = maMaxHeight;
+										vidPlayerNewW = maMaxHeight*metaAspect;
+									}
+								}
+							*/
+							default:
+							case MAVideoDisplay.LOCK_BOTH:
+							break;
+						}
+						
+					}
+					
+					private  function makeFlashVars(initString:String):Object
+					{
+						var array1:Array;
+						array1 =initString.split("&");
+						var obj:Object 	= new Object();
+						var k:int = array1.length;
+						for(var i:int = 0; i < k; i++)
+						{	
+							// get string.
+							var str:String = array1[i];
+							// make array out of string spitting on "="
+							var ary:Array = str.split("=");					
+							//set variables in object [0] = prop, [1] = value;
+							obj[ary[0]]=ary[1];
+						}	
+						return obj;
+					}
+					private function fireComplete():void
+					{
+						dispatchEvent(new VideoEvent(VideoEvent.COMPLETE));
+					}
+					private function resizeHandler(e:Event=null):void
+					{
+						
+					}
+					private var textY:Number;
+					private var textMousing:Boolean = false;
+					
+					
+					
+				]]>
+			</mx:Script>	
+			<!--
+			
+	 	autoBandWidthDetection="true" 
+			
+	 	backgroundAlpha="0"
+	 	borderStyle="none" 
+	 	borderThickness="5"
+			-->
+	 <components:FLVPlaybackFlexComp
+	 	id="videoPlayer"
+	 	source="{this.source}" 
+	    volume="0"
+	 	autoPlay="true" 
+	    skinAutoHide="true"
+	    skinBackgroundAlpha=".15"
+		scaleMode="maintainAspectRatio"
+	 	skin="{skin}"
+	 	complete="{fireComplete()}" 
+	 	metadataReceived="{metadataReceivedHandler()}" 
+	 	width="{this.width}"
+	 	height="{this.height}"
+	    mask="{this.videoMask}"
+	 	/>
+	 <mx:String id="skin" />
+	 <mx:Canvas width="{this.width}" height="{this.height}" id="videoMask"/>
+	 <mx:VBox id="textHolder" mask="{this.textMask}" width="{this.width}" height="{this.height}" verticalScrollPolicy="off" horizontalScrollPolicy="off" verticalAlign="bottom">
+	 	<text:MAText id="overlayText" styleName="videoOverlayText" width="{this.width}"/>
+	 </mx:VBox>	
+	 <mx:Move id="textMover" target="{this.textHolder}" easingFunction="{mx.effects.easing.Bounce.easeOut}"/>
+	 <mx:Canvas width="{this.width}" height="{this.height}" id="textMask"/>
+	 <mx:Canvas width="{this.width}" height="{this.height}" id="skinHolder"/>
+	 <mx:Script>
+	 	<![CDATA[
+	 		import mx.events.EffectEvent;
+	 		private function drawMask():void{
+	 			var rc:Number = this.getStyle('cornerRadius');
+	 			this.drawRC(this.videoMask.graphics,rc);
+	 			this.drawRC(this.textMask.graphics,rc,2);
+	 			this.positionText();
+	 		}
+	 		private function positionText():void{
+	 			this.textY = this.overlayText.height;
+	 			if(!this.textMousing){
+	 				this.textHolder.y = this.textY;
+	 			}
+	 		}
+	 		private function mouseOver():void{
+	 			if(this.textMover.isPlaying){
+	 				this.textMover.stop();
+	 			}
+	 			this.textMousing = true;
+	 			this.textMover.yFrom = this.textHolder.y;
+	 			this.textMover.yTo = 0;
+	 			this.textMover.play();
+	 		}
+	 		private function mouseOut():void{
+	 			if(this.textMover.isPlaying){
+	 				this.textMover.stop();
+	 			}
+	 			this.textMousing = true;
+	 			if(!this.textMover.hasEventListener(EffectEvent.EFFECT_END)){
+	 				this.textMover.addEventListener(EffectEvent.EFFECT_END,this.textMoveEffectEnd);
+	 			}
+	 			this.textMover.yTo = this.textY;
+	 			this.textMover.yFrom = this.textHolder.y;
+	 			this.textMover.play();
+	 		}
+	 		private function textMoveEffectEnd(e:EffectEvent):void{
+	 			this.textMousing = false;
+	 			if(this.textMover.hasEventListener(EffectEvent.EFFECT_END)){
+	 				this.textMover.removeEventListener(EffectEvent.EFFECT_END,this.textMoveEffectEnd);
+	 			}
+	 			
+	 		}
+	 		private function drawRC(gr:Graphics,rc:Number,ol:Number = 0):void{
+	 			if(ol>rc){rc = ol;}
+	 			gr.clear();
+	 			gr.beginFill(0x000000);
+	 			gr.drawRoundRect(ol,ol,this.width-ol*2,this.height-ol*2,(rc-ol)*2,(rc-ol)*2);
+	 		}
+	 	]]>
+	 </mx:Script>
+</mx:Canvas>
+
+
+
+
+
+
+
+

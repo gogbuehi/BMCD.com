@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox  autoLayout="true" verticalScrollPolicy="off" horizontalScrollPolicy="off" xmlns:mx="http://www.adobe.com/2006/mxml" implements="com.hphant.modsite.site.assets.interfaces.IMAsset" xmlns:video="com.hphant.modsite.site.assets.video.*" xmlns:images="com.hphant.modsite.site.assets.images.*">
+	<mx:Metadata>
+		[Event(name="linkClicked",type="com.hphant.modsite.site.events.MALinkClickEvent")]
+	</mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import com.hphant.modsite.site.events.MALinkClickEvent;
+			import com.hphant.modsite.site.assets.interfaces.IMAsset;
+			include "../interfaces/AssetIncludes.as";
+			protected override function commitProperties():void{
+				if(this.xmlChanged && this._xml){
+					var v:XML = <div><embed type="video/quicktime" pluginspage="http://www.apple.com/quicktime/download/" /></div>
+					v.@['class']="Video";
+					var d:Date = new Date();
+					var first:XML =  XML(this.xml.li[Math.floor(Math.random()*this.xml.li.length())]);
+					v.embed.@src = first.a.@href;
+					this.video.xml = XMLList(v);
+					this.imageList.sizeImages = true;
+					this.imageList.loadImages = true;
+					this.imageList.xml = this._xml;
+					this.dispatchEvent(new MALinkClickEvent(MALinkClickEvent.LINK_CLICKED,first));
+					this.xmlChanged = false;
+				} else if(this.xmlChanged) {
+					this.imageList.xml = null;
+					this.video.xml = null;
+				}
+				super.commitProperties();
+			}
+			[Bindable]
+			private var vdo:XMLList;
+			[Bindable]
+			private var img:XMLList;
+			
+			private function scrollImages(e:MouseEvent):void{
+				
+				this.scrollEffect.toValue = this.imageList.mouseX-93;
+				
+				if(!this.scrollEffect.isPlaying){
+					this.scrollEffect.play();
+				}
+			}
+			private function changeVideo(e:MALinkClickEvent):void{
+				var d:Date = new Date();
+				var v:XML = <div><embed type="video/quicktime" pluginspage="http://www.apple.com/quicktime/download/" /></div>
+					v.@['class']="Video";
+					v.embed.@src = XML(e.item).a.@href;
+				this.video.xml = XMLList(v);
+				this.dispatchEvent(new MALinkClickEvent(e.type,e.item,e.bubbles,e.cancelable));
+			}
+			private function drawSideFade():void{
+				this.lsfw = this.sideFadeWidth;//(this.imageList.horizontalScrollPosition > this.sideFadeWidth) ? this.sideFadeWidth : this.horizontalScrollPosition;
+				this.rsfw = this.sideFadeWidth;//(this.imageList.horizontalScrollPosition < this.imageList.width - this.sideFadeWidth) ? this.sideFadeWidth : this.imageList.width - this.horizontalScrollPosition;
+				
+				
+				
+				var lm:Matrix = new Matrix;
+				lm.createGradientBox(sideFadeWidth,this.imageList.height,0);
+				var rm:Matrix = new Matrix;
+				rm.createGradientBox(sideFadeWidth,this.imageList.height,Math.PI);
+				this.leftFade.graphics.beginGradientFill(GradientType.LINEAR,[0x000000,0x000000],[0,1],[0,255],lm);
+				this.leftFade.graphics.drawRect(0,0,this.sideFadeWidth,this.imageList.height);
+				this.leftFade.graphics.endFill();
+				this.rightFade.graphics.beginGradientFill(GradientType.LINEAR,[0x000000,0x000000],[0,1],[0,255],rm);
+				this.rightFade.graphics.drawRect(0,0,this.sideFadeWidth,this.imageList.height);
+				this.rightFade.graphics.endFill();
+				
+			}
+			[Bindable]
+			private var lsfw:Number;
+			
+			[Bindable]
+			private var rsfw:Number;
+			
+		]]>
+	</mx:Script>
+	<mx:Boolean id="showText">true</mx:Boolean>
+	<mx:String id="skin">swf/SkinOverPlayStopSeekMuteVol.swf</mx:String>
+	<mx:AnimateProperty id="scrollEffect" target="{this.imageList}" property="horizontalScrollPosition"/>
+	<video:MAVideoDisplay width="640" height="420" id="video" skin="{skin}" />
+	<mx:Canvas verticalScrollPolicy="off" horizontalScrollPolicy="off" width="{imageList.width}" height="{imageList.height}" >
+		<images:MAImageSelectorH cacheAsBitmap="true" showText="{this.showText}" mask="{selectorMask}" updateComplete="{drawSideFade()}" mouseMove="{scrollImages(event)}" styleName="imageShow" verticalScrollPolicy="off" width="{this.video.width}" id="imageList" imageWidth="93" imageHeight="70" linkClicked="{changeVideo(event)}">
+			
+		</images:MAImageSelectorH>
+		<mx:HBox cacheAsBitmap="true" id="selectorMask" width="100%" height="100%" horizontalGap="0" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Canvas id="leftFade" width="{sideFadeWidth}" backgroundAlpha="0" height="100%"/>
+			<mx:Canvas id="centerMask" width="{this.imageList.width-sideFadeWidth*2}" height="100%" backgroundAlpha="1" backgroundColor="#000000"/>
+			<mx:Canvas id="rightFade" width="{sideFadeWidth}" backgroundAlpha="0" height="100%"/>
+		</mx:HBox>
+	</mx:Canvas>
+	<mx:Number id="sideFadeWidth">100</mx:Number>
+</mx:VBox>

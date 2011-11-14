@@ -1,0 +1,49 @@
+/* CSS font face file */
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-Roman.otf");
+    fontFamily: SiteFont;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-Heavy.otf");
+    fontFamily: SiteFont;
+    fontWeight: Bold;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-HeavyOblique.otf");
+    fontFamily: SiteFont;
+    fontWeight: Bold;
+    fontStyle: Italic;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-Oblique.otf");
+    fontFamily: SiteFont;
+    fontStyle: Italic;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-BlackOblique.otf");
+    fontFamily: SiteFontExtra;
+    fontWeight: Bold;
+    fontStyle: Italic;
+    sing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-Black.otf");
+    fontFamily: SiteFontExtra;
+    fontWeight: Bold;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-MediumOblique.otf");
+    fontFamily: SiteFontSemi;
+    fontStyle: Italic;
+    advancedAntiAliasing: true;
+}
+@font-face {
+    src: url("fonts/Avenir LT Std/AvenirLTStd-Medium.otf");
+    fontFamily: SiteFontSemi;
+    advancedAntiAliasing: true;
+}
